@@ -1,0 +1,166 @@
+openapi: 3.0.3
+info:
+  title: Core API
+  description: |-
+    Core API
+  version: 0.0.1
+servers:
+  - url: http://localhost:8080/api/v1
+tags:
+  - name: Health
+  - name: Authentication
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Health check
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Success 200
+          $ref: '#/components/responses/SuccessResponse200'
+        '400':
+          description: Error 400
+          $ref: '#/components/responses/ErrorResponse400'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  # Authentication
+  /auth/sign-up:
+    post:
+      tags:
+        - Authentication
+      summary: Sign up by email and password
+      description: Sign by providing their email and password
+      operationId: signUpByEmailAndPassword
+      requestBody:
+        required: true
+        description: Signup payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpEmailPasswordPayload'
+      responses:
+        '200':
+          description: Successful signup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericSuccess'
+        '400':
+          description: Error 400
+          $ref: '#/components/responses/ErrorResponse400'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+components:
+  schemas:
+    UID:
+      type: string
+      example: "12345abcde"
+    Email: # Maybe change this back to email format due to error message
+      type: string
+      format: email
+      # pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      example: "example@starter.com"
+    Password:
+      type: string
+      format: password
+      #      pattern: ^[a-zA-Z0-9]*[!@#$%^&*][a-zA-Z0-9!@#$%^&*]{7,19}$
+      example: "1234567@"
+    User:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UID"
+        email:
+          $ref: "#/components/schemas/Email"
+      required:
+        - id
+        - email
+    SignUpEmailPasswordPayload:
+      type: object
+      properties:
+        email:
+          $ref: "#/components/schemas/Email"
+        password:
+          $ref: "#/components/schemas/Password"
+      required:
+        - email
+        - password
+    SignUpEmailPasswordResponse:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UID"
+        email:
+          $ref: "#/components/schemas/Email"
+      required:
+        - id
+        - email
+
+    GenericSuccess:
+      type: object
+      description: Generic success response
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+          example: "Ok"
+      required:
+        - status
+        - message
+    GenericError:
+      type: object
+      description: Generic error response
+      properties:
+        status:
+          type: integer
+        error:
+          type: string
+          example: "INVALID_INPUT"
+        message:
+          type: string
+          example: "Some error"
+      required:
+        - status
+        - error
+        - message
+
+  responses:
+    SuccessResponse200:
+      description: Ok
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericSuccess'
+    ErrorResponse400:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericError'
+    ErrorResponse401:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericError'
+    ErrorResponse500:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericError'
