@@ -1,0 +1,14 @@
+.wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--mantine-spacing-xl) * 2);
+  background: radial-gradient(circle at top, var(--mantine-color-blue-0), var(--mantine-color-gray-0));
+}
+
+@media (max-width: 48em) {
+  .wrapper {
+    padding: var(--mantine-spacing-lg);
+  }
+}
