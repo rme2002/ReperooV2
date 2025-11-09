@@ -2,42 +2,40 @@ import Link from 'next/link';
 import {
   Anchor,
   Button,
-  Checkbox,
   Container,
-  Group,
   Paper,
   PasswordInput,
   Text,
   TextInput,
   Title,
 } from '@mantine/core';
-import classes from './SignIn.module.css';
+import classes from './Register.module.css';
 
-export function SignIn() {
+export function Register() {
   return (
     <Container size={420} my={40}>
       <Title ta="center" className={classes.title}>
-        Welcome back!
+        Create an account
       </Title>
 
       <Text className={classes.subtitle}>
-        Do not have an account yet?{' '}
-        <Anchor component={Link} href="/register">
-          Create account
+        Already have an account?{' '}
+        <Anchor component={Link} href="/login">
+          Sign in
         </Anchor>
       </Text>
 
       <Paper withBorder shadow="sm" p={22} mt={30} radius="md">
         <TextInput label="Email" placeholder="you@mantine.dev" required radius="md" />
-        <PasswordInput label="Password" placeholder="Your password" required mt="md" radius="md" />
-        <Group justify="space-between" mt="lg">
-          <Checkbox label="Remember me" />
-          <Anchor component={Link} href="/forgot-password" size="sm">
-            Forgot password?
-          </Anchor>
-        </Group>
+        <PasswordInput
+          label="Password"
+          placeholder="Your secure password"
+          required
+          mt="md"
+          radius="md"
+        />
         <Button fullWidth mt="xl" radius="md">
-          Sign in
+          Create account
         </Button>
       </Paper>
     </Container>
