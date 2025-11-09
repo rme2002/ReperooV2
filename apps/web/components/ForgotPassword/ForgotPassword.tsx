@@ -1,4 +1,6 @@
-// import { IconArrowLeft } from '@tabler/icons-react';
+"use client";
+
+import { IconArrowLeft } from '@tabler/icons-react';
 import Link from 'next/link';
 import {
   Anchor,
@@ -35,7 +37,7 @@ export function ForgotPassword() {
             className={classes.control}
           >
             <Center inline>
-              {/* <IconArrowLeft size={12} stroke={1.5} /> */}
+              <IconArrowLeft size={12} stroke={1.5} />
               <Box ml={5}>Back to the login page</Box>
             </Center>
           </Anchor>

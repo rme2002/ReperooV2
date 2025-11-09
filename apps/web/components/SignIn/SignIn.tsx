@@ -1,3 +1,5 @@
+"use client";
+
 import Link from 'next/link';
 import {
   Anchor,
@@ -36,7 +38,7 @@ export function SignIn() {
             Forgot password?
           </Anchor>
         </Group>
-        <Button fullWidth mt="xl" radius="md">
+        <Button component={Link} href="/" fullWidth mt="xl" radius="md">
           Sign in
         </Button>
       </Paper>
