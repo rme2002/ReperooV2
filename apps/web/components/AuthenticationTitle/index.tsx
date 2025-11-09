@@ -1,1 +1,0 @@
-export { AuthenticationTitle } from "./AuthenticationTitle";

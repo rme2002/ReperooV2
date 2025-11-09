@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AuthenticationTitle } from "../../../components/AuthenticationTitle";
+import { SignIn } from "../../../components/SignIn";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function LoginRoute() {
-  return <AuthenticationTitle />;
+  return <SignIn />;
 }

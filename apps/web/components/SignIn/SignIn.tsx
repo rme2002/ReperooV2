@@ -10,9 +10,9 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
-import classes from './AuthenticationTitle.module.css';
+import classes from './SignIn.module.css';
 
-export function AuthenticationTitle() {
+export function SignIn() {
   return (
     <Container size={420} my={40}>
       <Title ta="center" className={classes.title}>
