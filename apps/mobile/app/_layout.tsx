@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { useSupabaseAuthSync } from '@/hooks/useSupabaseAuthSync';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -46,6 +47,11 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { initializing } = useSupabaseAuthSync();
+
+  if (initializing) {
+    return null;
+  }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

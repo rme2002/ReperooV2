@@ -1,15 +1,33 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export function LogoutButton() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const handleLogout = async () => {
+    if (loading) return;
+    setLoading(true);
+    const { error } = await supabase.auth.signOut();
+    setLoading(false);
+
+    if (error) {
+      Alert.alert('Sign out failed', error.message);
+      return;
+    }
+
+    router.replace('/login');
+  };
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-      onPress={() => router.replace('/login')}
+      style={({ pressed }) => [styles.button, (pressed || loading) && styles.buttonPressed]}
+      onPress={handleLogout}
+      disabled={loading}
     >
-      <Text style={styles.text}>Logout</Text>
+      <Text style={styles.text}>{loading ? 'Signing out…' : 'Logout'}</Text>
     </Pressable>
   );
 }

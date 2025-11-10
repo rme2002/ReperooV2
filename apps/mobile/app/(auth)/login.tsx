@@ -1,12 +1,28 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AuthScreenShell } from '@/components/auth/AuthScreenShell';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignIn = async () => {
+    if (loading) return;
+    if (!email || !password) {
+      Alert.alert('Missing info', 'Please enter both email and password.');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      Alert.alert('Unable to sign in', error.message);
+    }
+    setLoading(false);
+  };
 
   return (
     <AuthScreenShell
@@ -51,10 +67,14 @@ export default function LoginScreen() {
       </Pressable>
 
       <Pressable
-        style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
-        onPress={() => router.replace('/(tabs)')}
+        style={({ pressed }) => [
+          styles.primaryButton,
+          (pressed || loading) && styles.primaryButtonPressed,
+        ]}
+        onPress={handleSignIn}
+        disabled={loading}
       >
-        <Text style={styles.primaryButtonText}>Continue</Text>
+        <Text style={styles.primaryButtonText}>{loading ? 'Signing in…' : 'Continue'}</Text>
       </Pressable>
     </AuthScreenShell>
   );

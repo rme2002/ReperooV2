@@ -1,13 +1,40 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AuthScreenShell } from '@/components/auth/AuthScreenShell';
+import { registerUser } from '@/lib/api';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (loading) return;
+    if (!email || !password || !confirmPassword) {
+      Alert.alert('Missing info', 'Please fill out every field.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert('Passwords do not match', 'Please confirm the same password.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await registerUser({ email, password });
+      Alert.alert('Account created', 'Check your email to confirm your account.', [
+        { text: 'OK', onPress: () => router.replace('/login') },
+      ]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unable to register right now.';
+      Alert.alert('Unable to register', message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AuthScreenShell
@@ -60,10 +87,14 @@ export default function RegisterScreen() {
       </View>
 
       <Pressable
-        style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
-        onPress={() => router.push('/(tabs)')}
+        style={({ pressed }) => [
+          styles.primaryButton,
+          (pressed || loading) && styles.primaryButtonPressed,
+        ]}
+        onPress={handleRegister}
+        disabled={loading}
       >
-        <Text style={styles.primaryButtonText}>Create account</Text>
+        <Text style={styles.primaryButtonText}>{loading ? 'Creating…' : 'Create account'}</Text>
       </Pressable>
     </AuthScreenShell>
   );

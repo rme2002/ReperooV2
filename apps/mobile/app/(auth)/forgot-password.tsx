@@ -1,11 +1,31 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AuthScreenShell } from '@/components/auth/AuthScreenShell';
+import { supabase } from '@/lib/supabase';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleReset = async () => {
+    if (loading) return;
+    if (!email) {
+      Alert.alert('Missing email', 'Enter your account email to receive a reset link.');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    setLoading(false);
+
+    if (error) {
+      Alert.alert('Unable to send reset link', error.message);
+      return;
+    }
+
+    Alert.alert('Reset link sent', 'Check your inbox to finish resetting your password.');
+  };
 
   return (
     <AuthScreenShell
@@ -32,10 +52,14 @@ export default function ForgotPasswordScreen() {
       </View>
 
       <Pressable
-        style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
-        onPress={() => router.push('/login')}
+        style={({ pressed }) => [
+          styles.primaryButton,
+          (pressed || loading) && styles.primaryButtonPressed,
+        ]}
+        onPress={handleReset}
+        disabled={loading}
       >
-        <Text style={styles.primaryButtonText}>Send reset link</Text>
+        <Text style={styles.primaryButtonText}>{loading ? 'Sending…' : 'Send reset link'}</Text>
       </Pressable>
     </AuthScreenShell>
   );
