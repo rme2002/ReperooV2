@@ -1,6 +1,8 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   IconBellRinging,
   IconLayoutDashboard,
@@ -8,6 +10,7 @@ import {
   IconSettings,
   IconSwitchHorizontal,
 } from '@tabler/icons-react';
+import { createClient } from '@/utils/supabase/client';
 import classes from './NavbarSimple.module.css';
 
 const navItems = [
@@ -22,6 +25,25 @@ type NavbarSimpleProps = {
 };
 
 export function NavbarSimple({ activePath, onNavigate }: NavbarSimpleProps) {
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+      onNavigate?.();
+      router.replace('/login');
+      router.refresh();
+    } catch (error) {
+      console.error('Failed to sign out', error);
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
   const links = navItems.map((item) => {
     const isActive = activePath === item.href || activePath.startsWith(`${item.href}/`);
 
@@ -49,10 +71,10 @@ export function NavbarSimple({ activePath, onNavigate }: NavbarSimpleProps) {
           <span>Change account</span>
         </a>
 
-        <Link href="/login" className={classes.link} onClick={() => onNavigate?.()}>
+        <button type="button" className={classes.link} onClick={handleLogout} disabled={signingOut}>
           <IconLogout className={classes.linkIcon} stroke={1.5} />
-          <span>Logout</span>
-        </Link>
+          <span>{signingOut ? 'Signing out…' : 'Logout'}</span>
+        </button>
       </div>
     </nav>
   );

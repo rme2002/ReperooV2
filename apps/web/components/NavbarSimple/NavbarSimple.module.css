@@ -33,6 +33,10 @@
   border-radius: var(--mantine-radius-sm);
   font-weight: 500;
   width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
 
   @mixin hover {
     background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
@@ -61,4 +65,9 @@
   margin-right: var(--mantine-spacing-sm);
   width: 25px;
   height: 25px;
+}
+
+.link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
