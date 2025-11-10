@@ -85,7 +85,7 @@ docker compose down
 | Path | Description |
 |------|--------------|
 | `/apps/web` | Next.js web frontend (deployed to Vercel) |
-| `/apps/mobile` | Expo / React Native mobile app |
+| `/apps/mobile` | Expo / React Native mobile app (runs locally outside Docker) |
 | `/apps/api` | FastAPI backend (deployed to Cloud Run) |
 | `/packages/openapi` | OpenAPI spec (source of truth for all apps) |
 | `docker-compose.yml` | Unified local environment setup |
@@ -109,5 +109,5 @@ docker compose down
 | `docker compose up --build` | Start API + Web locally + build |
 | `docker compose up` | Start API + Web locally |
 | `docker compose up api` | Start only backend |
-
-
+| `cd apps/web && npm run dev` | Run the web app locally |
+| `cd apps/mobile && npx expo run:ios` | Run the mobile app locally |

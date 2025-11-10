@@ -5,7 +5,6 @@ import { Tabs } from 'expo-router';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-import { LogoutButton } from '@/components/LogoutButton';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -25,7 +24,6 @@ export default function TabLayout() {
         headerShown: useClientOnlyValue(true, true),
         headerStyle: { backgroundColor: '#050814' },
         headerTitleStyle: { color: '#fff', fontWeight: '600' },
-        headerRight: () => <LogoutButton />,
         tabBarStyle: { backgroundColor: '#050814' },
         tabBarInactiveTintColor: '#94a3b8',
       }}>
@@ -37,10 +35,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="settings"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color} />,
         }}
       />
     </Tabs>
