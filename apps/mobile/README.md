@@ -12,6 +12,8 @@ The Pulse mobile client runs on Expo Router + React Native. It connects to Supab
 - Expo CLI (installed automatically via `npx`)
 - Docker (optional, only if you want to run the API locally with `docker compose`)
 
+> First-time Expo developer? Follow the official environment setup guide for your platform: [docs.expo.dev/get-started/set-up-your-environment](https://docs.expo.dev/get-started/set-up-your-environment/?platform=ios&device=physical&mode=development-build&buildEnv=local)
+
 ---
 
 ## Environment Variables
