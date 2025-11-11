@@ -1,69 +1,73 @@
-# API
+# API (FastAPI + Supabase)
 
-## Introduction
+Backend service that powers registration and future workspace APIs. Built with FastAPI 0.116, Supabase, and uvicorn. Dependency management is handled by [`uv`](https://github.com/astral-sh/uv).
 
-API is a FastAPI-based project that provides [brief description of your project].
+---
 
-## Prerequisites
+## Requirements
 
-Before you begin, ensure you have the following installed:
-
-- Docker
 - Python 3.13
-- virtualenv (optional)
+- [`uv`](https://docs.astral.sh/uv/) (recommended over pip/virtualenv)
+- Docker (optional, for running via `docker compose`)
 
-## Getting Started
+Install dependencies:
 
-1. **Clone the repository**
-
-    ```bash
-    git clone <your repo>
-    cd <repo name>
-    ```
-
-2. **Create an .env file**
-
-    Create a file named `.env` in the project root and add the following, replacing `[YOUR_API_KEY]` with your actual API key:
-
-    ```env
-    API_KEY=[YOUR_API_KEY]
-    ```
-
-## Running the container
-
-6. **Build Docker image**
-
-    ```bash
-    docker build -t api:latest .
-    ```
-
-7. **Run Docker container**
-
-    ```bash
-    docker run --rm -p 8080:8080 --name api api:latest
-    ```
-
-## Usage
-
-The API will be accessible at http://localhost:8080/api/v1. [Provide details on how to use your API, including endpoints and examples.]
-
-## Development
-
-[Include any additional information for developers, such as how to contribute, testing, etc.]
-
-## Deploying to Google Cloud Platform (GCP)
-
-To deploy on Cloud Run using Cloud Build, leverage the cloudbuild.yaml file. Additionally, securely store your secrets in Secret Manager, and incorporate them during the build phase. This strategy optimizes resource usage by avoiding additional costs associated with calling Secret Manager on startup (even though it's not entirely accurate, it aligns with the approach of minimizing costs when using scale to 0).
-
-## Development
-
-### Generate openapi models
-```
-uv run datamodel-codegen --input ../../packages/openapi/api.yaml --input-file-type openapi --output src/models/model.py --output-model-type pydantic_v2.BaseModel --target-python-version 3.13
+```bash
+cd apps/api
+uv sync
 ```
 
-### Linting
+---
+
+## Environment Variables
+
+Create `apps/api/.env` (loaded via `python-dotenv`) with your Supabase service credentials:
+
+```env
+SUPABASE_URL=...
+SUPABASE_KEY=...
 ```
-uv run ruff check # Lint files in the current directory.
-uv run ruff check --fix # Lint files in the current directory and fix any fixable errors.
+
+> Use the **service role** key on the backend—you never expose this to clients.
+
+---
+
+## Running Locally
+
+### With uv (recommended)
+
+```bash
+cd apps/api
+uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8080
 ```
+
+### With Docker
+
+```bash
+docker compose up --build api    # from repo root
+# or
+docker build -t api:latest apps/api
+docker run --rm -p 8080:8080 api:latest
+```
+
+The OpenAPI docs are available at [http://localhost:8080/docs](http://localhost:8080/docs).
+
+---
+
+## Development Tasks
+
+| Task | Command |
+|------|---------|
+| Generate Pydantic models from the monorepo spec | `uv run datamodel-codegen --input ../../packages/openapi/api.yaml --input-file-type openapi --output src/models/model.py --output-model-type pydantic_v2.BaseModel --target-python-version 3.13` |
+| Lint | `uv run ruff check` |
+| Lint + fix | `uv run ruff check --fix` |
+
+---
+
+## Deployment Notes
+
+- The provided `Dockerfile` runs `uvicorn` via `uv` (`CMD ["uv", "run", "uvicorn", ...]`).
+- Cloud Build / Cloud Run can build directly from this Dockerfile.
+- Store secrets (Supabase keys, etc.) in Secret Manager and inject them during the build/deploy phase so the container can scale to zero without extra startup calls.
+
+For the shared contract and consumer implementations, see the root [`README.md`](../../README.md) and the service-specific docs in `apps/web` and `apps/mobile`.
