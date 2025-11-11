@@ -55,28 +55,38 @@ Make sure you have the following installed:
 
 ## 🐳 Local Development (Docker)
 
-Start all apps locally:
+Start shared backend services (FastAPI, DBs, etc.) via Docker:
 
 ```bash
-docker compose up --build
+docker compose up --build        # API on http://localhost:8080
+docker compose up api           # Only the API service
+docker compose down             # Stop/remove containers
 ```
 
-Run API only:
+Run the web + mobile apps natively for the best hot-reload experience:
 
 ```bash
-docker compose up api
+# Web (Next.js)
+cd apps/web && npm install && npm run dev
+
+# Mobile (Expo / iOS example)
+cd apps/mobile && npm install && npx expo run:ios
 ```
 
-Stop all containers:
+Need everything at once? The Makefile bundles the workflow (Docker API + local web + local mobile) and tears it all down with a single Ctrl+C:
 
 ```bash
-docker compose down
+make dev
+
+# Variations
+make dev-web      # API + Web only
+make dev-mobile   # API + Mobile only
 ```
 
 > **Ports:**
 > - API → [http://localhost:8080](http://localhost:8080)
-> - Web → [http://localhost:3000](http://localhost:3000)
-> - (Optional) Expo Mobile → 19000 / 19006 (via profile `mobile`)
+> - Web → [http://localhost:3000](http://localhost:3000) when run manually
+> - Expo Dev Server → 19000 / 19001 / 19002 (when you run Metro locally)
 
 ---
 
@@ -106,8 +116,11 @@ docker compose down
 
 | Command | Description |
 |----------|-------------|
-| `docker compose up --build` | Start API + Web locally + build |
-| `docker compose up` | Start API + Web locally |
-| `docker compose up api` | Start only backend |
+| `docker compose up --build` | Start backend services (API) |
+| `docker compose up api` | Start only the API service |
+| `docker compose down` | Stop/remove backend containers |
+| `make dev` | Start Docker API + local web + local mobile (auto cleanup) |
+| `make dev-web` | Start Docker API + local web only |
+| `make dev-mobile` | Start Docker API + local mobile only |
 | `cd apps/web && npm run dev` | Run the web app locally |
 | `cd apps/mobile && npx expo run:ios` | Run the mobile app locally |

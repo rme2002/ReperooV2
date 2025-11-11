@@ -12,16 +12,16 @@ services:
     # env_file:
     #   - ./apps/api/.env.local
 
-  web:
-    container_name: web
-    image: node:22-alpine
-    working_dir: /app
-    volumes:
-      - ./apps/web:/app
-    ports:
-      - "3000:3000"
-    command: npm run dev
-    depends_on:
-      - api
-    # environment:
-    #   NEXT_PUBLIC_API_URL: http://localhost:8080
+  # web:
+  #   container_name: web
+  #   image: node:22-alpine
+  #   working_dir: /app
+  #   volumes:
+  #     - ./apps/web:/app
+  #   ports:
+  #     - "3000:3000"
+  #   command: npm run dev
+  #   depends_on:
+  #     - api
+  #   # environment:
+  #   #   NEXT_PUBLIC_API_URL: http://localhost:8080
