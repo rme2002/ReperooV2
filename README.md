@@ -116,11 +116,11 @@ make dev-mobile   # API + Mobile only
 
 | Command | Description |
 |----------|-------------|
-| `docker compose up --build` | Start backend services (API) |
-| `docker compose up api` | Start only the API service |
-| `docker compose down` | Stop/remove backend containers |
 | `make dev` | Start Docker API + local web + local mobile (auto cleanup) |
 | `make dev-web` | Start Docker API + local web only |
 | `make dev-mobile` | Start Docker API + local mobile only |
+| `docker compose up --build` | Start backend services (API) |
+| `docker compose up api` | Start only the API service |
+| `docker compose down` | Stop/remove backend containers |
 | `cd apps/web && npm run dev` | Run the web app locally |
 | `cd apps/mobile && npx expo run:ios` | Run the mobile app locally |
