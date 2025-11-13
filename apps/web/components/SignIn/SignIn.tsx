@@ -1,8 +1,11 @@
 "use client";
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useFormStatus } from 'react-dom';
+import { IconCheck } from '@tabler/icons-react';
 import {
+  Alert,
   Anchor,
   Button,
   Container,
@@ -30,6 +33,9 @@ function SubmitButton() {
 }
 
 export function SignIn({ action }: SignInProps) {
+  const searchParams = useSearchParams();
+  const showRegistrationSuccess = searchParams.get('status') === 'registered';
+
   return (
     <Container size={420} my={40}>
       <Title ta="center" className={classes.title}>
@@ -44,6 +50,16 @@ export function SignIn({ action }: SignInProps) {
       </Text>
 
       <Paper withBorder shadow="sm" p={22} mt={30} radius="md" component="form" action={action}>
+        {showRegistrationSuccess && (
+          <Alert
+            icon={<IconCheck size={16} />}
+            color="green"
+            variant="light"
+            mb="md"
+          >
+            Account created successfully! Sign in to continue.
+          </Alert>
+        )}
         <TextInput label="Email" name="email" placeholder="you@mantine.dev" required radius="md" />
         <PasswordInput
           label="Password"

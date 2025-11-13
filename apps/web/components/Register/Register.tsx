@@ -48,7 +48,7 @@ export function Register() {
       );
 
       setTimeout(() => {
-        router.push("/login");
+        router.push("/login?status=registered");
       }, 1200);
     } catch (err) {
       const message =
