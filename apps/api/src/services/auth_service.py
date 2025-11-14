@@ -13,12 +13,16 @@ class AuthService:
         try:
             auth_response = await self.supabase.auth.sign_up({"email": email, "password": password})
         except Exception as e:
-            print(e)
             raise SignUpError("Sign-up failed.") from e
 
         user = getattr(auth_response, "user", None)
         if not user:
             raise SignUpError("No user returned")
 
-        # await self.user_repository.upsert_user(id=str(user.id), email=str(user.email))
+        try:
+            await self.user_repository.upsert_user(id=str(user.id), email=str(user.email))
+        except Exception as e:
+            await self.supabase.auth.admin.delete_user(user.id)
+            raise SignUpError("Failed to persist user profile.") from e
+
         return SignUpEmailPasswordResponse(id=str(user.id), email=str(user.email))
