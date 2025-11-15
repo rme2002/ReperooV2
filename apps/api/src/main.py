@@ -12,6 +12,7 @@ load_dotenv()
 # ---- global supabase reference (filled at startup)
 supabase: AsyncClient | None = None
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI-preferred startup/shutdown hook."""
@@ -37,4 +38,5 @@ app.add_middleware(
 
 # ---- include routes AFTER app is created
 from src.routes.router import api_v1  # noqa: E402
+
 app.include_router(api_v1, prefix="/api/v1")

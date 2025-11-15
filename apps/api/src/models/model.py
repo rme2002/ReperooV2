@@ -8,15 +8,15 @@ from pydantic import BaseModel, EmailStr, Field, RootModel, SecretStr
 
 
 class UID(RootModel[str]):
-    root: str = Field(..., examples=['12345abcde'])
+    root: str = Field(..., examples=["12345abcde"])
 
 
 class Email(RootModel[EmailStr]):
-    root: EmailStr = Field(..., examples=['example@starter.com'])
+    root: EmailStr = Field(..., examples=["example@starter.com"])
 
 
 class Password(RootModel[SecretStr]):
-    root: SecretStr = Field(..., examples=['1234567@'])
+    root: SecretStr = Field(..., examples=["1234567@"])
 
 
 class User(BaseModel):
@@ -36,10 +36,10 @@ class SignUpEmailPasswordResponse(BaseModel):
 
 class GenericSuccess(BaseModel):
     status: int
-    message: str = Field(..., examples=['Ok'])
+    message: str = Field(..., examples=["Ok"])
 
 
 class GenericError(BaseModel):
     status: int
-    error: str = Field(..., examples=['INVALID_INPUT'])
-    message: str = Field(..., examples=['Some error'])
+    error: str = Field(..., examples=["INVALID_INPUT"])
+    message: str = Field(..., examples=["Some error"])

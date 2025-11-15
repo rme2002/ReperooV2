@@ -9,12 +9,17 @@ from src.models.model import SignUpEmailPasswordPayload, SignUpEmailPasswordResp
 
 router = APIRouter()
 
+
 def get_auth_service(supabase: AsyncClient = Depends(get_supabase)) -> AuthService:
     user_repository = UserRepository(supabase)
     return AuthService(supabase, user_repository)
 
+
 @router.post("/sign-up", status_code=status.HTTP_201_CREATED)
-async def sign_up(payload: SignUpEmailPasswordPayload, auth_service: AuthService = Depends(get_auth_service)) -> SignUpEmailPasswordResponse:
+async def sign_up(
+    payload: SignUpEmailPasswordPayload,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> SignUpEmailPasswordResponse:
     try:
         return await auth_service.sign_up(
             email=str(payload.email.root),

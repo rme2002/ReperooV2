@@ -58,9 +58,12 @@ The OpenAPI docs are available at [http://localhost:8080/docs](http://localhost:
 
 | Task | Command |
 |------|---------|
-| Generate Pydantic models from the monorepo spec | `uv run datamodel-codegen --input ../../packages/openapi/api.yaml --input-file-type openapi --output src/models/model.py --output-model-type pydantic_v2.BaseModel --target-python-version 3.13` |
-| Lint | `uv run ruff check` |
-| Lint + fix | `uv run ruff check --fix` |
+| Clean cache / `.venv` | `uv clean` |
+| Install deps | `uv sync` |
+| Generate Pydantic models from OpenAPI | `uv run datamodel-codegen --input ../../packages/openapi/api.yaml --input-file-type openapi --output src/models/model.py --output-model-type pydantic_v2.BaseModel --target-python-version 3.13` |
+| Lint | `uvx ruff check .` |
+| Lint + fix | `uvx ruff check . --fix` |
+| Format | `uvx ruff format .` |
 
 ---
 
