@@ -9,7 +9,7 @@ DEV_WEB ?= true
 DEV_MOBILE ?= true
 
 # ===== targets =====
-.PHONY: setup dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop
+.PHONY: setup lint lint-fix dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop
 
 ## Bootstrap dependencies (uv + npm installs)
 setup:
@@ -66,3 +66,20 @@ stop:
 	-@pkill -f "expo start" >/dev/null 2>&1 || true
 	$(MAKE) api-down
 	@echo "🛑 All services stopped."
+lint:
+	@echo "[API] 🧹 uvx ruff check ."
+	@cd apps/api && uvx ruff check .
+	@echo "[WEB] 🧼 npm run lint"
+	@npm run lint --prefix $(WEB_DIR)
+	@echo "[MOBILE] 🧼 npm run lint"
+	@npm run lint --prefix $(MOBILE_DIR)
+	@echo "✅ Lint checks completed."
+
+lint-fix:
+	@echo "[API] 🧹 uvx ruff check . --fix"
+	@cd apps/api && uvx ruff check . --fix && uvx ruff format .
+	@echo "[WEB] 🧼 npm run lint:fix"
+	@npm run lint:fix --prefix $(WEB_DIR)
+	@echo "[MOBILE] 🧼 npm run lint:fix"
+	@npm run lint:fix --prefix $(MOBILE_DIR)
+	@echo "✅ Lint fixes applied."

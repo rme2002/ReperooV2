@@ -103,6 +103,7 @@ Each document covers environment variables, scripts, and workflow tips specific 
 | Command | Purpose |
 |---------|---------|
 | `make setup` | Install/sync dependencies (`uv sync` + `npm install`) |
+| `make lint` / `make lint-fix` | Run ESLint/Ruff checks (or auto-fix) across API + web + mobile |
 | `make dev` / `make dev-web` / `make dev-mobile` | Start Docker API + local dev servers (auto cleanup on exit) |
 | `docker compose up --build` / `down` | Manage API container manually |
 | `cd apps/web && npm run dev` | Web dev server only |
