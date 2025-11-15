@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   IconBellRinging,
   IconLayoutDashboard,
   IconLogout,
   IconSettings,
   IconSwitchHorizontal,
-} from '@tabler/icons-react';
-import { createClient } from '@/utils/supabase/client';
-import classes from './NavbarSimple.module.css';
+} from "@tabler/icons-react";
+import { createClient } from "@/utils/supabase/client";
+import classes from "./NavbarSimple.module.css";
 
 const navItems = [
-  { href: '/', label: 'Home', icon: IconLayoutDashboard },
-  { href: '/notifications', label: 'Notifications', icon: IconBellRinging },
-  { href: '/settings', label: 'Other Settings', icon: IconSettings },
+  { href: "/", label: "Home", icon: IconLayoutDashboard },
+  { href: "/notifications", label: "Notifications", icon: IconBellRinging },
+  { href: "/settings", label: "Other Settings", icon: IconSettings },
 ];
 
 type NavbarSimpleProps = {
@@ -35,17 +35,18 @@ export function NavbarSimple({ activePath, onNavigate }: NavbarSimpleProps) {
     try {
       await supabase.auth.signOut();
       onNavigate?.();
-      router.replace('/login');
+      router.replace("/login");
       router.refresh();
     } catch (error) {
-      console.error('Failed to sign out', error);
+      console.error("Failed to sign out", error);
     } finally {
       setSigningOut(false);
     }
   };
 
   const links = navItems.map((item) => {
-    const isActive = activePath === item.href || activePath.startsWith(`${item.href}/`);
+    const isActive =
+      activePath === item.href || activePath.startsWith(`${item.href}/`);
 
     return (
       <Link
@@ -66,14 +67,23 @@ export function NavbarSimple({ activePath, onNavigate }: NavbarSimpleProps) {
       <div className={classes.navbarMain}>{links}</div>
 
       <div className={classes.footer}>
-        <a href="#" className={classes.link} onClick={(event) => event.preventDefault()}>
+        <a
+          href="#"
+          className={classes.link}
+          onClick={(event) => event.preventDefault()}
+        >
           <IconSwitchHorizontal className={classes.linkIcon} stroke={1.5} />
           <span>Change account</span>
         </a>
 
-        <button type="button" className={classes.link} onClick={handleLogout} disabled={signingOut}>
+        <button
+          type="button"
+          className={classes.link}
+          onClick={handleLogout}
+          disabled={signingOut}
+        >
           <IconLogout className={classes.linkIcon} stroke={1.5} />
-          <span>{signingOut ? 'Signing out…' : 'Logout'}</span>
+          <span>{signingOut ? "Signing out…" : "Logout"}</span>
         </button>
       </div>
     </nav>

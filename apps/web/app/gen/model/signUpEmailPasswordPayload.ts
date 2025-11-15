@@ -5,8 +5,8 @@
  * Core API
  * OpenAPI spec version: 0.0.1
  */
-import type { Email } from './email';
-import type { Password } from './password';
+import type { Email } from "./email";
+import type { Password } from "./password";
 
 export interface SignUpEmailPasswordPayload {
   email: Email;

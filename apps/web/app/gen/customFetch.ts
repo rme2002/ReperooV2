@@ -1,12 +1,12 @@
 // NOTE: Supports cases where `content-type` is other than `json`
 const getBody = <T>(c: Response | Request): Promise<T> => {
-  const contentType = c.headers.get('content-type');
+  const contentType = c.headers.get("content-type");
 
-  if (contentType && contentType.includes('application/json')) {
+  if (contentType && contentType.includes("application/json")) {
     return c.json();
   }
 
-  if (contentType && contentType.includes('application/pdf')) {
+  if (contentType && contentType.includes("application/pdf")) {
     return c.blob() as Promise<T>;
   }
 
@@ -19,9 +19,9 @@ const getUrl = (contextUrl: string): string => {
   const pathname = url.pathname;
   const search = url.search;
   const baseUrl =
-    process.env.NODE_ENV === 'production'
-      ? 'http://localhost:8080/api/v1'
-      : 'http://localhost:8080/api/v1';
+    process.env.NODE_ENV === "production"
+      ? "http://localhost:8080/api/v1"
+      : "http://localhost:8080/api/v1";
 
   const requestUrl = new URL(`${baseUrl}${pathname}${search}`);
 

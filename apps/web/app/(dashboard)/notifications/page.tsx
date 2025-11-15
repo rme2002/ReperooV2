@@ -1,14 +1,26 @@
-import { Badge, Card, Group, Stack, Text, Title } from '@mantine/core';
+import { Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
 
 const notifications = [
   {
-    title: 'Workspace shared',
-    description: 'Clara invited you to “Growth experiments”.',
-    status: 'New',
+    title: "Workspace shared",
+    description: "Clara invited you to “Growth experiments”.",
+    status: "New",
   },
-  { title: 'Usage alert', description: 'Storage crossed 70% capacity.', status: 'Warning' },
-  { title: 'Invoice ready', description: 'October billing statement is available.', status: 'Billing' },
-  { title: 'New device login', description: 'Signed in from Chrome on macOS.', status: 'Security' },
+  {
+    title: "Usage alert",
+    description: "Storage crossed 70% capacity.",
+    status: "Warning",
+  },
+  {
+    title: "Invoice ready",
+    description: "October billing statement is available.",
+    status: "Billing",
+  },
+  {
+    title: "New device login",
+    description: "Signed in from Chrome on macOS.",
+    status: "Security",
+  },
 ];
 
 export default function NotificationsPage() {

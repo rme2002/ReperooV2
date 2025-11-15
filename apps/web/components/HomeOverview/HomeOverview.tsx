@@ -1,21 +1,30 @@
-import { Badge, Card, Group, Progress, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import {
+  Badge,
+  Card,
+  Group,
+  Progress,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 
 export function HomeOverview() {
   const notifications = [
     {
-      title: 'Workspace shared',
-      description: 'Clara invited you to “Growth experiments”.',
-      tag: '2m ago',
+      title: "Workspace shared",
+      description: "Clara invited you to “Growth experiments”.",
+      tag: "2m ago",
     },
     {
-      title: 'Usage alert',
-      description: 'Storage is approaching the 70% threshold.',
-      tag: '15m ago',
+      title: "Usage alert",
+      description: "Storage is approaching the 70% threshold.",
+      tag: "15m ago",
     },
     {
-      title: 'Invoice ready',
-      description: 'October billing statement is available.',
-      tag: '1h ago',
+      title: "Invoice ready",
+      description: "October billing statement is available.",
+      tag: "1h ago",
     },
   ];
 

@@ -28,7 +28,14 @@ type SubmitButtonProps = {
 
 function SubmitButton({ pending }: SubmitButtonProps) {
   return (
-    <Button type="submit" radius="md" fullWidth mt="xl" loading={pending} disabled={pending}>
+    <Button
+      type="submit"
+      radius="md"
+      fullWidth
+      mt="xl"
+      loading={pending}
+      disabled={pending}
+    >
       {pending ? "Signing in..." : "Sign in"}
     </Button>
   );
@@ -65,7 +72,13 @@ export function SignIn({ action }: SignInProps) {
             {state.error}
           </Alert>
         ) : null}
-        <TextInput label="Email" name="email" placeholder="you@mantine.dev" required radius="md" />
+        <TextInput
+          label="Email"
+          name="email"
+          placeholder="you@mantine.dev"
+          required
+          radius="md"
+        />
         <PasswordInput
           label="Password"
           name="password"

@@ -1,25 +1,35 @@
-import { useState } from 'react';
-import { useRouter } from 'expo-router';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AuthScreenShell } from '@/components/auth/AuthScreenShell';
-import { supabase } from '@/lib/supabase';
+import { useState } from "react";
+import { useRouter } from "expo-router";
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { AuthScreenShell } from "@/components/auth/AuthScreenShell";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
     if (loading) return;
     if (!email || !password) {
-      Alert.alert('Missing info', 'Please enter both email and password.');
+      Alert.alert("Missing info", "Please enter both email and password.");
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     if (error) {
-      Alert.alert('Unable to sign in', error.message);
+      Alert.alert("Unable to sign in", error.message);
     }
     setLoading(false);
   };
@@ -28,11 +38,15 @@ export default function LoginScreen() {
     <AuthScreenShell
       title="Welcome back 👋"
       subtitle="Sign in to keep your workspace in perfect flow."
-      highlights={['Secure sync', 'Realtime updates', 'Powered by AI']}
+      highlights={["Secure sync", "Realtime updates", "Powered by AI"]}
       footer={
-        <Pressable onPress={() => router.push('/register')} style={styles.secondaryAction}>
+        <Pressable
+          onPress={() => router.push("/register")}
+          style={styles.secondaryAction}
+        >
           <Text style={styles.secondaryText}>
-            New here? <Text style={styles.secondaryTextAccent}>Create account</Text>
+            New here?{" "}
+            <Text style={styles.secondaryTextAccent}>Create account</Text>
           </Text>
         </Pressable>
       }
@@ -62,7 +76,7 @@ export default function LoginScreen() {
         />
       </View>
 
-      <Pressable onPress={() => router.push('/forgot-password')}>
+      <Pressable onPress={() => router.push("/forgot-password")}>
         <Text style={styles.helperText}>Forgot password?</Text>
       </Pressable>
 
@@ -74,7 +88,9 @@ export default function LoginScreen() {
         onPress={handleSignIn}
         disabled={loading}
       >
-        <Text style={styles.primaryButtonText}>{loading ? 'Signing in…' : 'Continue'}</Text>
+        <Text style={styles.primaryButtonText}>
+          {loading ? "Signing in…" : "Continue"}
+        </Text>
       </Pressable>
     </AuthScreenShell>
   );
@@ -82,9 +98,9 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   label: {
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: 0.4,
   },
   input: {
@@ -92,10 +108,10 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 14,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: "rgba(255,255,255,0.05)",
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    color: '#ffffff',
+    borderColor: "rgba(255,255,255,0.12)",
+    color: "#ffffff",
     fontSize: 16,
   },
   fieldGroup: {
@@ -103,36 +119,36 @@ const styles = StyleSheet.create({
   },
   helperText: {
     marginTop: 18,
-    color: '#93c5fd',
+    color: "#93c5fd",
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   primaryButton: {
     marginTop: 24,
-    backgroundColor: '#2563eb',
+    backgroundColor: "#2563eb",
     borderRadius: 18,
     height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   primaryButtonPressed: {
     opacity: 0.85,
   },
   primaryButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: 0.3,
   },
   secondaryAction: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   secondaryText: {
-    color: 'rgba(255,255,255,0.65)',
+    color: "rgba(255,255,255,0.65)",
     fontSize: 14,
   },
   secondaryTextAccent: {
-    color: '#c084fc',
-    fontWeight: '600',
+    color: "#c084fc",
+    fontWeight: "600",
   },
 });

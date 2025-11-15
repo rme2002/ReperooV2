@@ -6,15 +6,15 @@
  * OpenAPI spec version: 0.0.1
  */
 
-export * from './email';
-export * from './errorResponse400Response';
-export * from './errorResponse401Response';
-export * from './errorResponse500Response';
-export * from './genericError';
-export * from './genericSuccess';
-export * from './password';
-export * from './signUpEmailPasswordPayload';
-export * from './signUpEmailPasswordResponse';
-export * from './successResponse200Response';
-export * from './uid';
-export * from './user';
+export * from "./email";
+export * from "./errorResponse400Response";
+export * from "./errorResponse401Response";
+export * from "./errorResponse500Response";
+export * from "./genericError";
+export * from "./genericSuccess";
+export * from "./password";
+export * from "./signUpEmailPasswordPayload";
+export * from "./signUpEmailPasswordResponse";
+export * from "./successResponse200Response";
+export * from "./uid";
+export * from "./user";

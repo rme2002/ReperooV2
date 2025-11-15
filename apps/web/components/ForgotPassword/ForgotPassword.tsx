@@ -1,7 +1,7 @@
 "use client";
 
-import { IconArrowLeft } from '@tabler/icons-react';
-import Link from 'next/link';
+import { IconArrowLeft } from "@tabler/icons-react";
+import Link from "next/link";
 import {
   Anchor,
   Box,
@@ -13,8 +13,8 @@ import {
   Text,
   TextInput,
   Title,
-} from '@mantine/core';
-import classes from './ForgotPassword.module.css';
+} from "@mantine/core";
+import classes from "./ForgotPassword.module.css";
 
 export function ForgotPassword() {
   return (

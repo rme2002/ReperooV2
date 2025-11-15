@@ -5,8 +5,8 @@
  * Core API
  * OpenAPI spec version: 0.0.1
  */
-import type { Uid } from './uid';
-import type { Email } from './email';
+import type { Uid } from "./uid";
+import type { Email } from "./email";
 
 export interface SignUpEmailPasswordResponse {
   id: Uid;
