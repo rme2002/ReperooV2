@@ -14,7 +14,7 @@ Install dependencies:
 
 ```bash
 cd apps/api
-uv sync
+uv sync   # or run `make setup` from the repo root
 ```
 
 ---

@@ -9,7 +9,17 @@ DEV_WEB ?= true
 DEV_MOBILE ?= true
 
 # ===== targets =====
-.PHONY: dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop
+.PHONY: setup dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop
+
+## Bootstrap dependencies (uv + npm installs)
+setup:
+	@echo "[API] 📦 uv sync"
+	@cd apps/api && uv sync
+	@echo "[WEB] 📦 npm install"
+	@npm install --prefix $(WEB_DIR)
+	@echo "[MOBILE] 📦 npm install"
+	@npm install --prefix $(MOBILE_DIR)
+	@echo "✅ Dependencies installed."
 
 ## Start API (Docker) + Web + Mobile
 dev:

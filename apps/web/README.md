@@ -10,7 +10,7 @@ Pulse’s web client is built with Next.js 15, Mantine UI, and Supabase authenti
 - npm 10+ (ships with Node 20)
 - Optional: Docker (only if you want to run the API locally via `docker compose`)
 
-Install dependencies once:
+Install dependencies once (or run `make setup` from the repo root):
 
 ```bash
 cd apps/web

@@ -34,6 +34,12 @@ Each app README details its own environment variables and additional prerequisit
 
 ## Local Development
 
+### First-time setup
+
+```bash
+make setup   # installs uv deps for API + npm packages for web/mobile
+```
+
 ### 1. Start backend services
 
 ```bash
@@ -96,6 +102,7 @@ Each document covers environment variables, scripts, and workflow tips specific 
 
 | Command | Purpose |
 |---------|---------|
+| `make setup` | Install/sync dependencies (`uv sync` + `npm install`) |
 | `make dev` / `make dev-web` / `make dev-mobile` | Start Docker API + local dev servers (auto cleanup on exit) |
 | `docker compose up --build` / `down` | Manage API container manually |
 | `cd apps/web && npm run dev` | Web dev server only |

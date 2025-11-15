@@ -38,7 +38,7 @@ docker compose up --build   # API on http://localhost:8080
 
 # 2. Run the native app (iOS example)
 cd apps/mobile
-npm install
+npm install   # or run `make setup` once from repo root
 npx expo run:ios            # first build + install
 
 # 3. Leave Metro running (npm run start) and reload the simulator as you edit code
