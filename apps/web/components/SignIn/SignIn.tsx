@@ -1,40 +1,41 @@
 "use client";
 
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { useFormStatus } from 'react-dom';
-import { IconCheck } from '@tabler/icons-react';
+import { useActionState } from "react";
+import Link from "next/link";
 import {
-  Alert,
+  Group,
   Anchor,
   Button,
   Container,
-  Group,
   Paper,
   PasswordInput,
+  Stack,
   Text,
   TextInput,
   Title,
-} from '@mantine/core';
-import classes from './SignIn.module.css';
+  Alert,
+} from "@mantine/core";
+import type { LoginState } from "@/components/SignIn/actions";
+import classes from "./SignIn.module.css";
 
 type SignInProps = {
-  action: (formData: FormData) => void;
+  action: (state: LoginState, formData: FormData) => Promise<LoginState>;
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+type SubmitButtonProps = {
+  pending: boolean;
+};
 
+function SubmitButton({ pending }: SubmitButtonProps) {
   return (
-    <Button type="submit" fullWidth mt="xl" radius="md" loading={pending} disabled={pending}>
-      Sign in
+    <Button type="submit" radius="md" fullWidth mt="xl" loading={pending} disabled={pending}>
+      {pending ? "Signing in..." : "Sign in"}
     </Button>
   );
 }
 
 export function SignIn({ action }: SignInProps) {
-  const searchParams = useSearchParams();
-  const showRegistrationSuccess = searchParams.get('status') === 'registered';
+  const [state, formAction, pending] = useActionState(action, { error: null });
 
   return (
     <Container size={420} my={40}>
@@ -43,23 +44,27 @@ export function SignIn({ action }: SignInProps) {
       </Title>
 
       <Text className={classes.subtitle}>
-        Do not have an account yet?{' '}
+        Do not have an account yet?{" "}
         <Anchor component={Link} href="/register">
           Create account
         </Anchor>
       </Text>
 
-      <Paper withBorder shadow="sm" p={22} mt={30} radius="md" component="form" action={action}>
-        {showRegistrationSuccess && (
-          <Alert
-            icon={<IconCheck size={16} />}
-            color="green"
-            variant="light"
-            mb="md"
-          >
-            Account created successfully! Sign in to continue.
+      <Paper
+        withBorder
+        shadow="sm"
+        p={22}
+        mt={30}
+        radius="md"
+        component="form"
+        action={formAction}
+        aria-busy={pending}
+      >
+        {state.error ? (
+          <Alert color="red" variant="light" mb="md">
+            {state.error}
           </Alert>
-        )}
+        ) : null}
         <TextInput label="Email" name="email" placeholder="you@mantine.dev" required radius="md" />
         <PasswordInput
           label="Password"
@@ -74,7 +79,7 @@ export function SignIn({ action }: SignInProps) {
             Forgot password?
           </Anchor>
         </Group>
-        <SubmitButton />
+        <SubmitButton pending={pending} />
       </Paper>
     </Container>
   );

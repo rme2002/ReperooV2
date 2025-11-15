@@ -2,7 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { IconAlertCircle, IconCheck } from "@tabler/icons-react";
 import {
   Alert,
@@ -19,7 +18,6 @@ import { signUpByEmailAndPassword } from "@/app/gen/authentication/authenticatio
 import classes from "./Register.module.css";
 
 export function Register() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,12 +42,8 @@ export function Register() {
 
       setSuccess(
         response.data.message ??
-          "Account created. Check your inbox to confirm access.",
+          "Account created. Sign in once you've confirmed your email.",
       );
-
-      setTimeout(() => {
-        router.push("/login?status=registered");
-      }, 1200);
     } catch (err) {
       const message =
         err instanceof Error
@@ -101,7 +95,10 @@ export function Register() {
             variant="light"
             mb="md"
           >
-            {success}
+            {success}{" "}
+            <Anchor component={Link} href="/login">
+              Go to login
+            </Anchor>
           </Alert>
         )}
 
@@ -114,6 +111,7 @@ export function Register() {
           onChange={(event) => setEmail(event.currentTarget.value)}
           type="email"
           autoComplete="email"
+          disabled={loading || Boolean(success)}
         />
         <PasswordInput
           label="Password"
@@ -124,6 +122,7 @@ export function Register() {
           value={password}
           onChange={(event) => setPassword(event.currentTarget.value)}
           autoComplete="new-password"
+          disabled={loading || Boolean(success)}
         />
         <Button
           type="submit"
@@ -131,7 +130,7 @@ export function Register() {
           mt="xl"
           radius="md"
           loading={loading}
-          disabled={loading}
+          disabled={loading || Boolean(success)}
         >
           Create account
         </Button>
