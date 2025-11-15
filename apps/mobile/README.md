@@ -51,6 +51,8 @@ Shortcuts:
 | `make dev-mobile` | Starts Docker API + Expo Metro + launches the iOS simulator |
 | `npm run start` | Metro bundler only (opens Expo dev tools) |
 | `npm run ios` / `npm run android` | Build & run native shells |
+| `npm run lint` | ESLint (Expo config) |
+| `npm run lint:fix` | ESLint with `--fix` |
 
 > Expo automatically chooses a free Metro port when starting via `make dev*`. If you run `npm run start` directly you can accept the suggested port or pass `--port`.
 

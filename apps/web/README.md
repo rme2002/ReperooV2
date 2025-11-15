@@ -60,7 +60,8 @@ The app lives at [http://localhost:3000](http://localhost:3000).
 | `npm run dev` | Next.js dev server with Fast Refresh |
 | `npm run build` | Production build (`.next/`) |
 | `npm run start` | Run the compiled app (`next start`) |
-| `npm run lint` | ESLint via `next lint` |
+| `npm run lint` | ESLint (flat config) |
+| `npm run lint:fix` | ESLint with `--fix` (runs Prettier via the config) |
 
 ---
 
