@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { AuthScreenShell } from "@/components/auth/AuthScreenShell";
-import { registerUser } from "@/lib/api";
+import { signUpByEmailAndPassword } from "@/lib/gen/authentication/authentication";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -34,10 +34,17 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      await registerUser({ email, password });
+      const response = await signUpByEmailAndPassword({ email, password });
+
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error(
+          response.data.message || "Unable to register right now.",
+        );
+      }
+
       Alert.alert(
         "Account created",
-        "Check your email to confirm your account.",
+        response.data.message || "Check your email to confirm your account.",
         [{ text: "OK", onPress: () => router.replace("/login") }],
       );
     } catch (err) {

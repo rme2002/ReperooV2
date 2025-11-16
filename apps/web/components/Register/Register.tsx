@@ -14,7 +14,7 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { signUpByEmailAndPassword } from "@/app/gen/authentication/authentication";
+import { signUpByEmailAndPassword } from "@/lib/gen/authentication/authentication";
 import classes from "./Register.module.css";
 
 export function Register() {
