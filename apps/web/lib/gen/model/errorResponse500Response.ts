@@ -5,7 +5,7 @@
  * Core API
  * OpenAPI spec version: 0.0.1
  */
-import type { GenericError } from "./genericError";
+import type { GenericError } from './genericError';
 
 /**
  * Internal server error

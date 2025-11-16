@@ -9,59 +9,61 @@ import type {
   ErrorResponse400Response,
   ErrorResponse401Response,
   ErrorResponse500Response,
-  SuccessResponse200Response,
-} from ".././model";
+  SuccessResponse200Response
+} from '.././model';
 
-import { customFetch } from ".././customFetch";
+import { customFetch } from '.././customFetch';
 
 /**
  * Health check
  * @summary Health check
  */
 export type healthCheckResponse200 = {
-  data: SuccessResponse200Response;
-  status: 200;
-};
+  data: SuccessResponse200Response
+  status: 200
+}
 
 export type healthCheckResponse400 = {
-  data: ErrorResponse400Response;
-  status: 400;
-};
+  data: ErrorResponse400Response
+  status: 400
+}
 
 export type healthCheckResponse401 = {
-  data: ErrorResponse401Response;
-  status: 401;
-};
+  data: ErrorResponse401Response
+  status: 401
+}
 
 export type healthCheckResponse500 = {
-  data: ErrorResponse500Response;
-  status: 500;
-};
-
-export type healthCheckResponseSuccess = healthCheckResponse200 & {
+  data: ErrorResponse500Response
+  status: 500
+}
+    
+export type healthCheckResponseSuccess = (healthCheckResponse200) & {
   headers: Headers;
 };
-export type healthCheckResponseError = (
-  | healthCheckResponse400
-  | healthCheckResponse401
-  | healthCheckResponse500
-) & {
+export type healthCheckResponseError = (healthCheckResponse400 | healthCheckResponse401 | healthCheckResponse500) & {
   headers: Headers;
 };
 
-export type healthCheckResponse =
-  | healthCheckResponseSuccess
-  | healthCheckResponseError;
+export type healthCheckResponse = (healthCheckResponseSuccess | healthCheckResponseError)
 
 export const getHealthCheckUrl = () => {
-  return `http://example.com/health`;
-};
 
-export const healthCheck = async (
-  options?: RequestInit,
-): Promise<healthCheckResponse> => {
-  return customFetch<healthCheckResponse>(getHealthCheckUrl(), {
+
+  
+
+  return `http://example.com/health`
+}
+
+export const healthCheck = async ( options?: RequestInit): Promise<healthCheckResponse> => {
+  
+  return customFetch<healthCheckResponse>(getHealthCheckUrl(),
+  {      
     ...options,
-    method: "GET",
-  });
-};
+    method: 'GET'
+    
+    
+  }
+);}
+
+

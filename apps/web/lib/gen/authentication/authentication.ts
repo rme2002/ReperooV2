@@ -10,66 +10,62 @@ import type {
   ErrorResponse401Response,
   ErrorResponse500Response,
   GenericSuccess,
-  SignUpEmailPasswordPayload,
-} from ".././model";
+  SignUpEmailPasswordPayload
+} from '.././model';
 
-import { customFetch } from ".././customFetch";
+import { customFetch } from '.././customFetch';
 
 /**
  * Sign by providing their email and password
  * @summary Sign up by email and password
  */
 export type signUpByEmailAndPasswordResponse200 = {
-  data: GenericSuccess;
-  status: 200;
-};
+  data: GenericSuccess
+  status: 200
+}
 
 export type signUpByEmailAndPasswordResponse400 = {
-  data: ErrorResponse400Response;
-  status: 400;
-};
+  data: ErrorResponse400Response
+  status: 400
+}
 
 export type signUpByEmailAndPasswordResponse401 = {
-  data: ErrorResponse401Response;
-  status: 401;
-};
+  data: ErrorResponse401Response
+  status: 401
+}
 
 export type signUpByEmailAndPasswordResponse500 = {
-  data: ErrorResponse500Response;
-  status: 500;
+  data: ErrorResponse500Response
+  status: 500
+}
+    
+export type signUpByEmailAndPasswordResponseSuccess = (signUpByEmailAndPasswordResponse200) & {
+  headers: Headers;
 };
-
-export type signUpByEmailAndPasswordResponseSuccess =
-  signUpByEmailAndPasswordResponse200 & {
-    headers: Headers;
-  };
-export type signUpByEmailAndPasswordResponseError = (
-  | signUpByEmailAndPasswordResponse400
-  | signUpByEmailAndPasswordResponse401
-  | signUpByEmailAndPasswordResponse500
-) & {
+export type signUpByEmailAndPasswordResponseError = (signUpByEmailAndPasswordResponse400 | signUpByEmailAndPasswordResponse401 | signUpByEmailAndPasswordResponse500) & {
   headers: Headers;
 };
 
-export type signUpByEmailAndPasswordResponse =
-  | signUpByEmailAndPasswordResponseSuccess
-  | signUpByEmailAndPasswordResponseError;
+export type signUpByEmailAndPasswordResponse = (signUpByEmailAndPasswordResponseSuccess | signUpByEmailAndPasswordResponseError)
 
 export const getSignUpByEmailAndPasswordUrl = () => {
-  return `http://example.com/auth/sign-up`;
-};
 
-export const signUpByEmailAndPassword = async (
-  signUpEmailPasswordPayload: SignUpEmailPasswordPayload,
-  options?: RequestInit,
-): Promise<signUpByEmailAndPasswordResponse> => {
-  return customFetch<signUpByEmailAndPasswordResponse>(
-    getSignUpByEmailAndPasswordUrl(),
-    {
-      ...options,
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...options?.headers },
-      body: JSON.stringify(signUpEmailPasswordPayload),
-    },
-  );
-};
+
+  
+
+  return `http://example.com/auth/sign-up`
+}
+
+export const signUpByEmailAndPassword = async (signUpEmailPasswordPayload: SignUpEmailPasswordPayload, options?: RequestInit): Promise<signUpByEmailAndPasswordResponse> => {
+  
+  return customFetch<signUpByEmailAndPasswordResponse>(getSignUpByEmailAndPasswordUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      signUpEmailPasswordPayload,)
+  }
+);}
+
+

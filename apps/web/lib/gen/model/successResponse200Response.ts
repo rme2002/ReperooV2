@@ -5,7 +5,7 @@
  * Core API
  * OpenAPI spec version: 0.0.1
  */
-import type { GenericSuccess } from "./genericSuccess";
+import type { GenericSuccess } from './genericSuccess';
 
 /**
  * Ok
