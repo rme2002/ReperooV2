@@ -9,7 +9,7 @@ DEV_WEB ?= true
 DEV_MOBILE ?= true
 
 # ===== targets =====
-.PHONY: setup lint lint-fix dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop
+.PHONY: setup clean setup-clean lint lint-fix dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop
 
 ## Bootstrap dependencies (uv + npm installs)
 setup:
@@ -20,6 +20,17 @@ setup:
 	@echo "[MOBILE] 📦 npm install"
 	@npm install --prefix $(MOBILE_DIR)
 	@echo "✅ Dependencies installed."
+
+clean:
+	@echo "[API] 🧹 uv clean"
+	@cd apps/api && uv clean
+	@echo "[WEB] 🧽 removing node_modules"
+	@rm -rf $(WEB_DIR)/node_modules
+	@echo "[MOBILE] 🧽 removing node_modules"
+	@rm -rf $(MOBILE_DIR)/node_modules
+	@echo "✅ Clean complete. Run 'make setup' to reinstall."
+
+setup-clean: clean setup
 
 ## Start API (Docker) + Web + Mobile
 dev:
