@@ -53,6 +53,7 @@ Shortcuts:
 | `npm run ios` / `npm run android` | Build & run native shells |
 | `npm run lint` | ESLint (Expo config) |
 | `npm run lint:fix` | ESLint with `--fix` |
+| `npm run generate-api` | Run Orval to refresh `lib/gen/**` from `packages/openapi/api.yaml` |
 
 > Expo automatically chooses a free Metro port when starting via `make dev*`. If you run `npm run start` directly you can accept the suggested port or pass `--port`.
 
@@ -63,14 +64,15 @@ Shortcuts:
 - `app/` – Expo Router routes (auth stack, dashboard tab stack, modal)
 - `components/` – Shared UI (auth shell, settings, etc.)
 - `hooks/` – Supabase session syncing + navigation guards
-- `lib/` – Supabase client + REST API helpers
+- `lib/` – Supabase client, Orval fetch wrappers (`lib/gen/**`), and supporting utilities
 
 ---
 
 ## Notes & Tips
 
-- **Auth flow** – Sign-in + forgot password use Supabase directly; registration posts to the FastAPI `/auth/sign-up` endpoint (see `lib/api.ts`).
+- **Auth flow** – Sign-in + forgot password use Supabase directly; registration posts to the FastAPI `/auth/sign-up` endpoint via the Orval client in `lib/gen/authentication/authentication.ts`.
 - **Session guard** – `hooks/useSupabaseAuthSync.ts` keeps Expo Router stacks aligned with Supabase auth state.
+- **API client** – Whenever `packages/openapi/api.yaml` changes, run `npm run generate-api` (or `make generate-api`) to rebuild the TypeScript client + models in `lib/gen/**`.
 - **Metro vs. native build** – Only run `npx expo run:ios` when you need a fresh native build. Day-to-day edits only require Metro (`npm run start`) and the simulator already open.
 - **Troubleshooting ports** – If the Expo CLI reports “port in use”, specify `npm run start -- --port 8083`.
 

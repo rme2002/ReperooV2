@@ -60,10 +60,12 @@ The OpenAPI docs are available at [http://localhost:8080/docs](http://localhost:
 |------|---------|
 | Clean cache / `.venv` | `uv clean` |
 | Install deps | `uv sync` |
-| Generate Pydantic models from OpenAPI | `uv run datamodel-codegen --input ../../packages/openapi/api.yaml --input-file-type openapi --output src/models/model.py --output-model-type pydantic_v2.BaseModel --target-python-version 3.13` |
+| Generate Pydantic models from OpenAPI | `uv run datamodel-codegen --input ../../packages/openapi/api.yaml --input-file-type openapi --output src/models/model.py --output-model-type pydantic_v2.BaseModel --target-python-version 3.13` (or `make generate-api`) |
 | Lint | `uvx ruff check .` |
 | Lint + fix | `uvx ruff check . --fix` |
 | Format | `uvx ruff format .` |
+
+> The web (`apps/web`) and mobile (`apps/mobile`) clients consume this same OpenAPI spec via Orval. Run `make generate-api` from the repo root to regenerate the backend models and both client SDKs in one shot.
 
 ---
 

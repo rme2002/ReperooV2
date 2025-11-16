@@ -89,6 +89,42 @@ Each document covers environment variables, scripts, and workflow tips specific 
 
 ---
 
+## OpenAPI & Code Generation
+
+`packages/openapi/api.yaml` is the single source of truth for request/response contracts. Each surface consumes that spec through its own generator:
+
+| Surface | Tool | Output |
+|---------|------|--------|
+| API | `datamodel-codegen` (Pydantic v2) | `apps/api/src/models/model.py` |
+| Web | `orval` (fetch client + models) | `apps/web/lib/gen/**` |
+| Mobile | `orval` (fetch client + models) | `apps/mobile/lib/gen/**` |
+
+Run everything at once with:
+
+```bash
+make generate-api
+```
+
+Orcall individual commands if you need to iterate quickly:
+
+```bash
+# API data models
+cd apps/api
+uv run datamodel-codegen --input ../../packages/openapi/api.yaml --input-file-type openapi --output src/models/model.py --output-model-type pydantic_v2.BaseModel --target-python-version 3.13
+
+# Web client
+cd apps/web
+npm run generate-api
+
+# Mobile client
+cd apps/mobile
+npm run generate-api
+```
+
+Check regenerated files into git so the rest of the stack stays in sync.
+
+---
+
 ## CI/CD Snapshot
 
 - **GitHub Actions** – lint/test/build per app.
@@ -105,6 +141,7 @@ Each document covers environment variables, scripts, and workflow tips specific 
 | `make setup` | Install/sync dependencies (`uv sync` + `npm install`) |
 | `make clean` / `make setup-clean` | Remove cached deps (uv/node_modules) or clean+reinstall |
 | `make lint` / `make lint-fix` | Run ESLint/Ruff checks (or auto-fix) across API + web + mobile |
+| `make generate-api` | Regenerate backend models + web/mobile Orval clients from OpenAPI |
 | `make dev` / `make dev-web` / `make dev-mobile` | Start Docker API + local dev servers (auto cleanup on exit) |
 | `docker compose up --build` / `down` | Manage API container manually |
 | `cd apps/web && npm run dev` | Web dev server only |

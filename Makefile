@@ -9,7 +9,7 @@ DEV_WEB ?= true
 DEV_MOBILE ?= true
 
 # ===== targets =====
-.PHONY: setup clean setup-clean lint lint-fix dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop
+.PHONY: setup clean setup-clean lint lint-fix dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop generate-api
 
 ## Bootstrap dependencies (uv + npm installs)
 setup:
@@ -94,3 +94,12 @@ lint-fix:
 	@echo "[MOBILE] 🧼 npm run lint:fix"
 	@npm run lint:fix --prefix $(MOBILE_DIR)
 	@echo "✅ Lint fixes applied."
+
+generate-api:
+	@echo "[API] 🧬 datamodel-codegen"
+	@cd apps/api && uv run datamodel-codegen --input ../../packages/openapi/api.yaml --input-file-type openapi --output src/models/model.py --output-model-type pydantic_v2.BaseModel --target-python-version 3.13
+	@echo "[WEB] 🧾 orval"
+	@npm run generate-api --prefix $(WEB_DIR)
+	@echo "[MOBILE] 📱 orval"
+	@npm run generate-api --prefix $(MOBILE_DIR)
+	@echo "✅ Contract + clients refreshed."
