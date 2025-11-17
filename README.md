@@ -1,6 +1,6 @@
 # 🧩 Monorepo Starter Template
 
-Unified workspace for the Pulse stack: a Next.js web app, an Expo mobile client, and a FastAPI backend that share a single OpenAPI contract.
+Unified workspace for the [YOURAPP] stack: a Next.js web app, an Expo mobile client, and a FastAPI backend that share a single OpenAPI contract.
 
 ---
 

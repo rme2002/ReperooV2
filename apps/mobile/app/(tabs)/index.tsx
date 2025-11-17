@@ -31,7 +31,7 @@ export default function OverviewScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.hero}>
-        <Text style={styles.eyebrow}>Pulse Workspace</Text>
+        <Text style={styles.eyebrow}>YOURAPP Workspace</Text>
         <Text style={styles.heading}>Welcome back, Avery.</Text>
         <Text style={styles.subtitle}>
           Here is what your teams shipped overnight.

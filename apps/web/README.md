@@ -1,6 +1,6 @@
 # Web App (Next.js + Mantine)
 
-Pulse’s web client is built with Next.js 15, Mantine UI, and Supabase authentication. This document covers local development, environment variables, and useful scripts.
+[YOURAPP] web client is built with Next.js 15, Mantine UI, and Supabase authentication. This document covers local development, environment variables, and useful scripts.
 
 ---
 

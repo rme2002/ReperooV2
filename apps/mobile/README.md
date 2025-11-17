@@ -1,6 +1,6 @@
 # Mobile App (Expo / React Native)
 
-The Pulse mobile client runs on Expo Router + React Native. It connects to Supabase for authentication and the FastAPI backend for registration flows.
+The [YOURAPP] mobile client runs on Expo Router + React Native. It connects to Supabase for authentication and the FastAPI backend for registration flows.
 
 ---
 

@@ -38,7 +38,7 @@ export function AuthScreenShell({
       >
         <View>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>Pulse</Text>
+            <Text style={styles.badgeText}>YOURAPP</Text>
           </View>
           <Text style={styles.heading}>{title}</Text>
           <Text style={styles.subheading}>{subtitle}</Text>
