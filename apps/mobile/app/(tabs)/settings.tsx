@@ -1,5 +1,4 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -28,7 +27,6 @@ const settingsItems = [
 ];
 
 export default function SettingsScreen() {
-  const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
 
   const handleItemPress = async (itemKey: string) => {

@@ -54,8 +54,10 @@ export function NavbarSimple({ activePath, onNavigate }: NavbarSimpleProps) {
   };
 
   const links = navItems.map((item) => {
+    const isNestedRoute = activePath.startsWith(`${item.href}/`);
+    const isExactMatch = activePath === item.href;
     const isActive =
-      activePath === item.href || activePath.startsWith(`${item.href}/`);
+      isExactMatch || (item.href !== "/backoffice" && isNestedRoute);
 
     return (
       <Link
