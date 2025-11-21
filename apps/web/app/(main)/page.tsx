@@ -70,7 +70,12 @@ export default async function LandingPage() {
                     Quick snapshot of what you can expect to find.
                   </Text>
                 </div>
-                <Button component={Link} href="/login" variant="subtle" size="xs">
+                <Button
+                  component={Link}
+                  href="/login"
+                  variant="subtle"
+                  size="xs"
+                >
                   View more
                 </Button>
               </Group>
