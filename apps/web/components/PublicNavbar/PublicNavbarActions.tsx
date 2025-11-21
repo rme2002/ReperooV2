@@ -34,39 +34,43 @@ export function PublicNavbarActions({
     onNavigate?.();
   };
 
-  const renderActions = (fullWidth: boolean) => (
-    <>
+  const renderActions = (fullWidth: boolean) => {
+    if (isAuthenticated) {
+      return (
+        <>
+          <Button
+            component={Link}
+            href="/backoffice"
+            variant="light"
+            color="blue"
+            fullWidth={fullWidth}
+            onClick={onNavigate}
+          >
+            Go to backoffice
+          </Button>
+          <Button
+            variant="default"
+            onClick={handleLogout}
+            loading={signingOut}
+            fullWidth={fullWidth}
+          >
+            Logout
+          </Button>
+        </>
+      );
+    }
+
+    return (
       <Button
         component={Link}
-        href="/backoffice"
-        variant="light"
-        color="blue"
+        href="/login"
         fullWidth={fullWidth}
         onClick={onNavigate}
       >
-        Go to backoffice
+        Login
       </Button>
-      {isAuthenticated ? (
-        <Button
-          variant="default"
-          onClick={handleLogout}
-          loading={signingOut}
-          fullWidth={fullWidth}
-        >
-          Logout
-        </Button>
-      ) : (
-        <Button
-          component={Link}
-          href="/login"
-          fullWidth={fullWidth}
-          onClick={onNavigate}
-        >
-          Login
-        </Button>
-      )}
-    </>
-  );
+    );
+  };
 
   if (layout === "stack") {
     return <Stack gap="xs">{renderActions(true)}</Stack>;

@@ -41,11 +41,19 @@ export async function updateSession(request: NextRequest) {
   const publicPrefixes = ['/login', '/register', '/forgot-password', '/auth', '/error'] as const;
   const isPublic = publicPrefixes.some((prefix) => pathname.startsWith(prefix));
   const isRootPath = pathname === '/';
+  const authOnlyPrefixes = ['/login', '/register', '/forgot-password'] as const;
+  const isAuthOnly = authOnlyPrefixes.some((prefix) => pathname.startsWith(prefix));
 
   if (!user && !isPublic && !isRootPath) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  if (user && isAuthOnly) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 

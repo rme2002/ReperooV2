@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   IconBellRinging,
+  IconHome,
   IconLayoutDashboard,
   IconLogout,
   IconSettings,
@@ -43,7 +44,7 @@ export function NavbarSimple({ activePath, onNavigate }: NavbarSimpleProps) {
     try {
       await supabase.auth.signOut();
       onNavigate?.();
-      router.replace("/login");
+      router.replace("/");
       router.refresh();
     } catch (error) {
       console.error("Failed to sign out", error);
@@ -75,6 +76,10 @@ export function NavbarSimple({ activePath, onNavigate }: NavbarSimpleProps) {
       <div className={classes.navbarMain}>{links}</div>
 
       <div className={classes.footer}>
+        <Link href="/" className={classes.link} onClick={() => onNavigate?.()}>
+          <IconHome className={classes.linkIcon} stroke={1.5} />
+          <span>Public Home</span>
+        </Link>
         <a
           href="#"
           className={classes.link}
