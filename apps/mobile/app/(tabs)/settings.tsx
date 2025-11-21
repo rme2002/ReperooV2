@@ -43,7 +43,6 @@ export default function SettingsScreen() {
         return;
       }
 
-      router.replace("/login");
       return;
     }
 
