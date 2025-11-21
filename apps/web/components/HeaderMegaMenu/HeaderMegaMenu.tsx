@@ -101,7 +101,18 @@ export function HeaderMegaMenu({
     <Box pb={paddingBottom}>
       <header className={classes.header}>
         <Group justify="space-between" h="100%">
-          {/* <MantineLogo size={30} /> */}
+          <Link href="/" aria-label="Home">
+            <Box
+              component="span"
+              w={34}
+              h={34}
+              bg="var(--mantine-color-blue-6)"
+              style={{
+                display: "inline-block",
+                borderRadius: "8px",
+              }}
+            />
+          </Link>
 
           <Group h="100%" gap={0} visibleFrom="sm">
             <Link href="/" className={classes.link}>
