@@ -14,9 +14,17 @@ import { createClient } from "@/utils/supabase/client";
 import classes from "./NavbarSimple.module.css";
 
 const navItems = [
-  { href: "/", label: "Home", icon: IconLayoutDashboard },
-  { href: "/notifications", label: "Notifications", icon: IconBellRinging },
-  { href: "/settings", label: "Other Settings", icon: IconSettings },
+  { href: "/backoffice", label: "Overview", icon: IconLayoutDashboard },
+  {
+    href: "/backoffice/notifications",
+    label: "Notifications",
+    icon: IconBellRinging,
+  },
+  {
+    href: "/backoffice/settings",
+    label: "Other Settings",
+    icon: IconSettings,
+  },
 ];
 
 type NavbarSimpleProps = {

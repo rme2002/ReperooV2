@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               size="sm"
               aria-label="Toggle navigation"
             />
-            <Title order={4}>Dashboard</Title>
+            <Title order={4}>Backoffice</Title>
           </Group>
           <ActionIcon variant="subtle" aria-label="Notifications">
             <IconBell size={18} />
