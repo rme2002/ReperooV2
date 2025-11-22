@@ -1,8 +1,10 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
+import { AuthBottomSheet } from "@/components/auth/AuthBottomSheet";
 
-const settingsItems = [
+const baseSettings = [
   {
     key: "profile",
     title: "Profile & Identity",
@@ -18,16 +20,36 @@ const settingsItems = [
     title: "Workspace access",
     description: "Manage member roles and approvals for new devices.",
   },
-  {
-    key: "logout",
-    title: "Sign out",
-    description: "Securely disconnect from this device.",
-    danger: true,
-  },
 ];
 
 export default function SettingsScreen() {
   const [signingOut, setSigningOut] = useState(false);
+  const [authSheetOpen, setAuthSheetOpen] = useState(false);
+  const { session } = useSupabaseAuthSync();
+
+  const settingsItems = useMemo(() => {
+    if (session) {
+      return [
+        ...baseSettings,
+        {
+          key: "logout",
+          title: "Sign out",
+          description: "Securely disconnect from this device.",
+          danger: true,
+        },
+      ];
+    }
+
+    return [
+      ...baseSettings,
+      {
+        key: "login",
+        title: "Sign in",
+        description: "Authenticate to access the backoffice workspace.",
+        accent: true,
+      },
+    ];
+  }, [session]);
 
   const handleItemPress = async (itemKey: string) => {
     if (itemKey === "logout") {
@@ -40,7 +62,11 @@ export default function SettingsScreen() {
         console.warn("Failed to sign out", error);
         return;
       }
+      return;
+    }
 
+    if (itemKey === "login") {
+      setAuthSheetOpen(true);
       return;
     }
 
@@ -83,6 +109,7 @@ export default function SettingsScreen() {
               <Text
                 style={[
                   styles.cardDescription,
+                  item.accent && styles.cardDescriptionAccent,
                   item.danger && styles.cardDescriptionDanger,
                 ]}
               >
@@ -96,6 +123,11 @@ export default function SettingsScreen() {
             </Text>
           </Pressable>
         )}
+      />
+
+      <AuthBottomSheet
+        visible={authSheetOpen}
+        onClose={() => setAuthSheetOpen(false)}
       />
     </View>
   );
@@ -155,6 +187,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 4,
     lineHeight: 18,
+  },
+  cardDescriptionAccent: {
+    color: "#93c5fd",
   },
   cardDescriptionDanger: {
     color: "rgba(248,113,113,0.7)",

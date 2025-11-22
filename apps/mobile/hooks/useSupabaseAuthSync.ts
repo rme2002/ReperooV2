@@ -1,13 +1,10 @@
-import { useEffect, useState } from 'react';
-import { useRouter, useSegments } from 'expo-router';
-import type { Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
 export function useSupabaseAuthSync() {
   const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(true);
-  const segments = useSegments();
-  const router = useRouter();
 
   useEffect(() => {
     let isMounted = true;
@@ -35,18 +32,6 @@ export function useSupabaseAuthSync() {
       subscription.unsubscribe();
     };
   }, []);
-
-  useEffect(() => {
-    if (initializing) return;
-
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (!session && !inAuthGroup) {
-      router.replace('/login');
-    } else if (session && inAuthGroup) {
-      router.replace('/(tabs)');
-    }
-  }, [session, segments, router, initializing]);
 
   return { session, initializing };
 }
