@@ -4,10 +4,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Literal, Optional
-
-from pydantic import AnyUrl, BaseModel, EmailStr, Field, RootModel, SecretStr
+from pydantic import BaseModel, EmailStr, Field, RootModel, SecretStr
 
 
 class UID(RootModel[str]):
@@ -46,41 +43,3 @@ class GenericError(BaseModel):
     status: int
     error: str = Field(..., examples=['INVALID_INPUT'])
     message: str = Field(..., examples=['Some error'])
-
-
-class Business(BaseModel):
-    id: UID
-    name: str
-    description: Optional[str] = None
-    logoUrl: Optional[AnyUrl] = None
-    contactNumber: str
-    gcashQrUrl: Optional[AnyUrl] = None
-    createdAt: datetime
-    updatedAt: datetime
-
-
-class BusinessResponse(BaseModel):
-    business: Business
-
-
-class BusinessCreatePayload(BaseModel):
-    name: str
-    description: Optional[str] = None
-    contactNumber: str
-    logoUrl: Optional[AnyUrl] = None
-    gcashQrUrl: Optional[AnyUrl] = None
-
-
-class BusinessUpdatePayload(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    contactNumber: Optional[str] = None
-    logoUrl: Optional[AnyUrl] = None
-    gcashQrUrl: Optional[AnyUrl] = None
-
-
-BusinessAssetType = Literal['logo', 'payout_qr']
-
-
-class BusinessAssetUploadResponse(BaseModel):
-    url: AnyUrl

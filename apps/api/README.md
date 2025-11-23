@@ -26,7 +26,6 @@ Create `apps/api/.env` (loaded via `python-dotenv`) with your Supabase service c
 ```env
 SUPABASE_URL=...
 SUPABASE_KEY=...
-BUSINESS_ASSETS_BUCKET=business-assets
 ```
 
 > Use the **service role** key on the backend—you never expose this to clients.
