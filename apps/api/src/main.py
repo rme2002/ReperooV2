@@ -2,12 +2,16 @@ import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from supabase._async.client import AsyncClient, create_client
 
-# ---- load env first
-load_dotenv()
+# ---- load env first (support both .env and .env.local)
+if Path(".env").exists():
+    load_dotenv(".env")
+if Path(".env.local").exists():
+    load_dotenv(".env.local", override=True)
 
 # ---- global supabase reference (filled at startup)
 supabase: AsyncClient | None = None
