@@ -1,3 +1,5 @@
+import { supabase } from "@/lib/supabase";
+
 // NOTE: Supports cases where `content-type` is other than `json`
 const getBody = <T>(c: Response | Request): Promise<T> => {
   const contentType = c.headers.get("content-type");
@@ -29,13 +31,18 @@ const getUrl = (contextUrl: string): string => {
 };
 
 // NOTE: Add headers
-const getHeaders = (headers?: HeadersInit): HeadersInit => {
-  return {
-    ...(headers || {}),
-    // ...headers,
-    // Authorization: 'token',
-    // 'Content-Type': 'multipart/form-data',
-  };
+const getHeaders = async (headers?: HeadersInit): Promise<HeadersInit> => {
+  const merged = new Headers(headers ?? {});
+
+  if (!merged.has("Authorization")) {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (token) {
+      merged.set("Authorization", `Bearer ${token}`);
+    }
+  }
+
+  return merged;
 };
 
 export const customFetch = async <T>(
@@ -43,7 +50,7 @@ export const customFetch = async <T>(
   options: RequestInit,
 ): Promise<T> => {
   const requestUrl = getUrl(url);
-  const requestHeaders = getHeaders(options.headers);
+  const requestHeaders = await getHeaders(options.headers);
 
   const requestInit: RequestInit = {
     ...options,

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ActionIcon, AppShell, Burger, Group, Title } from "@mantine/core";
 import { IconBell } from "@tabler/icons-react";
 import { NavbarSimple } from "@/components/NavbarSimple/NavbarSimple";
+import { BusinessGate } from "@/components/BusinessGate/BusinessGate";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [opened, { toggle, close }] = useDisclosure(false);
@@ -39,7 +40,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <NavbarSimple activePath={pathname} onNavigate={close} />
       </AppShell.Navbar>
 
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main>
+        <BusinessGate>{children}</BusinessGate>
+      </AppShell.Main>
     </AppShell>
   );
 }
