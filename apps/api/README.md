@@ -30,6 +30,20 @@ SUPABASE_KEY=...
 
 > Use the **service role** key on the backend—you never expose this to clients.
 
+### Supabase schema
+
+Create the `profiles` table (linked to `auth.users`) in your Supabase project before hitting the signup endpoint:
+
+```sql
+create table if not exists public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+```
+
+The email is already stored on `auth.users`, so this table only needs the user id and timestamps until you’re ready to add custom profile fields.
+
 ---
 
 ## Running Locally

@@ -1,14 +1,16 @@
 from supabase._async.client import AsyncClient
 
 from src.models.model import SignUpEmailPasswordResponse
-from src.repositories.user_repository import UserRepository
+from src.repositories.profile_repository import ProfileRepository
 from src.services.errors import SignUpError
 
 
 class AuthService:
-    def __init__(self, supabase: AsyncClient, user_repository: UserRepository):
+    def __init__(
+        self, supabase: AsyncClient, profile_repository: ProfileRepository
+    ):
         self.supabase = supabase
-        self.user_repository = user_repository
+        self.profile_repository = profile_repository
 
     async def sign_up(self, email: str, password: str) -> SignUpEmailPasswordResponse:
         try:
@@ -23,9 +25,7 @@ class AuthService:
             raise SignUpError("No user returned")
 
         try:
-            await self.user_repository.upsert_user(
-                id=str(user.id), email=str(user.email)
-            )
+            await self.profile_repository.upsert_profile(id=str(user.id))
         except Exception as e:
             await self.supabase.auth.admin.delete_user(user.id)
             raise SignUpError("Failed to persist user profile.") from e

@@ -30,6 +30,20 @@ Unified workspace for the [YOURAPP] stack: a Next.js web app, an Expo mobile cli
 
 Each app README details its own environment variables and additional prerequisites.
 
+### Supabase bootstrap
+
+The FastAPI service expects a `profiles` table linked to Supabase Auth. Create it once in the SQL editor before running the stack:
+
+```sql
+create table if not exists public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+```
+
+Emails (and other auth claims) already live in `auth.users`, so this table only tracks profile lifecycle timestamps for now—you can add more columns later.
+
 ---
 
 ## Local Development

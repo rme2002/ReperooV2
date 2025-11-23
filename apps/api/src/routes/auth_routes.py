@@ -3,7 +3,7 @@ from supabase._async.client import AsyncClient
 
 from src.core.supabase import get_supabase
 from src.services.auth_service import AuthService
-from src.repositories.user_repository import UserRepository
+from src.repositories.profile_repository import ProfileRepository
 from src.services.errors import SignUpError
 from src.models.model import SignUpEmailPasswordPayload, SignUpEmailPasswordResponse
 
@@ -11,8 +11,8 @@ router = APIRouter()
 
 
 def get_auth_service(supabase: AsyncClient = Depends(get_supabase)) -> AuthService:
-    user_repository = UserRepository(supabase)
-    return AuthService(supabase, user_repository)
+    profile_repository = ProfileRepository(supabase)
+    return AuthService(supabase, profile_repository)
 
 
 @router.post("/sign-up", status_code=status.HTTP_201_CREATED)
