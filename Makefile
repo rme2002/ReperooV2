@@ -48,6 +48,7 @@ dev-mobile:
 dev-run: api-up
 	@DEV_WEB=$(DEV_WEB) DEV_MOBILE=$(DEV_MOBILE) \
 	WEB_DIR=$(WEB_DIR) MOBILE_DIR=$(MOBILE_DIR) WEB_PORT=$(WEB_PORT) \
+	API_SERVICE=$(API_SERVICE) \
 	bash scripts/dev-run.sh
 
 ## API up via docker compose

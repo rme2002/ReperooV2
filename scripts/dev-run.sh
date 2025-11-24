@@ -6,8 +6,10 @@ MOBILE_MODE=${DEV_MOBILE:-true}
 WEB_DIR=${WEB_DIR:-apps/web}
 MOBILE_DIR=${MOBILE_DIR:-apps/mobile}
 WEB_PORT=${WEB_PORT:-3000}
+API_SERVICE=${API_SERVICE:-api}
 
 PIDS=()
+LOG_PIDS=()
 
 log() {
   printf '%s\n' "$1"
@@ -46,6 +48,12 @@ start_mobile() {
   PIDS+=($!)
 }
 
+start_api_logs() {
+  log "🐳 [CMD] docker compose logs -f ${API_SERVICE}"
+  docker compose logs -f "${API_SERVICE}" 2>&1 | sed -e 's/^/[API] /' &
+  LOG_PIDS+=($!)
+}
+
 cleanup_called=false
 trap 'cleanup; exit 0' INT TERM
 
@@ -58,8 +66,16 @@ cleanup() {
       kill "$pid" >/dev/null 2>&1 || true
     fi
   done
+  for pid in "${LOG_PIDS[@]}"; do
+    if kill -0 "$pid" >/dev/null 2>&1; then
+      kill "$pid" >/dev/null 2>&1 || true
+    fi
+  done
   if [ ${#PIDS[@]} -gt 0 ]; then
     wait "${PIDS[@]}" 2>/dev/null || true
+  fi
+  if [ ${#LOG_PIDS[@]} -gt 0 ]; then
+    wait "${LOG_PIDS[@]}" 2>/dev/null || true
   fi
   docker compose down >/dev/null 2>&1 || true
   printf '✅ Dev stack stopped.\n'
@@ -82,6 +98,8 @@ if [ ${#PIDS[@]} -eq 0 ]; then
   trap - INT TERM
   exit 0
 fi
+
+start_api_logs
 
 wait "${PIDS[@]}"
 cleanup
