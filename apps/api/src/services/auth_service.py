@@ -6,9 +6,7 @@ from src.services.errors import SignUpError
 
 
 class AuthService:
-    def __init__(
-        self, supabase: AsyncClient, profile_repository: ProfileRepository
-    ):
+    def __init__(self, supabase: AsyncClient, profile_repository: ProfileRepository):
         self.supabase = supabase
         self.profile_repository = profile_repository
 

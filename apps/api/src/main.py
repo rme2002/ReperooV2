@@ -1,4 +1,3 @@
-import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -6,6 +5,8 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from supabase._async.client import AsyncClient, create_client
+
+from src.core.secrets import resolve_secret
 
 # ---- load env first (support both .env and .env.local)
 if Path(".env").exists():
@@ -21,8 +22,8 @@ supabase: AsyncClient | None = None
 async def lifespan(app: FastAPI):
     """FastAPI-preferred startup/shutdown hook."""
     app.state.supabase = await create_client(
-        os.environ["SUPABASE_URL"],
-        os.environ["SUPABASE_KEY"],
+        resolve_secret("SUPABASE_URL"),
+        resolve_secret("SUPABASE_KEY"),
     )
     yield
     # If the client exposes a close method later:

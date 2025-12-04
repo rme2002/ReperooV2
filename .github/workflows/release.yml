@@ -1,0 +1,277 @@
+# name: Release Deployments
+
+# on:
+#   push:
+#     branches:
+#       - main
+#     tags:
+#       - 'v*'
+#   workflow_dispatch:
+
+# env:
+#   PYTHON_VERSION: '3.13'
+#   NODE_VERSION: 20
+
+# jobs:
+#   detect-changes:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       api: ${{ steps.set.outputs.api }}
+#       mobile: ${{ steps.set.outputs.mobile }}
+#       web: ${{ steps.set.outputs.web }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+
+#       - name: Paths filter
+#         id: filter
+#         uses: dorny/paths-filter@v3
+#         with:
+#           filters: |
+#             api:
+#               - 'apps/api/**'
+#               - 'packages/openapi/**'
+#               - '.github/workflows/release.yml'
+#               - 'docs/release.md'
+#             mobile:
+#               - 'apps/mobile/**'
+#               - 'packages/openapi/**'
+#               - '.github/workflows/release.yml'
+#               - 'docs/release.md'
+#             web:
+#               - 'apps/web/**'
+#               - 'packages/openapi/**'
+#               - '.github/workflows/release.yml'
+#               - 'docs/release.md'
+
+#       - name: Set outputs
+#         id: set
+#         run: |
+#           if [[ "${{ github.event_name }}" == 'push' && "${{ github.ref }}" == 'refs/heads/main' ]]; then
+#             echo "api=${{ steps.filter.outputs.api }}" >> "$GITHUB_OUTPUT"
+#             echo "mobile=${{ steps.filter.outputs.mobile }}" >> "$GITHUB_OUTPUT"
+#             echo "web=${{ steps.filter.outputs.web }}" >> "$GITHUB_OUTPUT"
+#           else
+#             echo "api=true" >> "$GITHUB_OUTPUT"
+#             echo "mobile=true" >> "$GITHUB_OUTPUT"
+#             echo "web=true" >> "$GITHUB_OUTPUT"
+#           fi
+
+#   deploy-api:
+#     name: Deploy API
+#     needs: detect-changes
+#     if: needs.detect-changes.outputs.api == 'true'
+#     runs-on: ubuntu-latest
+#     environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'prod' || 'dev' }}
+#     defaults:
+#       run:
+#         working-directory: apps/api
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: ${{ env.PYTHON_VERSION }}
+
+#       - name: Set up uv
+#         uses: astral-sh/setup-uv@v2
+
+#       - name: Install Supabase CLI
+#         uses: supabase/setup-cli@v1
+#         with:
+#           version: latest
+
+#       - name: Sync dependencies
+#         run: uv sync --all-extras --dev --locked
+
+#       - name: Lint
+#         run: uvx ruff check .
+
+#       - name: Test
+#         run: uv run --with pytest pytest
+
+#       - name: Ensure tag is on main
+#         if: startsWith(github.ref, 'refs/tags/v')
+#         run: |
+#           git fetch origin main --depth=1
+#           git merge-base --is-ancestor HEAD origin/main
+
+#       - name: Apply dev migrations
+#         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#         env:
+#           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL_DEV }}
+#         run: |
+#           supabase db push --db-url "$SUPABASE_DB_URL"
+
+#       - name: Apply prod migrations
+#         if: startsWith(github.ref, 'refs/tags/v')
+#         env:
+#           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL_PROD }}
+#         run: |
+#           supabase db push --db-url "$SUPABASE_DB_URL"
+
+#       - name: Authenticate to Google Cloud (dev)
+#         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#         uses: google-github-actions/auth@v2
+#         with:
+#           credentials_json: ${{ secrets.GCP_SA_KEY_DEV }}
+
+#       - name: Set up gcloud (dev)
+#         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#         uses: google-github-actions/setup-gcloud@v2
+#         with:
+#           project_id: ${{ secrets.GCP_PROJECT_ID_DEV }}
+
+#       - name: Deploy API container to Cloud Run (dev)
+#         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#         env:
+#           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID_DEV }}
+#           GCP_REGION: ${{ secrets.GCP_REGION_DEV }}
+#           CLOUD_RUN_SERVICE: ${{ secrets.CLOUD_RUN_SERVICE_API_DEV }}
+#         run: |
+#           gcloud builds submit . --tag "gcr.io/${GCP_PROJECT_ID}/api:${GITHUB_SHA}"
+#           gcloud run deploy "$CLOUD_RUN_SERVICE" \
+#             --image "gcr.io/${GCP_PROJECT_ID}/api:${GITHUB_SHA}" \
+#             --region "$GCP_REGION" \
+#             --quiet
+
+#       - name: Authenticate to Google Cloud (prod)
+#         if: startsWith(github.ref, 'refs/tags/v')
+#         uses: google-github-actions/auth@v2
+#         with:
+#           credentials_json: ${{ secrets.GCP_SA_KEY_PROD }}
+
+#       - name: Set up gcloud (prod)
+#         if: startsWith(github.ref, 'refs/tags/v')
+#         uses: google-github-actions/setup-gcloud@v2
+#         with:
+#           project_id: ${{ secrets.GCP_PROJECT_ID_PROD }}
+
+#       - name: Deploy API container to Cloud Run (prod)
+#         if: startsWith(github.ref, 'refs/tags/v')
+#         env:
+#           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID_PROD }}
+#           GCP_REGION: ${{ secrets.GCP_REGION_PROD }}
+#           CLOUD_RUN_SERVICE: ${{ secrets.CLOUD_RUN_SERVICE_API_PROD }}
+#         run: |
+#           gcloud builds submit . --tag "gcr.io/${GCP_PROJECT_ID}/api:${GITHUB_SHA}"
+#           gcloud run deploy "$CLOUD_RUN_SERVICE" \
+#             --image "gcr.io/${GCP_PROJECT_ID}/api:${GITHUB_SHA}" \
+#             --region "$GCP_REGION" \
+#             --quiet
+
+#   deploy-mobile:
+#     name: Deploy mobile
+#     needs: detect-changes
+#     if: needs.detect-changes.outputs.mobile == 'true'
+#     runs-on: ubuntu-latest
+#     environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'prod' || 'dev' }}
+#     env:
+#       EXPO_NO_TELEMETRY: '1'
+#     defaults:
+#       run:
+#         working-directory: apps/mobile
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: ${{ env.NODE_VERSION }}
+#           cache: npm
+#           cache-dependency-path: apps/mobile/package-lock.json
+
+#       - name: Install dependencies
+#         run: npm ci
+
+#       - name: Lint
+#         run: npm run lint
+
+#       - name: Type check
+#         run: npx tsc --noEmit
+
+#       - name: Ensure tag is on main
+#         if: startsWith(github.ref, 'refs/tags/v')
+#         run: |
+#           git fetch origin main --depth=1
+#           git merge-base --is-ancestor HEAD origin/main
+
+#       - name: Publish Expo update (dev)
+#         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#         env:
+#           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN_DEV }}
+#         run: npx expo publish --release-channel dev --non-interactive
+
+#       - name: Publish Expo update (prod)
+#         if: startsWith(github.ref, 'refs/tags/v')
+#         env:
+#           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN_PROD }}
+#         run: npx expo publish --release-channel production --non-interactive
+
+#   deploy-web:
+#     name: Deploy web
+#     needs: detect-changes
+#     if: needs.detect-changes.outputs.web == 'true'
+#     runs-on: ubuntu-latest
+#     environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'prod' || 'dev' }}
+#     env:
+#       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+#       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+#       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+#     defaults:
+#       run:
+#         working-directory: apps/web
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: ${{ env.NODE_VERSION }}
+#           cache: npm
+#           cache-dependency-path: apps/web/package-lock.json
+
+#       - name: Install dependencies
+#         run: npm ci
+
+#       - name: Lint
+#         run: npm run lint
+
+#       - name: Build
+#         run: npm run build
+
+#       - name: Ensure tag is on main
+#         if: startsWith(github.ref, 'refs/tags/v')
+#         run: |
+#           git fetch origin main --depth=1
+#           git merge-base --is-ancestor HEAD origin/main
+
+#       - name: Pull Vercel env (dev)
+#         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#         run: npx vercel pull --yes --environment=preview --token "$VERCEL_TOKEN"
+
+#       - name: Create deployment artifact (dev)
+#         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#         run: npx vercel build --token "$VERCEL_TOKEN"
+
+#       - name: Deploy to Vercel (dev)
+#         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#         run: npx vercel deploy --prebuilt --target=preview --token "$VERCEL_TOKEN"
+
+#       - name: Pull Vercel env (prod)
+#         if: startsWith(github.ref, 'refs/tags/v')
+#         run: npx vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
+
+#       - name: Create deployment artifact (prod)
+#         if: startsWith(github.ref, 'refs/tags/v')
+#         run: npx vercel build --prod --token "$VERCEL_TOKEN"
+
+#       - name: Deploy to Vercel (prod)
+#         if: startsWith(github.ref, 'refs/tags/v')
+#         run: npx vercel deploy --prebuilt --target=production --token "$VERCEL_TOKEN"

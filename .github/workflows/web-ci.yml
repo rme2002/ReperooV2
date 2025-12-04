@@ -8,6 +8,7 @@ on:
       - apps/web/**
       - packages/openapi/**
       - .github/workflows/web-ci.yml
+      - docs/release.md
   pull_request:
     branches:
       - main
@@ -15,11 +16,14 @@ on:
       - apps/web/**
       - packages/openapi/**
       - .github/workflows/web-ci.yml
+      - docs/release.md
   workflow_dispatch:
+
+env:
+  NODE_VERSION: 20
 
 jobs:
   web-ci:
-    name: Lint, Test, and Build Web
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -31,7 +35,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
 
@@ -40,9 +44,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
-
-      # - name: Test
-      #   run: npm run test --if-present
 
       # - name: Build
       #   run: npm run build

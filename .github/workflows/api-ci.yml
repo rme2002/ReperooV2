@@ -8,6 +8,7 @@ on:
       - apps/api/**
       - packages/openapi/**
       - .github/workflows/api-ci.yml
+      - docs/release.md
   pull_request:
     branches:
       - main
@@ -15,11 +16,14 @@ on:
       - apps/api/**
       - packages/openapi/**
       - .github/workflows/api-ci.yml
+      - docs/release.md
   workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.13'
 
 jobs:
   api-ci:
-    name: Lint, Test, and Build API
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -31,7 +35,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v2
@@ -42,8 +46,5 @@ jobs:
       - name: Lint
         run: uvx ruff check .
 
-      # - name: Test
-      #   run: uv run --with pytest pytest
-
-      # - name: Build
-      #   run: uv run python -m compileall src
+      - name: Test
+        run: uv run --with pytest pytest

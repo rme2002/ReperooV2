@@ -8,6 +8,7 @@ on:
       - apps/mobile/**
       - packages/openapi/**
       - .github/workflows/mobile-ci.yml
+      - docs/release.md
   pull_request:
     branches:
       - main
@@ -15,11 +16,14 @@ on:
       - apps/mobile/**
       - packages/openapi/**
       - .github/workflows/mobile-ci.yml
+      - docs/release.md
   workflow_dispatch:
+
+env:
+  NODE_VERSION: 20
 
 jobs:
   mobile-ci:
-    name: Lint, Test, and Build Mobile
     runs-on: ubuntu-latest
     env:
       EXPO_NO_TELEMETRY: '1'
@@ -33,7 +37,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: apps/mobile/package-lock.json
 
@@ -43,8 +47,5 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # - name: Test
-      #   run: npm run test --if-present
-
-      # - name: Type check build
+      # - name: Type check
       #   run: npx tsc --noEmit

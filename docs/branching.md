@@ -52,3 +52,5 @@ Each job should checkout code, run tests, apply migrations for the target DB, an
 - Teams disciplined about feature flags, migration safety, and CI quality so `main` stays releasable.
 
 Stick to these habits and trunk-based development remains simple: develop on short-lived branches, merge only when releasable, let dev follow `main`, and promote specific tags to prod when you’re ready.
+
+For the exact release/tagging checklist, see `docs/release.md`.
