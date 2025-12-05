@@ -267,3 +267,92 @@ jobs:
           echo "Simulating Cloud Run deployment for image api:${GITHUB_SHA}"
           echo "gcloud run deploy api --image api:${GITHUB_SHA} --region=us-central1 (mock)"
 
+  build-web:
+    name: Web build
+    needs: test-web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Mock artifact upload
+        run: echo "Simulating upload of web build artifacts to hosting"
+
+  deploy-web:
+    name: Web deploy
+    needs: build-web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Mock deploy
+        run: |
+          echo "Simulating deployment of latest web build"
+          echo "vercel deploy --prebuilt (mock)"
+
+  build-mobile:
+    name: Mobile build
+    needs: test-mobile
+    runs-on: ubuntu-latest
+    env:
+      EXPO_NO_TELEMETRY: '1'
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # - name: Build mobile app
+      #   run: npm run build
+
+      - name: Mock artifact upload
+        run: echo "Simulating upload of mobile build artifacts"
+
+  deploy-mobile:
+    name: Mobile deploy
+    needs: build-mobile
+    runs-on: ubuntu-latest
+    env:
+      EXPO_NO_TELEMETRY: '1'
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Mock deploy
+        run: |
+          echo "Simulating mobile deployment via Expo"
+          echo "expo publish --non-interactive (mock)"
