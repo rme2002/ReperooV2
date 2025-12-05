@@ -29,6 +29,7 @@ jobs:
       - id: filter
         uses: dorny/paths-filter@v3
         with:
+          list-files: json
           filters: |
             api:
               - 'apps/api/**'
@@ -36,9 +37,8 @@ jobs:
               - 'apps/web/**'
             mobile:
               - 'apps/mobile/**'
-            outside_apps:
+            all:
               - '**'
-              - '!apps/**'
 
       - name: Determine flows
         id: decide
@@ -46,16 +46,27 @@ jobs:
           API: ${{ steps.filter.outputs.api }}
           WEB: ${{ steps.filter.outputs.web }}
           MOBILE: ${{ steps.filter.outputs.mobile }}
-          OUTSIDE_APPS: ${{ steps.filter.outputs.outside_apps }}
+          ALL_FILES: ${{ steps.filter.outputs.all_files }}
         run: |
-          if [[ "$OUTSIDE_APPS" == "true" ]]; then
-            echo "api=true" >> "$GITHUB_OUTPUT"
-            echo "web=true" >> "$GITHUB_OUTPUT"
-            echo "mobile=true" >> "$GITHUB_OUTPUT"
+          run_all=false
+          if [[ -n "$ALL_FILES" ]] && jq -e '. | length > 0' >/dev/null <<<"$ALL_FILES"; then
+            while IFS= read -r file; do
+              if [[ "$file" != apps/* ]]; then
+                run_all=true
+                break
+              fi
+            done < <(jq -r '.[]' <<<"$ALL_FILES")
+          fi
+
+          if [[ "$run_all" == "true" ]]; then
+            echo "Detected changes outside apps/, running all flows"
+            echo "api=true" >>"$GITHUB_OUTPUT"
+            echo "web=true" >>"$GITHUB_OUTPUT"
+            echo "mobile=true" >>"$GITHUB_OUTPUT"
           else
-            echo "api=$API" >> "$GITHUB_OUTPUT"
-            echo "web=$WEB" >> "$GITHUB_OUTPUT"
-            echo "mobile=$MOBILE" >> "$GITHUB_OUTPUT"
+            echo "api=$API" >>"$GITHUB_OUTPUT"
+            echo "web=$WEB" >>"$GITHUB_OUTPUT"
+            echo "mobile=$MOBILE" >>"$GITHUB_OUTPUT"
           fi
 
   lint-api:
