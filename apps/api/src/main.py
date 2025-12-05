@@ -17,6 +17,7 @@ if Path(".env.local").exists():
 # ---- global supabase reference (filled at startup)
 supabase: AsyncClient | None = None
 
+
 # Mock change to test pipeline 2
 @asynccontextmanager
 async def lifespan(app: FastAPI):

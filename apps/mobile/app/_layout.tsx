@@ -18,6 +18,7 @@ export {
   ErrorBoundary,
 } from "expo-router";
 
+// mock changes to mobile
 export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
