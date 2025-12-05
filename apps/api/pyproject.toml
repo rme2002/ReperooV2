@@ -16,6 +16,8 @@ dependencies = [
 [dependency-groups]
 dev = [
     "datamodel-code-generator==0.33.0",
+    "httpx>=0.28.1",
+    "pytest>=9.0.1",
 ]
 
 [tool.ruff]

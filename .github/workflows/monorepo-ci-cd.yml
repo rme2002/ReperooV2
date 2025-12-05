@@ -180,11 +180,8 @@ jobs:
       - name: Sync dependencies
         run: uv sync --all-extras --dev --locked
 
-      - name: Mock tests
-        run: |
-          echo "Simulating API test suite..."
-          sleep 3
-          echo "All mock tests passed"
+      - name: Run tests
+        run: uv run pytest
 
   test-web:
     name: Web tests
@@ -207,11 +204,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Mock tests
-        run: |
-          echo "Simulating web test suite..."
-          sleep 3
-          echo "All mock tests passed"
+      - name: Run tests
+        run: npm run test
 
   test-mobile:
     name: Mobile tests
@@ -234,11 +228,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Mock tests
-        run: |
-          echo "Simulating mobile test suite..."
-          sleep 3
-          echo "All mock tests passed"
+      - name: Run tests
+        run: npm run test
 
   # Build
   build-api:
