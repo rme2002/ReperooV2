@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 'feat/**'
     tags:
       - 'v*'
   workflow_dispatch:
@@ -17,6 +18,8 @@ jobs:
   detect-changes:
     name: Detect changes
     runs-on: ubuntu-latest
+    env:
+      FORCE_ALL: ${{ startsWith(github.ref, 'refs/tags/') }}
     outputs:
       api: ${{ steps.decide.outputs.api }}
       web: ${{ steps.decide.outputs.web }}
@@ -48,9 +51,10 @@ jobs:
           WEB: ${{ steps.filter.outputs.web }}
           MOBILE: ${{ steps.filter.outputs.mobile }}
           ALL_FILES: ${{ steps.filter.outputs.all_files }}
+          FORCE_ALL: ${{ env.FORCE_ALL }}
         run: |
-          run_all=false
-          if [[ -n "$ALL_FILES" ]] && jq -e '. | length > 0' >/dev/null <<<"$ALL_FILES"; then
+          run_all="$FORCE_ALL"
+          if [[ "$run_all" != "true" ]] && [[ -n "$ALL_FILES" ]] && jq -e '. | length > 0' >/dev/null <<<"$ALL_FILES"; then
             while IFS= read -r file; do
               if [[ "$file" != apps/* ]]; then
                 run_all=true
@@ -60,7 +64,11 @@ jobs:
           fi
 
           if [[ "$run_all" == "true" ]]; then
-            echo "Detected changes outside apps/, running all flows"
+            if [[ "$FORCE_ALL" == "true" ]]; then
+              echo "Tag detected, forcing all flows to run"
+            else
+              echo "Detected changes outside apps/, running all flows"
+            fi
             echo "api=true" >>"$GITHUB_OUTPUT"
             echo "web=true" >>"$GITHUB_OUTPUT"
             echo "mobile=true" >>"$GITHUB_OUTPUT"
@@ -236,6 +244,7 @@ jobs:
   build-api:
     name: API build
     needs: test-api
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -257,6 +266,7 @@ jobs:
   deploy-api:
     name: API deploy
     needs: build-api
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -270,6 +280,7 @@ jobs:
   build-web:
     name: Web build
     needs: test-web
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -297,6 +308,7 @@ jobs:
   deploy-web:
     name: Web deploy
     needs: build-web
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -313,6 +325,7 @@ jobs:
   build-mobile:
     name: Mobile build
     needs: test-mobile
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     env:
       EXPO_NO_TELEMETRY: '1'
@@ -333,8 +346,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # - name: Build mobile app
-      #   run: npm run build
+      - name: Build mobile app
+        run: npm run build
 
       - name: Mock artifact upload
         run: echo "Simulating upload of mobile build artifacts"
@@ -342,6 +355,7 @@ jobs:
   deploy-mobile:
     name: Mobile deploy
     needs: build-mobile
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     env:
       EXPO_NO_TELEMETRY: '1'
