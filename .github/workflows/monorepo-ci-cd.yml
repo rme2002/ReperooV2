@@ -299,11 +299,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build web app
-        run: npm run build
-
       - name: Mock artifact upload
-        run: echo "Simulating upload of web build artifacts to hosting"
+        run: echo "Skipping local build; Vercel will build from source"
 
   deploy-web:
     name: Web deploy
@@ -317,10 +314,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Mock deploy
+      - name: Mock deploy to Vercel
+        id: mock_web_deploy
+        env:
+          DEPLOYMENT_ID: dep-${{ github.sha }}
         run: |
-          echo "Simulating deployment of latest web build"
-          echo "vercel deploy --prebuilt (mock)"
+          echo "Running: vercel deploy --prod --token=\$VERCEL_TOKEN"
+          echo "vercel deploy output (mock): deployment id $DEPLOYMENT_ID"
+          echo "deployment_id=$DEPLOYMENT_ID" >>"$GITHUB_OUTPUT"
+
+      - name: Mock poll Vercel deployment
+        env:
+          DEPLOYMENT_ID: ${{ steps.mock_web_deploy.outputs.deployment_id }}
+        run: |
+          echo "Polling: curl \"https://api.vercel.com/v2/deployments/$DEPLOYMENT_ID?token=\$VERCEL_TOKEN\""
+          echo "readyState=BUILDING (mock)"
+          sleep 2
+          echo "readyState=READY (mock)"
+          echo "Deployment $DEPLOYMENT_ID completed successfully"
 
   build-mobile:
     name: Mobile build
