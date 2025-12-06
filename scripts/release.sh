@@ -91,16 +91,16 @@ if [ -z "$last_tag" ]; then
   echo "ℹ️ No previous tags detected; using kickoff release notes."
 fi
 
-declare -a commit_entries=()
-declare -A commit_messages=()
-declare -A commit_files=()
+commit_entries=()
+commit_messages=()
+commit_files=()
 
 if [ "$first_release" = false ]; then
   while IFS=$'\t' read -r sha subject; do
     [ -z "$sha" ] && continue
     commit_entries+=("$sha")
-    commit_messages["$sha"]="$subject"
-    commit_files["$sha"]=$(git show --pretty="" --name-only "$sha")
+    commit_messages+=("$subject")
+    commit_files+=("$(git show --pretty=\"\" --name-only "$sha")")
   done < <(git log "${last_tag}..HEAD" --pretty=format:'%H\t%s')
 
   if [ "${#commit_entries[@]}" -eq 0 ]; then
@@ -128,11 +128,13 @@ generate_notes() {
     return
   fi
   local notes=()
+  local idx=0
   for sha in "${commit_entries[@]}"; do
-    local files="${commit_files["$sha"]}"
+    local files="${commit_files[$idx]}"
     if commit_has_prefix "$files" "$prefix"; then
-      notes+=("- ${commit_messages["$sha"]}")
+      notes+=("- ${commit_messages[$idx]}")
     fi
+    idx=$((idx + 1))
   done
   if [ "${#notes[@]}" -eq 0 ]; then
     echo "- No changes"
