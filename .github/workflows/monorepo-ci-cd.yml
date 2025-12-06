@@ -12,6 +12,16 @@ on:
 env:
   PYTHON_VERSION: "3.13"
   NODE_VERSION: 20
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }} # Google Cloud project id
+  GAR_LOCATION: ${{ vars.GAR_LOCATION }} # Artifact Registry location, e.g. us-central1
+  REPOSITORY: ${{ vars.GAR_REPOSITORY }} # Artifact Registry repository name
+  IMAGE_NAME: api # Docker image name inside Artifact Registry
+  IMAGE: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/api:${{ github.sha }}
+  REGION: ${{ vars.CLOUD_RUN_REGION }} # Cloud Run service region
+  CLOUD_RUN_SERVICE_DEV: ${{ vars.CLOUD_RUN_SERVICE_DEV }} # Dev Cloud Run service name
+  CLOUD_RUN_SERVICE_PRD: ${{ vars.CLOUD_RUN_SERVICE_PRD }} # Prod Cloud Run service name
+  WIF_PROVIDER: ${{ vars.WIF_PROVIDER }}
+  WIF_SERVICE_ACCOUNT: ${{ vars.WIF_SERVICE_ACCOUNT }}
 
 jobs:
   # Check which apps have changes
@@ -26,12 +36,12 @@ jobs:
       mobile: ${{ steps.decide.outputs.mobile }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
         with:
           fetch-depth: 0
 
       - id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v3.0.2
         with:
           list-files: json
           filters: |
@@ -89,15 +99,15 @@ jobs:
         working-directory: apps/api
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6.1.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v2
+        uses: astral-sh/setup-uv@v7.1.4
 
       - name: Sync dependencies
         run: uv sync --all-extras --dev --locked
@@ -115,10 +125,10 @@ jobs:
         working-directory: apps/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -142,10 +152,10 @@ jobs:
         working-directory: apps/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -167,15 +177,15 @@ jobs:
         working-directory: apps/api
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6.1.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v2
+        uses: astral-sh/setup-uv@v7.1.4
 
       - name: Sync dependencies
         run: uv sync --all-extras --dev --locked
@@ -192,10 +202,10 @@ jobs:
         working-directory: apps/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -216,10 +226,10 @@ jobs:
         working-directory: apps/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -237,36 +247,100 @@ jobs:
     needs: test-api
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     defaults:
       run:
         working-directory: apps/api
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3.11.1
 
-      - name: Build Docker image
-        run: docker build -t api:${{ github.sha }} .
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
 
-      - name: Mock push to Artifactory
+      - name: Authenticate Docker to Artifact Registry
+        uses: docker/login-action@v3.6.0
+        with:
+          registry: ${{ env.GAR_LOCATION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Build and push container
         run: |
-          echo "Simulating docker push of api:${GITHUB_SHA} to Artifactory registry"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
 
-  deploy-api:
-    name: API deploy
+  deploy-api-dev:
+    name: API deploy (dev)
     needs: build-api
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
-      - name: Mock deploy to Cloud Run
-        run: |
-          echo "Simulating Cloud Run deployment for image api:${GITHUB_SHA}"
-          echo "gcloud run deploy api --image api:${GITHUB_SHA} --region=us-central1 (mock)"
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: ${{ env.CLOUD_RUN_SERVICE_DEV }}
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGE }}
+
+      - name: Show service URL
+        run: echo "${{ steps.deploy.outputs.url }}"
+
+  # deploy-api-prd:
+  #   name: API deploy (prod)
+  #   needs: build-api
+  #   if: startsWith(github.ref, 'refs/tags/')
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: 'read'
+  #     id-token: 'write'
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v6.0.1
+
+  #     - name: Google Auth
+  #       id: auth
+  #       uses: google-github-actions/auth@v3
+  #       with:
+  #         token_format: 'access_token'
+  #         workload_identity_provider: ${{ env.WIF_PROVIDER }}
+  #         service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
+
+  #     - name: Deploy to Cloud Run
+  #       id: deploy
+  #       uses: google-github-actions/deploy-cloudrun@v3
+  #       with:
+  #         service: ${{ env.CLOUD_RUN_SERVICE_PRD }}
+  #         region: ${{ env.REGION }}
+  #         image: ${{ env.IMAGE }}
+
+  #     - name: Show service URL
+  #       run: echo "${{ steps.deploy.outputs.url }}"
 
   build-web:
     name: Web build
@@ -278,10 +352,10 @@ jobs:
         working-directory: apps/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -303,7 +377,7 @@ jobs:
         working-directory: apps/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
       - name: Mock deploy to Vercel
         id: mock_web_deploy
@@ -336,10 +410,10 @@ jobs:
         working-directory: apps/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -366,7 +440,7 @@ jobs:
         working-directory: apps/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
 
       - name: Mock deploy
         run: |

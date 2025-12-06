@@ -10,7 +10,7 @@ from .main import app
 def client(monkeypatch):
     # FastAPI lifespan tries to create a Supabase client; stub it out.
     monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
-    monkeypatch.setenv("SUPABASE_KEY", "fake-test-key")
+    monkeypatch.setenv("SUPABASE_SECRET_API_KEY", "fake-test-key")
 
     async def fake_create_client(url: str, key: str):
         return {"url": url, "key": key}
