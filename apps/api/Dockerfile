@@ -16,8 +16,9 @@ RUN uv sync --frozen --no-cache
 # Now copy the rest of your app
 COPY . .
 
-# Expose the actual port you're using
+# Default port for Cloud Run (can be overridden via env)
+ENV PORT=8080
 EXPOSE 8080
 
 # Run via uv (uses the .venv automatically)
-CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["sh", "-c", "uv run uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
