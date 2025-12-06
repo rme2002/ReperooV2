@@ -1,6 +1,6 @@
 name: Monorepo CI-CD
 
-# Some test. cloud run to dev + service account user
+# Some test commit on pipeline
 
 on:
   push:
