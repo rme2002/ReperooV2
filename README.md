@@ -181,8 +181,8 @@ Use `make release` to automate version bumps, changelog entries, and git tagging
 
 1. Ensure your working tree is clean (all work merged into `main`).
 2. Run `make release` and choose the SemVer bump (patch/minor/major) when prompted.
-3. The script looks at commits since the previous tag, groups them by surface based on touched paths (`apps/api`, `apps/web`, `apps/mobile`), and auto-populates the changelog sections (the first release defaults to “Kickoff project” for each surface).
-4. It synchronizes `VERSION`, `apps/api/pyproject.toml`, `apps/web/package.json`, and `apps/mobile/package.json` so every app shares the same SemVer.
+3. The script looks at commits since the previous tag, groups them by surface based on touched paths (`apps/api`, `apps/web`, `apps/mobile`), adds an “Other” bucket for everything else (docs, CI, infra), and auto-populates the changelog sections (the first release defaults to “Kickoff project” for each surface).
+4. It synchronizes `VERSION`, `apps/api/pyproject.toml` + `apps/api/uv.lock`, and each app’s `package.json`/`package-lock.json` so every surface (and its lockfiles) share the same SemVer.
 5. It then updates `CHANGELOG.md`, creates a `Release vX.Y.Z` commit, tags it, and pushes both the commit and tag upstream.
 
 Use descriptive commit messages so the generated changelog remains readable.

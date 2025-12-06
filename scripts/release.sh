@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
 cd "$ROOT_DIR"
@@ -50,6 +50,23 @@ esac
 new_version="${major}.${minor}.${patch}"
 echo "⏫ Releasing v$new_version"
 
+last_tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
+first_release=false
+if [ -z "$last_tag" ]; then
+  first_release=true
+  echo "ℹ️ No previous tags detected; using kickoff release notes."
+else
+  commit_count=$(git rev-list --count "${last_tag}..HEAD")
+  if [ "$commit_count" -eq 0 ]; then
+    echo "❌ No commits found since last tag $last_tag. Nothing to release." >&2
+    exit 1
+  fi
+fi
+
+declare -a commit_entries=()
+declare -a commit_messages=()
+declare -a commit_files=()
+
 update_pyproject_version() {
   local file=$1
   local version=$2
@@ -67,47 +84,28 @@ path.write_text(new_text)
 PY
 }
 
-update_package_json_version() {
-  local file=$1
-  local version=$2
-  python3 - "$file" "$version" <<'PY'
-import json, pathlib, sys
-path = pathlib.Path(sys.argv[1])
-version = sys.argv[2]
-data = json.loads(path.read_text())
-data["version"] = version
-path.write_text(json.dumps(data, indent=2) + "\n")
-PY
+update_pyproject_version "apps/api/pyproject.toml" "$new_version"
+(cd apps/api && uv lock >/dev/null)
+
+bump_node_version() {
+  local dir=$1
+  (cd "$dir" && npm version "$new_version" --no-git-tag-version >/dev/null)
 }
 
-update_pyproject_version "apps/api/pyproject.toml" "$new_version"
-update_package_json_version "apps/web/package.json" "$new_version"
-update_package_json_version "apps/mobile/package.json" "$new_version"
+bump_node_version "apps/web"
+bump_node_version "apps/mobile"
 
-last_tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
-first_release=false
-if [ -z "$last_tag" ]; then
-  first_release=true
-  echo "ℹ️ No previous tags detected; using kickoff release notes."
-fi
-
-commit_entries=()
-commit_messages=()
-commit_files=()
-
+log_range=()
 if [ "$first_release" = false ]; then
-  while IFS=$'\t' read -r sha subject; do
-    [ -z "$sha" ] && continue
-    commit_entries+=("$sha")
-    commit_messages+=("$subject")
-    commit_files+=("$(git show --pretty=\"\" --name-only "$sha")")
-  done < <(git log "${last_tag}..HEAD" --pretty=format:'%H\t%s')
-
-  if [ "${#commit_entries[@]}" -eq 0 ]; then
-    echo "❌ No commits found since last tag $last_tag. Nothing to release." >&2
-    exit 1
-  fi
+  log_range=("${last_tag}..HEAD")
 fi
+
+while IFS=$'\t' read -r sha subject; do
+  [ -z "$sha" ] && continue
+  commit_entries+=("$sha")
+  commit_messages+=("$subject")
+  commit_files+=("$(git show --pretty=\"\" --name-only "$sha")")
+done < <(git log "${log_range[@]}" --pretty=format:'%H\t%s')
 
 commit_has_prefix() {
   local files="$1"
@@ -121,31 +119,44 @@ commit_has_prefix() {
   return 1
 }
 
-generate_notes() {
-  local prefix=$1
-  if [ "$first_release" = true ]; then
-    echo "- Kickoff project"
-    return
-  fi
-  local notes=()
-  local idx=0
+api_block=""
+web_block=""
+mobile_block=""
+other_block=""
+
+if [ "$first_release" = true ]; then
+  api_block="- Kickoff project"
+  web_block="- Kickoff project"
+  mobile_block="- Kickoff project"
+  other_block="- Kickoff project"
+else
+  idx=0
   for sha in "${commit_entries[@]}"; do
-    local files="${commit_files[$idx]}"
-    if commit_has_prefix "$files" "$prefix"; then
-      notes+=("- ${commit_messages[$idx]}")
+    files="${commit_files[$idx]}"
+    subject="${commit_messages[$idx]}"
+    matched=false
+    if commit_has_prefix "$files" "apps/api/"; then
+      api_block+="- ${subject}"$'\n'
+      matched=true
+    fi
+    if commit_has_prefix "$files" "apps/web/"; then
+      web_block+="- ${subject}"$'\n'
+      matched=true
+    fi
+    if commit_has_prefix "$files" "apps/mobile/"; then
+      mobile_block+="- ${subject}"$'\n'
+      matched=true
+    fi
+    if [ "$matched" = false ]; then
+      other_block+="- ${subject}"$'\n'
     fi
     idx=$((idx + 1))
   done
-  if [ "${#notes[@]}" -eq 0 ]; then
-    echo "- No changes"
-  else
-    printf "%s\n" "${notes[@]}"
-  fi
-}
-
-api_block=$(generate_notes "apps/api/")
-web_block=$(generate_notes "apps/web/")
-mobile_block=$(generate_notes "apps/mobile/")
+  [ -z "$api_block" ] && api_block="- No changes"
+  [ -z "$web_block" ] && web_block="- No changes"
+  [ -z "$mobile_block" ] && mobile_block="- No changes"
+  [ -z "$other_block" ] && other_block="- No changes"
+fi
 
 echo "$new_version" > "$VERSION_FILE"
 release_date=$(date +%Y-%m-%d)
@@ -157,7 +168,10 @@ ${api_block}
 ${web_block}
 
 ### Mobile
-${mobile_block}"
+${mobile_block}
+
+### Other
+${other_block}"
 
 tmp=$(mktemp)
 {
@@ -168,7 +182,10 @@ tmp=$(mktemp)
 } > "$tmp"
 mv "$tmp" "$CHANGELOG_FILE"
 
-git add "$VERSION_FILE" "$CHANGELOG_FILE" apps/api/pyproject.toml apps/web/package.json apps/mobile/package.json
+git add "$VERSION_FILE" "$CHANGELOG_FILE" \
+  apps/api/pyproject.toml apps/api/uv.lock \
+  apps/web/package.json apps/web/package-lock.json \
+  apps/mobile/package.json apps/mobile/package-lock.json
 git commit -m "Release v$new_version"
 git tag "v$new_version"
 
