@@ -174,3 +174,15 @@ Check regenerated files into git so the rest of the stack stays in sync.
 | `cd apps/web && npm run dev` | Web dev server only |
 | `cd apps/mobile && npx expo run:ios` | Launch Expo + simulator |
 | `cd apps/api && uv run uvicorn src.main:app --reload` | Run FastAPI locally (see API README) |
+
+## Release Workflow
+
+Use `make release` to automate version bumps, changelog entries, and git tagging:
+
+1. Ensure your working tree is clean (all work merged into `main`).
+2. Run `make release` and choose the SemVer bump (patch/minor/major) when prompted.
+3. The script looks at commits since the previous tag, groups them by surface based on touched paths (`apps/api`, `apps/web`, `apps/mobile`), and auto-populates the changelog sections (the first release defaults to “Kickoff project” for each surface).
+4. It synchronizes `VERSION`, `apps/api/pyproject.toml`, `apps/web/package.json`, and `apps/mobile/package.json` so every app shares the same SemVer.
+5. It then updates `CHANGELOG.md`, creates a `Release vX.Y.Z` commit, tags it, and pushes both the commit and tag upstream.
+
+Use descriptive commit messages so the generated changelog remains readable.

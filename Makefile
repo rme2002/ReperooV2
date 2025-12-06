@@ -9,7 +9,7 @@ DEV_WEB ?= true
 DEV_MOBILE ?= true
 
 # ===== targets =====
-.PHONY: setup clean setup-clean lint lint-fix dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop generate-api
+.PHONY: setup clean setup-clean lint lint-fix dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop generate-api release
 
 ## Bootstrap dependencies (uv + npm installs)
 setup:
@@ -104,3 +104,6 @@ generate-api:
 	@echo "[MOBILE] 📱 orval"
 	@npm run generate-api --prefix $(MOBILE_DIR)
 	@echo "✅ Contract + clients refreshed."
+
+release:
+	@scripts/release.sh
