@@ -1,6 +1,6 @@
 name: Monorepo CI-CD
 
-# Some test. cloud run to admin
+# Some test. cloud run to dev + service account user
 
 on:
   push:
