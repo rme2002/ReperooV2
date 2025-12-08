@@ -23,16 +23,26 @@ Within the combined workflow, dev jobs install dependencies, execute lint/tests,
 ### Secrets required by CI
 Configure these GitHub Action secrets so the workflows can authenticate with third parties:
 
-| Secret | Used by | Purpose |
-|--------|---------|---------|
-| `SUPABASE_DB_URL_DEV` / `SUPABASE_DB_URL_PROD` | API workflow | Connection string for `supabase db push` in dev/prod. |
-| `GCP_SA_KEY_DEV` / `GCP_SA_KEY_PROD` | API workflow | JSON service account key for Cloud Build/Run auth. |
-| `GCP_PROJECT_ID_DEV` / `GCP_PROJECT_ID_PROD` | API workflow | Cloud project IDs used to build images and deploy services. |
-| `GCP_REGION_DEV` / `GCP_REGION_PROD` | API workflow | Cloud Run region for each environment. |
-| `CLOUD_RUN_SERVICE_API_DEV` / `CLOUD_RUN_SERVICE_API_PROD` | API workflow | Cloud Run service names that receive the deployments. |
-| `EXPO_TOKEN_DEV` / `EXPO_TOKEN_PROD` | Mobile workflow | Expo access tokens used for `expo publish` on dev/prod channels. |
-| `VERCEL_TOKEN` | Web workflow | Non-interactive token for `vercel pull/build/deploy`. |
-| `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` | Web workflow | Identifiers required for the Vercel CLI to target the correct project. |
+| Name | Type (GitHub) | Used by | Purpose |
+|------|---------------|---------|---------|
+| `SUPABASE_DB_URL_DEV` / `SUPABASE_DB_URL_PROD` | Secret | API workflow | Connection string for `supabase db push` in dev/prod. |
+| `GCP_SA_KEY_DEV` / `GCP_SA_KEY_PROD` | Secret | API workflow | JSON service account key for Cloud Build/Run auth. |
+| `GCP_PROJECT_ID_DEV` / `GCP_PROJECT_ID_PROD` | Variable | API workflow | Cloud project IDs used to build images and deploy services. |
+| `GCP_REGION_DEV` / `GCP_REGION_PROD` | Variable | API workflow | Cloud Run region for each environment. |
+| `CLOUD_RUN_SERVICE_API_DEV` / `CLOUD_RUN_SERVICE_API_PROD` | Variable | API workflow | Cloud Run service names that receive the deployments. |
+| `EXPO_TOKEN_DEV` / `EXPO_TOKEN_PROD` | Secret | Mobile workflow | Expo access tokens used for `expo publish` on dev/prod channels. |
+| `VERCEL_TOKEN` | Secret | Web workflow | Non-interactive token for `vercel pull/build/deploy`. |
+| `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` | Variable | Web workflow | Identifiers required for the Vercel CLI to target the correct project. |
+
+### First-time web deployment prerequisites
+Vercel must already know about the `apps/web` project before CI can deploy it. Run the following once (locally) to bootstrap the project and obtain the IDs referenced above:
+
+1. `npm i -g vercel` – installs the CLI.
+2. `vercel login` – follow the emailed link to authenticate.
+3. `cd apps/web` – move into the Next.js app.
+4. `vercel` – when prompted, select **No** for linking, provide the project name, choose the correct scope/team, and confirm the initial deploy.
+
+This creates the project under your team without wiring up Git. Afterwards, copy the **Project ID** and **Team ID** (org) from Vercel → **Settings → General** into GitHub (either as repo variables or secrets) and create a `VERCEL_TOKEN` for CI. The first CI build may still fail until you add the Supabase env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, etc.) inside Vercel → Project → Settings → Environment Variables; expect the export error shown in the logs until those keys exist.
 
 ## Cutting a Release
 1. **Verify `main` is releasable**  
