@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.0.9 - 2025-12-08
+### API
+- No changes
+
+### Web
+- No changes
+
+### Other
+- General improvements and maintenance
+
 ## v0.0.8 - 2025-12-08
 ### API
 - No changes

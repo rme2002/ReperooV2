@@ -9,6 +9,9 @@ The workflow at `.github/workflows/monorepo-ci-cd.yml` runs lint, test, build, a
 3. **API build** – When `main` or a tag runs, the API job builds `apps/api`, authenticates to Google Cloud with Workload Identity Federation (WIF), and pushes `asia-southeast1-docker.pkg.dev/<PROJECT>/<REPOSITORY>/api:<SHA>`.
 4. **Deployments** – Two Cloud Run jobs share the pushed image: `deploy-api-dev` triggers on `main` and targets the dev service, while `deploy-api-prd` triggers on tags and targets prod. Web uses the Vercel CLI (preview on `main`, prod on `v*` tags), and mobile uses Expo EAS with manual dispatch for the dev/beta channel plus `mobile-v*` tags for production stores.
 
+## Manual workflow controls
+Using **Run workflow** is only meant for mobile deployments. Set `mobile_deploy_env=dev` to force the Expo development profile (lint + test still run beforehand). Leave it as `none` to simply rerun CI checks; API and web deploys remain tied to `main`/`v*` pushes.
+
 ## Required GitHub Variables
 
 Create repository-level **Variables** (GitHub → Settings → Secrets and variables → Actions → Variables):

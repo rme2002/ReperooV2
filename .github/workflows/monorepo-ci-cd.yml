@@ -13,10 +13,9 @@ on:
   workflow_dispatch:
     inputs:
       mobile_deploy_env:
-        description: "Optional mobile deployment target (dev beta build)"
-        required: false
-        default: "none"
+        description: "Mobile deployment target"
         type: choice
+        default: "none"
         options:
           - none
           - dev
@@ -48,6 +47,7 @@ jobs:
       FORCE_ALL: ${{ startsWith(github.ref, 'refs/tags/v') }}
       FORCE_MOBILE_TAG: ${{ startsWith(github.ref, 'refs/tags/mobile-v') }}
       MOBILE_DISPATCH_TARGET: ${{ github.event.inputs.mobile_deploy_env || '' }}
+      FORCE_ALL_CI: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.mobile_deploy_env || 'none') == 'none' }}
     outputs:
       api: ${{ steps.decide.outputs.api }}
       web: ${{ steps.decide.outputs.web }}
@@ -82,7 +82,16 @@ jobs:
           FORCE_ALL: ${{ env.FORCE_ALL }}
           FORCE_MOBILE_TAG: ${{ env.FORCE_MOBILE_TAG }}
           MOBILE_DISPATCH_TARGET: ${{ env.MOBILE_DISPATCH_TARGET }}
+          FORCE_ALL_CI: ${{ env.FORCE_ALL_CI }}
         run: |
+          normalize_bool() {
+            [[ "$1" == "true" ]] && echo "true" || echo "false"
+          }
+
+          run_api=$(normalize_bool "$API")
+          run_web=$(normalize_bool "$WEB")
+          run_mobile=$(normalize_bool "$MOBILE")
+
           run_all="$FORCE_ALL"
           if [[ "$MOBILE_DISPATCH_TARGET" == "none" ]]; then
             MOBILE_DISPATCH_TARGET=""
@@ -97,28 +106,32 @@ jobs:
             done < <(jq -r '.[]' <<<"$ALL_FILES")
           fi
 
-          if [[ "$run_all" == "true" ]]; then
+          if [[ "$run_all" == "true" || "$FORCE_ALL_CI" == "true" ]]; then
             if [[ "$FORCE_ALL" == "true" ]]; then
               echo "Tag detected, forcing all flows to run"
+            elif [[ "$FORCE_ALL_CI" == "true" ]]; then
+              echo "Manual workflow dispatch without mobile deploy; running all CI flows"
             else
               echo "Detected changes outside apps/, running all flows"
             fi
-            echo "api=true" >>"$GITHUB_OUTPUT"
-            echo "web=true" >>"$GITHUB_OUTPUT"
-            echo "mobile=true" >>"$GITHUB_OUTPUT"
+            run_api=true
+            run_web=true
+            run_mobile=true
           else
-            echo "api=$API" >>"$GITHUB_OUTPUT"
-            echo "web=$WEB" >>"$GITHUB_OUTPUT"
-            echo "mobile=$MOBILE" >>"$GITHUB_OUTPUT"
+            :
           fi
 
           if [[ "$FORCE_MOBILE_TAG" == "true" ]]; then
             echo "Detected mobile release tag, forcing mobile flow"
-            echo "mobile=true" >>"$GITHUB_OUTPUT"
+            run_mobile=true
           elif [[ -n "$MOBILE_DISPATCH_TARGET" ]]; then
             echo "Manual workflow_dispatch mobile target '$MOBILE_DISPATCH_TARGET' detected; forcing mobile flow"
-            echo "mobile=true" >>"$GITHUB_OUTPUT"
+            run_mobile=true
           fi
+
+          echo "api=$run_api" >>"$GITHUB_OUTPUT"
+          echo "web=$run_web" >>"$GITHUB_OUTPUT"
+          echo "mobile=$run_mobile" >>"$GITHUB_OUTPUT"
 
   # Linting
   lint-api:
@@ -277,7 +290,7 @@ jobs:
   build-api:
     name: API build
     needs: test-api
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
@@ -315,7 +328,7 @@ jobs:
   deploy-api-dev:
     name: API deploy (dev)
     needs: build-api
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
@@ -346,7 +359,7 @@ jobs:
   deploy-api-prd:
     name: API deploy (prod)
     needs: build-api
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
@@ -377,7 +390,7 @@ jobs:
   build-deploy-web-dev:
     name: Web build & deploy (dev)
     needs: test-web
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -401,7 +414,7 @@ jobs:
   build-deploy-web-prd:
     name: Web build & deploy (prod)
     needs: test-web
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     defaults:
       run:
