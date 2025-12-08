@@ -7,7 +7,7 @@ The workflow at `.github/workflows/monorepo-ci-cd.yml` runs lint, test, build, a
 1. **Change detection** – `dorny/paths-filter` determines which apps changed (or if non-app files require full coverage). Jobs exit early when nothing relevant changed.
 2. **Linting & Testing** – Each app has dedicated lint/test jobs (Python via `uv`, web/mobile via `npm`) that run only when their app changed.
 3. **API build** – When `main` or a tag runs, the API job builds `apps/api`, authenticates to Google Cloud with Workload Identity Federation (WIF), and pushes `asia-southeast1-docker.pkg.dev/<PROJECT>/<REPOSITORY>/api:<SHA>`.
-4. **Deployments** – Two Cloud Run jobs share the pushed image: `deploy-api-dev` triggers on `main` and targets the dev service, while `deploy-api-prd` triggers on tags and targets prod. Web and mobile currently have placeholder build/deploy steps ready for future integrations.
+4. **Deployments** – Two Cloud Run jobs share the pushed image: `deploy-api-dev` triggers on `main` and targets the dev service, while `deploy-api-prd` triggers on tags and targets prod. Web uses the Vercel CLI (preview on `main`, prod on `v*` tags), and mobile uses Expo EAS with manual dispatch for the dev/beta channel plus `mobile-v*` tags for production stores.
 
 ## Required GitHub Variables
 

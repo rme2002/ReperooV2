@@ -18,7 +18,7 @@ The primary workflow is `monorepo-ci-cd.yml`, which keeps CI + CD inside a singl
 
 Legacy workflows (`api-ci.yml`, `mobile-ci.yml`, `web-ci.yml`, and `release.yml`) still live alongside the new pipeline if you ever need a lighter-weight or more targeted run, but `monorepo-ci-cd.yml` is the canonical trunk-based flow.
 
-Within the combined workflow, dev jobs install dependencies, execute lint/tests, and push artifacts to the dev environment automatically. Prod jobs enforce that the tagged commit exists on `main`, rerun the same checks, apply any migrations (API), then deploy the exact tag.
+Within the combined workflow, dev jobs install dependencies, execute lint/tests, and push artifacts to the dev environment automatically. Prod jobs enforce that the tagged commit exists on `main`, rerun the same checks, apply any migrations (API), then deploy the exact tag. `CHANGELOG.md` tracks API + web releases, while `apps/mobile/CHANGELOG.md` tracks iOS/Android builds.
 
 ### Secrets required by CI
 Configure these GitHub Action secrets so the workflows can authenticate with third parties:
@@ -30,7 +30,7 @@ Configure these GitHub Action secrets so the workflows can authenticate with thi
 | `GCP_PROJECT_ID_DEV` / `GCP_PROJECT_ID_PROD` | Variable | API workflow | Cloud project IDs used to build images and deploy services. |
 | `GCP_REGION_DEV` / `GCP_REGION_PROD` | Variable | API workflow | Cloud Run region for each environment. |
 | `CLOUD_RUN_SERVICE_API_DEV` / `CLOUD_RUN_SERVICE_API_PROD` | Variable | API workflow | Cloud Run service names that receive the deployments. |
-| `EXPO_TOKEN_DEV` / `EXPO_TOKEN_PROD` | Secret | Mobile workflow | Expo access tokens used for `expo publish` on dev/prod channels. |
+| `EXPO_TOKEN` | Secret | Mobile workflow | Expo token used for both dev/beta builds and production App/Play store builds. (All runtime env lives in EAS secrets per profile.) |
 | `VERCEL_TOKEN` | Secret | Web workflow | Non-interactive token for `vercel pull/build/deploy`. |
 | `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` | Variable | Web workflow | Identifiers required for the Vercel CLI to target the correct project. |
 
@@ -59,7 +59,14 @@ This creates the project under your team without wiring up Git. Afterwards, copy
 5. **Verify**  
    - Smoke test the prod endpoint(s), confirm migrations succeeded, and update release notes if needed.
 
-`make release` automates these steps and commits `chore(release): vX.Y.Z`. The CI workflow skips dev deploys for branch pushes with that message, but tag-triggered prod runs still execute.
+`make release` automates these steps and commits `chore(release): vX.Y.Z`. The CI workflow skips dev deploys for branch pushes with that message, but tag-triggered prod runs still execute. This command only updates the API/web changelog (`CHANGELOG.md`).
+
+### Mobile release flow
+1. **Local development** – run the Expo app against Supabase dev using `.env` or Metro’s development profile. No CI needed.
+2. **Manual beta/TestFlight builds** – open the `Monorepo CI-CD` workflow, click **Run workflow**, and choose `mobile_deploy_env=dev`. CI reruns lint/tests and triggers the EAS development profile; Supabase/API env vars are sourced from the profile’s EAS secrets, so GitHub only supplies the Expo token.
+3. **Production stores** – run `make release-mobile`, choose the bump, and let the script push `chore(mobile-release): vX.Y.Z` plus the `mobile-vX.Y.Z` tag. The script also prepends an entry to `apps/mobile/CHANGELOG.md`. That tag triggers Expo EAS production builds with Supabase prod variables and App/Play store distribution.
+
+`make release-mobile` only touches `apps/mobile/**` (package/app versions) and pushes the `mobile-v*` tag so web/API deployments remain untouched.
 
 Hotfix flow matches the above: land the fix on `main`, tag a patch release (e.g., `v1.2.1`), and let the tag deploy to prod. If `main` is temporarily unsafe, branch off the prod tag, patch, tag, and then merge or cherry-pick the fix back into `main`.
 

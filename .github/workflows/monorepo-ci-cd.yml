@@ -9,7 +9,17 @@ on:
       - "feat/**"
     tags:
       - "v*"
+      - "mobile-v*"
   workflow_dispatch:
+    inputs:
+      mobile_deploy_env:
+        description: "Optional mobile deployment target (dev beta build)"
+        required: false
+        default: "none"
+        type: choice
+        options:
+          - none
+          - dev
 
 env:
   PYTHON_VERSION: "3.13"
@@ -33,9 +43,11 @@ jobs:
   detect-changes:
     name: Detect changes
     runs-on: ubuntu-latest
-    if: ${{ !(github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.event.head_commit && contains(github.event.head_commit.message, 'chore(release)')) }}
+    if: ${{ !(github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.event.head_commit && (contains(github.event.head_commit.message, 'chore(release)') || contains(github.event.head_commit.message, 'chore(mobile-release)'))) }}
     env:
-      FORCE_ALL: ${{ startsWith(github.ref, 'refs/tags/') }}
+      FORCE_ALL: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      FORCE_MOBILE_TAG: ${{ startsWith(github.ref, 'refs/tags/mobile-v') }}
+      MOBILE_DISPATCH_TARGET: ${{ github.event.inputs.mobile_deploy_env || '' }}
     outputs:
       api: ${{ steps.decide.outputs.api }}
       web: ${{ steps.decide.outputs.web }}
@@ -68,8 +80,14 @@ jobs:
           MOBILE: ${{ steps.filter.outputs.mobile }}
           ALL_FILES: ${{ steps.filter.outputs.all_files }}
           FORCE_ALL: ${{ env.FORCE_ALL }}
+          FORCE_MOBILE_TAG: ${{ env.FORCE_MOBILE_TAG }}
+          MOBILE_DISPATCH_TARGET: ${{ env.MOBILE_DISPATCH_TARGET }}
         run: |
           run_all="$FORCE_ALL"
+          if [[ "$MOBILE_DISPATCH_TARGET" == "none" ]]; then
+            MOBILE_DISPATCH_TARGET=""
+          fi
+
           if [[ "$run_all" != "true" ]] && [[ -n "$ALL_FILES" ]] && jq -e '. | length > 0' >/dev/null <<<"$ALL_FILES"; then
             while IFS= read -r file; do
               if [[ "$file" != apps/* ]]; then
@@ -92,6 +110,14 @@ jobs:
             echo "api=$API" >>"$GITHUB_OUTPUT"
             echo "web=$WEB" >>"$GITHUB_OUTPUT"
             echo "mobile=$MOBILE" >>"$GITHUB_OUTPUT"
+          fi
+
+          if [[ "$FORCE_MOBILE_TAG" == "true" ]]; then
+            echo "Detected mobile release tag, forcing mobile flow"
+            echo "mobile=true" >>"$GITHUB_OUTPUT"
+          elif [[ -n "$MOBILE_DISPATCH_TARGET" ]]; then
+            echo "Manual workflow_dispatch mobile target '$MOBILE_DISPATCH_TARGET' detected; forcing mobile flow"
+            echo "mobile=true" >>"$GITHUB_OUTPUT"
           fi
 
   # Linting
@@ -396,13 +422,14 @@ jobs:
       - name: Deploy to Vercel (production)
         run: vercel deploy --prebuilt --prod --token=${{ env.VERCEL_TOKEN }}
 
-  build-mobile:
-    name: Mobile build
+  deploy-mobile-dev:
+    name: Mobile deploy (dev)
     needs: test-mobile
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.mobile_deploy_env == 'dev'
     runs-on: ubuntu-latest
     env:
       EXPO_NO_TELEMETRY: "1"
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
     defaults:
       run:
         working-directory: apps/mobile
@@ -417,22 +444,27 @@ jobs:
           cache: npm
           cache-dependency-path: apps/mobile/package-lock.json
 
+      - name: Expo GitHub Action
+        uses: expo/expo-github-action@8.2.1
+        with:
+          packager: npm
+          eas-version: latest
+          token: ${{ env.EXPO_TOKEN }}
+
       - name: Install dependencies
         run: npm ci
 
-      # - name: Build mobile app
-      #   run: npm run build
+      - name: Build development clients
+        run: npx eas build --profile development --platform all --non-interactive --wait
 
-      - name: Mock artifact upload
-        run: echo "Simulating upload of mobile build artifacts"
-
-  deploy-mobile:
-    name: Mobile deploy
-    needs: build-mobile
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+  deploy-mobile-prod:
+    name: Mobile deploy (prod)
+    needs: test-mobile
+    if: startsWith(github.ref, 'refs/tags/mobile-v')
     runs-on: ubuntu-latest
     env:
       EXPO_NO_TELEMETRY: "1"
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
     defaults:
       run:
         working-directory: apps/mobile
@@ -440,7 +472,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6.0.1
 
-      - name: Mock deploy
-        run: |
-          echo "Simulating mobile deployment via Expo"
-          echo "expo publish --non-interactive (mock)"
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+
+      - name: Expo GitHub Action
+        uses: expo/expo-github-action@8.2.1
+        with:
+          packager: npm
+          eas-version: latest
+          token: ${{ env.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build store binaries
+        run: npx eas build --profile production --platform all --non-interactive --wait

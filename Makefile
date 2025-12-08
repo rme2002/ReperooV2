@@ -9,7 +9,7 @@ DEV_WEB ?= true
 DEV_MOBILE ?= true
 
 # ===== targets =====
-.PHONY: setup clean setup-clean lint lint-fix dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop generate-api release
+.PHONY: setup clean setup-clean lint lint-fix dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop generate-api release release-mobile
 
 ## Bootstrap dependencies (uv + npm installs)
 setup:
@@ -107,3 +107,6 @@ generate-api:
 
 release:
 	@scripts/release.sh
+
+release-mobile:
+	@scripts/release-mobile.sh

@@ -93,7 +93,6 @@ bump_node_version() {
 }
 
 bump_node_version "apps/web"
-bump_node_version "apps/mobile"
 
 log_range=()
 if [ "$first_release" = false ]; then
@@ -121,13 +120,11 @@ commit_has_prefix() {
 
 api_block=""
 web_block=""
-mobile_block=""
 other_block=""
 
 if [ "$first_release" = true ]; then
   api_block="- Kickoff project"
   web_block="- Kickoff project"
-  mobile_block="- Kickoff project"
   other_block="- Kickoff project"
 else
   idx=0
@@ -144,8 +141,8 @@ else
       matched=true
     fi
     if commit_has_prefix "$files" "apps/mobile/"; then
-      mobile_block+="- ${subject}"$'\n'
       matched=true
+      continue
     fi
     if [ "$matched" = false ]; then
       other_block+="- ${subject}"$'\n'
@@ -154,7 +151,6 @@ else
   done
   [ -z "$api_block" ] && api_block="- No changes"
   [ -z "$web_block" ] && web_block="- No changes"
-  [ -z "$mobile_block" ] && mobile_block="- No changes"
   [ -z "$other_block" ] && other_block="- General improvements and maintenance"
 fi
 
@@ -166,9 +162,6 @@ ${api_block}
 
 ### Web
 ${web_block}
-
-### Mobile
-${mobile_block}
 
 ### Other
 ${other_block}"
@@ -184,8 +177,7 @@ mv "$tmp" "$CHANGELOG_FILE"
 
 git add "$VERSION_FILE" "$CHANGELOG_FILE" \
   apps/api/pyproject.toml apps/api/uv.lock \
-  apps/web/package.json apps/web/package-lock.json \
-  apps/mobile/package.json apps/mobile/package-lock.json
+  apps/web/package.json apps/web/package-lock.json
 git commit -m "chore(release): v$new_version"
 git tag "v$new_version"
 
