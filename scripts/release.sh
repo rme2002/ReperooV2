@@ -155,7 +155,7 @@ else
   [ -z "$api_block" ] && api_block="- No changes"
   [ -z "$web_block" ] && web_block="- No changes"
   [ -z "$mobile_block" ] && mobile_block="- No changes"
-  [ -z "$other_block" ] && other_block="- No changes"
+  [ -z "$other_block" ] && other_block="- General improvements and maintenance"
 fi
 
 echo "$new_version" > "$VERSION_FILE"
