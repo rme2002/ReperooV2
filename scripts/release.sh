@@ -105,7 +105,7 @@ while IFS=$'\t' read -r sha subject; do
   commit_entries+=("$sha")
   commit_messages+=("$subject")
   commit_files+=("$(git diff-tree --no-commit-id --name-only -r "$sha")")
-done < <(git log "${log_range[@]}" --pretty=format:'%H\t%s')
+done < <(git log "${log_range[@]}" --pretty=format:%H%x09%s)
 
 commit_has_prefix() {
   local files="$1"
