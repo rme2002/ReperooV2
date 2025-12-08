@@ -65,10 +65,13 @@ jobs:
           filters: |
             api:
               - 'apps/api/**'
+              - 'packages/openapi/**'
             web:
               - 'apps/web/**'
+              - 'packages/openapi/**'
             mobile:
               - 'apps/mobile/**'
+              - 'packages/openapi/**'
             all:
               - '**'
 
@@ -97,22 +100,11 @@ jobs:
             MOBILE_DISPATCH_TARGET=""
           fi
 
-          if [[ "$run_all" != "true" ]] && [[ -n "$ALL_FILES" ]] && jq -e '. | length > 0' >/dev/null <<<"$ALL_FILES"; then
-            while IFS= read -r file; do
-              if [[ "$file" != apps/* ]]; then
-                run_all=true
-                break
-              fi
-            done < <(jq -r '.[]' <<<"$ALL_FILES")
-          fi
-
           if [[ "$run_all" == "true" || "$FORCE_ALL_CI" == "true" ]]; then
             if [[ "$FORCE_ALL" == "true" ]]; then
               echo "Tag detected, forcing all flows to run"
             elif [[ "$FORCE_ALL_CI" == "true" ]]; then
               echo "Manual workflow dispatch without mobile deploy; running all CI flows"
-            else
-              echo "Detected changes outside apps/, running all flows"
             fi
             run_api=true
             run_web=true
