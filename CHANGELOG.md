@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.10 - 2025-12-08
+### API
+- chore(release): v0.0.9
+
+
+### Web
+- chore(release): v0.0.9
+
+
+### Other
+- fix pipeline
+
+
 ## v0.0.9 - 2025-12-08
 ### API
 - No changes
