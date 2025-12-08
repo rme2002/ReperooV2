@@ -59,7 +59,7 @@ This creates the project under your team without wiring up Git. Afterwards, copy
 5. **Verify**  
    - Smoke test the prod endpoint(s), confirm migrations succeeded, and update release notes if needed.
 
-`make release` automates these steps and commits `chore(release): vX.Y.Z [skip ci]`, which ensures the push to `main` skips the dev pipeline while the tag-triggered prod flow still runs.
+`make release` automates these steps and commits `chore(release): vX.Y.Z`. The CI workflow skips dev deploys for branch pushes with that message, but tag-triggered prod runs still execute.
 
 Hotfix flow matches the above: land the fix on `main`, tag a patch release (e.g., `v1.2.1`), and let the tag deploy to prod. If `main` is temporarily unsafe, branch off the prod tag, patch, tag, and then merge or cherry-pick the fix back into `main`.
 

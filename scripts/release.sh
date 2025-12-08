@@ -186,7 +186,7 @@ git add "$VERSION_FILE" "$CHANGELOG_FILE" \
   apps/api/pyproject.toml apps/api/uv.lock \
   apps/web/package.json apps/web/package-lock.json \
   apps/mobile/package.json apps/mobile/package-lock.json
-git commit -m "chore(release): v$new_version [skip ci]"
+git commit -m "chore(release): v$new_version"
 git tag "v$new_version"
 
 echo "🚀 Pushing changes to $REMOTE_NAME"
