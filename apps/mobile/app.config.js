@@ -5,14 +5,14 @@ export default ({ config }) => {
   const isProd = variant === "prd";
 
   // Base identifier from your original app.json
-  const baseId = "com.anonymous.mobile";
+  const baseId = "com.rjaay23.startermono";
 
   return {
     // start from Expo's defaults
     ...config,
 
     // ----- generic app settings -----
-    name: isProd ? "mobile" : "mobile Dev",
+    name: isProd ? "Starter" : "Starter dev",
     slug: "mobile",
     version: "0.0.9",
     orientation: "portrait",
@@ -31,6 +31,9 @@ export default ({ config }) => {
     ios: {
       ...(config.ios || {}),
       supportsTablet: true,
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false
+      },
       // prod: com.anonymous.mobile
       // dev:  com.anonymous.mobile.dev  (so you *can* install both later)
       bundleIdentifier: isProd ? baseId : `${baseId}.dev`

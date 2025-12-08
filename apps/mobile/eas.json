@@ -5,12 +5,14 @@
   "build": {
     "dev": {
       "distribution": "internal",
+      "environment": "development",
       "env": {
         "APP_VARIANT": "dev"
       }
     },
     "prd": {
       "distribution": "store",
+      "environment": "production",
       "env": {
         "APP_VARIANT": "prd"
       }
