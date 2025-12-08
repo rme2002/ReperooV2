@@ -65,6 +65,7 @@ This creates the project under your team without wiring up Git. Afterwards, copy
 1. **Local development** – run the Expo app against Supabase dev using `.env` or Metro’s development profile. No CI needed.
 2. **Manual beta/TestFlight builds** – open the `Monorepo CI-CD` workflow, click **Run workflow**, and choose `mobile_deploy_env=dev`. CI reruns lint/tests and triggers the EAS development profile; Supabase/API env vars are sourced from the profile’s EAS secrets, so GitHub only supplies the Expo token.
 3. **Production stores** – run `make release-mobile`, choose the bump, and let the script push `chore(mobile-release): vX.Y.Z` plus the `mobile-vX.Y.Z` tag. The script also prepends an entry to `apps/mobile/CHANGELOG.md`. That tag triggers Expo EAS production builds with Supabase prod variables and App/Play store distribution.
+> **Expo env vars:** Configure your Supabase + API URLs in EAS (Project Settings → Environment variables or via `eas secret:create`) for both the `dev` and `prd` profiles. The GitHub workflow does not inject runtime env—EAS must provide them at build time.
 
 `make release-mobile` only touches `apps/mobile/**` (package/app versions) and pushes the `mobile-v*` tag so web/API deployments remain untouched.
 
