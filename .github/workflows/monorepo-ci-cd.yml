@@ -503,4 +503,4 @@ jobs:
         run: npm ci
 
       - name: Build store binaries
-        run: npx eas build --profile production --platform all --non-interactive --wait
+        run: eas build --profile production --platform all --non-interactive --wait
