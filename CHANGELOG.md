@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.0.7 - 2025-12-08
+### API
+- No changes
+
+### Web
+- No changes
+
+### Mobile
+- No changes
+
+### Other
+- update changelog update
+
+
 ## v0.0.6 - 2025-12-08
 ### API
 - No changes
