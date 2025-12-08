@@ -129,6 +129,13 @@ jobs:
             run_mobile=true
           fi
 
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$MOBILE_DISPATCH_TARGET" == "dev" ]]; then
+            echo "Manual mobile deployment selected; running only mobile CI"
+            run_api=false
+            run_web=false
+            run_mobile=true
+          fi
+
           echo "api=$run_api" >>"$GITHUB_OUTPUT"
           echo "web=$run_web" >>"$GITHUB_OUTPUT"
           echo "mobile=$run_mobile" >>"$GITHUB_OUTPUT"
@@ -468,7 +475,7 @@ jobs:
         run: npm ci
 
       - name: Build development clients
-        run: npx eas build --profile development --platform all --non-interactive --wait
+        run: eas build --profile development --platform all --non-interactive --wait
 
   deploy-mobile-prod:
     name: Mobile deploy (prod)
