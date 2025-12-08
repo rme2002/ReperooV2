@@ -68,6 +68,14 @@ This creates the project under your team without wiring up Git. Afterwards, copy
 
 `make release-mobile` only touches `apps/mobile/**` (package/app versions) and pushes the `mobile-v*` tag so web/API deployments remain untouched.
 
+> **Expo certificate prep:** Run the following once per platform to let Expo collect signing credentials. Repeat whenever you rotate certificates or onboard a new environment:
+> ```
+> npx eas build --profile dev --platform android
+> npx eas build --profile dev --platform ios
+> npx eas build --profile prd --platform android
+> npx eas build --profile prd --platform ios
+> ```
+
 Hotfix flow matches the above: land the fix on `main`, tag a patch release (e.g., `v1.2.1`), and let the tag deploy to prod. If `main` is temporarily unsafe, branch off the prod tag, patch, tag, and then merge or cherry-pick the fix back into `main`.
 
 ## Secret Management During Releases
