@@ -1,6 +1,6 @@
 name: Monorepo CI-CD
 
-# Some test commit on pipeline
+# Some test commit on pipeline for vercel
 
 on:
   push:
