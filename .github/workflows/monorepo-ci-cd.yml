@@ -475,7 +475,7 @@ jobs:
         run: npm ci
 
       - name: Build development clients
-        run: eas build --profile development --platform all --non-interactive --wait
+        run: eas build --profile dev --platform all --non-interactive --wait
 
   deploy-mobile-prod:
     name: Mobile deploy (prod)
@@ -510,4 +510,4 @@ jobs:
         run: npm ci
 
       - name: Build store binaries
-        run: eas build --profile production --platform all --non-interactive --wait
+        run: eas build --profile prd --platform all --non-interactive --wait

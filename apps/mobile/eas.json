@@ -1,16 +1,16 @@
 {
-  "cli": {
-    "version": ">= 11.0.0"
-  },
   "build": {
-    "development": {
-      "developmentClient": true,
+    "dev": {
       "distribution": "internal",
-      "channel": "development"
+      "env": {
+        "APP_VARIANT": "dev"
+      }
     },
-    "production": {
+    "prd": {
       "distribution": "store",
-      "channel": "production"
+      "env": {
+        "APP_VARIANT": "prd"
+      }
     }
   }
 }
