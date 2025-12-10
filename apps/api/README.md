@@ -26,9 +26,25 @@ Create `apps/api/.env` (loaded via `python-dotenv`) with your Supabase service c
 ```env
 SUPABASE_URL=...
 SUPABASE_SECRET_API_KEY=...
+# Required: async SQLAlchemy DSN (use the Supabase session pooler locally for IPv4/Docker)
+DATABASE_URL=postgresql://postgres:<password>@<pooler-host>:6543/postgres
 ```
 
 > Use the **service role** key on the backend—you never expose this to clients.
+
+### SQLAlchemy database
+
+The service exposes a synchronous [`SQLAlchemy`](https://docs.sqlalchemy.org/en/20/core/engines.html) engine
+(`src/core/database.py`) that you can tap into from routes/services:
+
+- Database tables live under `src/db/models/` (pure SQLAlchemy models). Keep request/response Pydantic models in
+  `src/models/` and import with aliases when needed, e.g. `from src.db.models import Profile as ProfileDB`.
+- Use `Depends(get_session)` inside FastAPI routes (or `session_scope()` in scripts/tests) to obtain a standard
+  `Session`. FastAPI will run synchronous DB work in a threadpool when necessary, so async endpoints remain supported.
+- `DATABASE_URL` is required; point it at Postgres (or another database supported by SQLAlchemy), e.g.
+  `postgresql+psycopg://...`.
+- Schema changes should run through Alembic/Supabase migrations in your pipeline (runtime code no longer calls
+  `create_all`).
 
 ### Supabase schema
 

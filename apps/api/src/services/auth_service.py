@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from supabase._async.client import AsyncClient
 
 from src.models.model import SignUpEmailPasswordResponse
@@ -10,7 +11,9 @@ class AuthService:
         self.supabase = supabase
         self.profile_repository = profile_repository
 
-    async def sign_up(self, email: str, password: str) -> SignUpEmailPasswordResponse:
+    async def sign_up(
+        self, email: str, password: str, session: Session
+    ) -> SignUpEmailPasswordResponse:
         try:
             auth_response = await self.supabase.auth.sign_up(
                 {"email": email, "password": password}
@@ -23,9 +26,16 @@ class AuthService:
             raise SignUpError("No user returned")
 
         try:
-            await self.profile_repository.upsert_profile(id=str(user.id))
+            self.profile_repository.upsert_profile(session, id=str(user.id))
+            session.commit()
         except Exception as e:
-            await self.supabase.auth.admin.delete_user(user.id)
+            session.rollback()
+            try:
+                print(e)
+                await self.supabase.auth.admin.delete_user(user.id)
+            except Exception:
+                # TODO: add structured logging once logging infra is in place.
+                pass
             raise SignUpError("Failed to persist user profile.") from e
 
         return SignUpEmailPasswordResponse(id=str(user.id), email=str(user.email))

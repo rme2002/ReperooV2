@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 from supabase._async.client import AsyncClient
 
 from src.core.supabase import get_supabase
+from src.core.database import get_session
 from src.services.auth_service import AuthService
 from src.repositories.profile_repository import ProfileRepository
 from src.services.errors import SignUpError
@@ -11,7 +13,7 @@ router = APIRouter()
 
 
 def get_auth_service(supabase: AsyncClient = Depends(get_supabase)) -> AuthService:
-    profile_repository = ProfileRepository(supabase)
+    profile_repository = ProfileRepository()
     return AuthService(supabase, profile_repository)
 
 
@@ -19,11 +21,13 @@ def get_auth_service(supabase: AsyncClient = Depends(get_supabase)) -> AuthServi
 async def sign_up(
     payload: SignUpEmailPasswordPayload,
     auth_service: AuthService = Depends(get_auth_service),
+    session: Session = Depends(get_session),
 ) -> SignUpEmailPasswordResponse:
     try:
         return await auth_service.sign_up(
             email=str(payload.email.root),
             password=payload.password.root.get_secret_value(),
+            session=session,
         )
     except SignUpError as e:
         raise HTTPException(status_code=400, detail=str(e))
