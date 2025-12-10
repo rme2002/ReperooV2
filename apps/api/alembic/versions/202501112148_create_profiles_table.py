@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
@@ -19,6 +20,11 @@ depends_on = None
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    if inspector.has_table("profiles"):
+        return
+
     op.create_table(
         "profiles",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
