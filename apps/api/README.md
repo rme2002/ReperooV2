@@ -60,6 +60,40 @@ create table if not exists public.profiles (
 
 The email is already stored on `auth.users`, so this table only needs the user id and timestamps until you’re ready to add custom profile fields.
 
+### Database migrations (Alembic)
+
+`alembic.ini` and the migration scripts live in `apps/api/alembic/`. The config always reads the database URL from `DATABASE_URL`, so every surface (local dev shell, CI, Cloud Run) can point at the same database simply by exporting the correct URL.
+
+#### Running Alembic locally
+
+Alembic is in the `dev` dependency group. Before running any migrations from your laptop, install the tooling with:
+
+```bash
+uv sync --all-extras --dev
+```
+
+Common commands (run them from `apps/api`):
+
+```bash
+# Create a new revision from your SQLAlchemy models
+uv run alembic revision --autogenerate -m "add widget table"
+
+# Apply the latest revision(s) to the target database
+uv run alembic upgrade head
+
+# Inspect the current DB state and outstanding heads
+uv run alembic current
+uv run alembic heads
+```
+
+Recommended mental model:
+
+- Local development shares the Supabase **dev** instance, so `DATABASE_URL` should point at that database while building features, generating migrations, and running tests.
+- The GitHub Actions workflow now runs `uv run alembic upgrade head` before each Cloud Run deploy:
+  - Dev deploys export `DATABASE_URL=${{ secrets.DB_URL_DEV }}`.
+  - Prod deploys (triggered by `v*` tags) export `DATABASE_URL=${{ secrets.DB_URL_PRD }}`.
+- Because every environment runs migrations the same way, the dev DB schema never drifts from what lands in `main`, and prod stays in sync with the release tags.
+
 ---
 
 ## Running Locally

@@ -17,6 +17,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "alembic>=1.17.2",
     "datamodel-code-generator==0.33.0",
     "httpx>=0.28.1",
     "pytest>=9.0.1",
