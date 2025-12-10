@@ -26,9 +26,25 @@ Create `apps/api/.env` (loaded via `python-dotenv`) with your Supabase service c
 ```env
 SUPABASE_URL=...
 SUPABASE_SECRET_API_KEY=...
+# Required: async SQLAlchemy DSN (use the Supabase session pooler locally for IPv4/Docker)
+DATABASE_URL=postgresql://postgres:<password>@<pooler-host>:6543/postgres
 ```
 
 > Use the **service role** key on the backend—you never expose this to clients.
+
+### SQLAlchemy database
+
+The service exposes a synchronous [`SQLAlchemy`](https://docs.sqlalchemy.org/en/20/core/engines.html) engine
+(`src/core/database.py`) that you can tap into from routes/services:
+
+- Database tables live under `src/db/models/` (pure SQLAlchemy models). Keep request/response Pydantic models in
+  `src/models/` and import with aliases when needed, e.g. `from src.db.models import Profile as ProfileDB`.
+- Use `Depends(get_session)` inside FastAPI routes (or `session_scope()` in scripts/tests) to obtain a standard
+  `Session`. FastAPI will run synchronous DB work in a threadpool when necessary, so async endpoints remain supported.
+- `DATABASE_URL` is required; point it at Postgres (or another database supported by SQLAlchemy), e.g.
+  `postgresql+psycopg://...`.
+- Schema changes should run through Alembic/Supabase migrations in your pipeline (runtime code no longer calls
+  `create_all`).
 
 ### Supabase schema
 
@@ -43,6 +59,40 @@ create table if not exists public.profiles (
 ```
 
 The email is already stored on `auth.users`, so this table only needs the user id and timestamps until you’re ready to add custom profile fields.
+
+### Database migrations (Alembic)
+
+`alembic.ini` and the migration scripts live in `apps/api/alembic/`. The config always reads the database URL from `DATABASE_URL`, so every surface (local dev shell, CI, Cloud Run) can point at the same database simply by exporting the correct URL.
+
+#### Running Alembic locally
+
+Alembic is in the `dev` dependency group. Before running any migrations from your laptop, install the tooling with:
+
+```bash
+uv sync --all-extras --dev
+```
+
+Common commands (run them from `apps/api`):
+
+```bash
+# Create a new revision from your SQLAlchemy models
+uv run alembic revision --autogenerate -m "add widget table"
+
+# Apply the latest revision(s) to the target database
+uv run alembic upgrade head
+
+# Inspect the current DB state and outstanding heads
+uv run alembic current
+uv run alembic heads
+```
+
+Recommended mental model:
+
+- Local development shares the Supabase **dev** instance, so `DATABASE_URL` should point at that database while building features, generating migrations, and running tests.
+- The GitHub Actions workflow now runs `uv run alembic upgrade head` before each Cloud Run deploy:
+  - Dev deploys export `DATABASE_URL=${{ secrets.DB_URL_DEV }}`.
+  - Prod deploys (triggered by `v*` tags) export `DATABASE_URL=${{ secrets.DB_URL_PRD }}`.
+- Because every environment runs migrations the same way, the dev DB schema never drifts from what lands in `main`, and prod stays in sync with the release tags.
 
 ---
 

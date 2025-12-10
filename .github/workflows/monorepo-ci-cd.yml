@@ -1,6 +1,6 @@
 name: Monorepo CI-CD
 
-# Some test commit on pipeline for vercel. some feat branch test
+# Some test commit
 
 on:
   push:
@@ -324,9 +324,67 @@ jobs:
           docker build -t "$IMAGE" .
           docker push "$IMAGE"
 
+  migrate-api-dev:
+    name: API migrate (dev)
+    needs: build-api
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    env:
+      DATABASE_URL: ${{ secrets.DB_URL_DEV }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.1.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7.1.4
+
+      - name: Sync dependencies
+        run: uv sync --all-extras --dev --locked
+
+      - name: Run Alembic migrations
+        run: uv run alembic upgrade head
+
+  migrate-api-prd:
+    name: API migrate (prod)
+    needs: build-api
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    env:
+      DATABASE_URL: ${{ secrets.DB_URL_PRD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.1.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7.1.4
+
+      - name: Sync dependencies
+        run: uv sync --all-extras --dev --locked
+
+      - name: Run Alembic migrations
+        run: uv run alembic upgrade head
+
   deploy-api-dev:
     name: API deploy (dev)
-    needs: build-api
+    needs:
+      - build-api
+      - migrate-api-dev
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -357,7 +415,9 @@ jobs:
 
   deploy-api-prd:
     name: API deploy (prod)
-    needs: build-api
+    needs:
+      - build-api
+      - migrate-api-prd
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
