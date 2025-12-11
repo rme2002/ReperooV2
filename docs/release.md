@@ -12,11 +12,11 @@ API + web share the same pipeline (`.github/workflows/monorepo-ci-cd.yml`) and v
 | Stage | Trigger | What runs |
 |-------|---------|-----------|
 | `paths-filter` | every run | Determines whether API/web changed (mobile ignored here). |
-| `ci-api` / `ci-web` | PRs + pushes (or any `v*` tag) | Lint/build/test for each surface, in parallel. |
+| `ci-api` / `ci-web` | PRs + pushes (or any `v*` tag) | Lint → unit tests → API integration tests before any build/deploy jobs. |
 | `deploy-dev` | Push to `main` with relevant changes | API Docker image → Cloud Run, web → Vercel preview. |
 | `deploy-prod` | Tags `v*` | Requires CI to be green, confirms tag lives on `main`, then deploys API → Cloud Run prod and web → Vercel prod. |
 
-Dev jobs install deps, run lint/tests, and push artifacts automatically. Production jobs ensure the tag is on `main`, re-run the checks, apply migrations (API), and deploy that exact artifact. `CHANGELOG.md` documents these releases.
+Dev jobs install deps, run lint/unit/integration tests, and push artifacts automatically. Production jobs ensure the tag is on `main`, re-run the checks, apply migrations (API), and deploy that exact artifact. Feature branches stop right after integration tests, `main` continues through build → migrate → deploy (dev), and tags rerun the whole flow with production targets. `CHANGELOG.md` documents these releases.
 
 ## Mobile Release Strategy
 Mobile follows the same workflow file but uses separate triggers because Expo binaries are heavier to build:
@@ -42,9 +42,13 @@ Populate these GitHub Action secrets/variables so `monorepo-ci-cd.yml` can authe
 |------|------|--------|---------|
 | `VERCEL_TOKEN` | Secret | Web jobs | Authenticates `vercel pull/build/deploy`. |
 | `EXPO_TOKEN` | Secret | Mobile jobs | Authenticates Expo/EAS for dev + prod builds. |
+| `SUPABASE_SECRET_API_KEY` | Secret | API integration tests | Service role key so tests can hit Supabase directly. |
+| `DB_URL_DEV` | Secret | API jobs | Postgres DSN for dev (migrations + integration tests). |
+| `DB_URL_PRD` | Secret | API jobs | Postgres DSN for prod migrations. |
 
 | Name | Type | Used by | Purpose |
 |------|------|--------|---------|
+| `SUPABASE_URL` | Variable | API integration tests | Supabase project URL used during integration tests. |
 | `GCP_PROJECT_ID` | Variable | API jobs | Google Cloud project hosting Artifact Registry + Cloud Run. |
 | `GAR_LOCATION` | Variable | API jobs | Artifact Registry region, e.g., `us-central1`. |
 | `GAR_REPOSITORY` | Variable | API jobs | Artifact Registry repo that stores the API image. |
