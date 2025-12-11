@@ -214,7 +214,8 @@ jobs:
   # Testing
   test-api:
     name: API tests
-    needs: lint-api
+    needs: detect-changes
+    if: needs.detect-changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -239,7 +240,8 @@ jobs:
 
   integration-api:
     name: API integration tests
-    needs: test-api
+    needs: detect-changes
+    if: needs.detect-changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -268,7 +270,8 @@ jobs:
 
   test-web:
     name: Web tests
-    needs: lint-web
+    needs: detect-changes
+    if: needs.detect-changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -292,7 +295,8 @@ jobs:
 
   test-mobile:
     name: Mobile tests
-    needs: lint-mobile
+    needs: detect-changes
+    if: needs.detect-changes.outputs.mobile == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -317,7 +321,10 @@ jobs:
   # Build
   build-api:
     name: API build
-    needs: integration-api
+    needs:
+      - lint-api
+      - test-api
+      - integration-api
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-latest
     permissions:
@@ -477,7 +484,9 @@ jobs:
 
   build-deploy-web-dev:
     name: Web build & deploy (dev)
-    needs: test-web
+    needs:
+      - lint-web
+      - test-web
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     defaults:
@@ -501,7 +510,9 @@ jobs:
 
   build-deploy-web-prd:
     name: Web build & deploy (prod)
-    needs: test-web
+    needs:
+      - lint-web
+      - test-web
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     defaults:
@@ -525,7 +536,9 @@ jobs:
 
   deploy-mobile-dev:
     name: Mobile deploy (dev)
-    needs: test-mobile
+    needs:
+      - lint-mobile
+      - test-mobile
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.mobile_deploy_env == 'dev'
     runs-on: ubuntu-latest
     env:
@@ -560,7 +573,9 @@ jobs:
 
   deploy-mobile-prod:
     name: Mobile deploy (prod)
-    needs: test-mobile
+    needs:
+      - lint-mobile
+      - test-mobile
     if: startsWith(github.ref, 'refs/tags/mobile-v')
     runs-on: ubuntu-latest
     env:

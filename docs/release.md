@@ -12,11 +12,11 @@ API + web share the same pipeline (`.github/workflows/monorepo-ci-cd.yml`) and v
 | Stage | Trigger | What runs |
 |-------|---------|-----------|
 | `paths-filter` | every run | Determines whether API/web changed (mobile ignored here). |
-| `ci-api` / `ci-web` | PRs + pushes (or any `v*` tag) | Lint → unit tests → API integration tests before any build/deploy jobs. |
+| `ci-api` / `ci-web` | PRs + pushes (or any `v*` tag) | Each surface runs lint + tests (API adds integration) in parallel, and every check must pass before any build/deploy jobs. |
 | `deploy-dev` | Push to `main` with relevant changes | API Docker image → Cloud Run, web → Vercel preview. |
 | `deploy-prod` | Tags `v*` | Requires CI to be green, confirms tag lives on `main`, then deploys API → Cloud Run prod and web → Vercel prod. |
 
-Dev jobs install deps, run lint/unit/integration tests, and push artifacts automatically. Production jobs ensure the tag is on `main`, re-run the checks, apply migrations (API), and deploy that exact artifact. Feature branches stop right after integration tests, `main` continues through build → migrate → deploy (dev), and tags rerun the whole flow with production targets. `CHANGELOG.md` documents these releases.
+Dev jobs install deps, run each surface’s lint/unit/integration tests (API’s three checks now run concurrently), and push artifacts automatically. Production jobs ensure the tag is on `main`, re-run the checks, apply migrations (API), and deploy that exact artifact. Feature branches stop right after integration tests, `main` continues through build → migrate → deploy (dev), and tags rerun the whole flow with production targets. `CHANGELOG.md` documents these releases.
 
 ## Mobile Release Strategy
 Mobile follows the same workflow file but uses separate triggers because Expo binaries are heavier to build:
