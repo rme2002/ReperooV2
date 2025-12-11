@@ -31,10 +31,9 @@ def integration_env() -> dict[str, str]:
 
     missing = _missing_env_vars()
     if missing:
-        pytest.skip(
+        pytest.fail(
             "Integration tests require the following environment variables: "
-            + ", ".join(missing),
-            allow_module_level=True,
+            + ", ".join(missing)
         )
 
     return {var: os.environ[var] for var in REQUIRED_ENV_VARS}
