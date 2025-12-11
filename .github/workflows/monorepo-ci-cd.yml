@@ -237,6 +237,35 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
+  integration-api:
+    name: API integration tests
+    needs: test-api
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.1.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7.1.4
+
+      - name: Sync dependencies
+        run: uv sync --all-extras --dev --locked
+
+      - name: Run integration tests
+        env:
+          DATABASE_URL: ${{ secrets.DB_URL_DEV }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SECRET_API_KEY: ${{ secrets.SUPABASE_SECRET_API_KEY }}
+        run: uv run pytest -m integration .
+
   test-web:
     name: Web tests
     needs: lint-web
@@ -288,7 +317,7 @@ jobs:
   # Build
   build-api:
     name: API build
-    needs: test-api
+    needs: integration-api
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-latest
     permissions:

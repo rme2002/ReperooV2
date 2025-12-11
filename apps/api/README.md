@@ -133,6 +133,18 @@ The OpenAPI docs are available at [http://localhost:8080/docs](http://localhost:
 
 ---
 
+## Testing
+
+- **Unit tests (default)**: `uv run pytest`  
+  - `pytest.ini` sets `addopts = -m "not integration"`, so unit tests are the default run. Add `-s` if you want to see captured stdout.
+
+- **Integration tests (Supabase/Postgres)**: `uv run pytest -m integration apps/api/tests/integration`
+  - Requires the Supabase dev environment variables mentioned above plus a `DATABASE_URL` that points at the shared dev Postgres instance (the Supabase connection string works fine).
+  - CI should export these secrets via GitHub Actions (e.g. `SUPABASE_DEV_DB_URL` → `DATABASE_URL`) before running `pytest -m integration`.
+  - Test data uses emails like `ci+<uuid>@example.com`. The cleanup helpers are currently disabled, so auth users and profiles created during these tests remain in the dev Supabase project until you remove them manually.
+
+---
+
 ## Deployment Notes
 
 - The provided `Dockerfile` runs `uvicorn` via `uv` (`CMD ["uv", "run", "uvicorn", ...]`).
