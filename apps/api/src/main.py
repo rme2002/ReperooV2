@@ -7,7 +7,7 @@ from supabase._async.client import AsyncClient, create_client
 from dotenv import load_dotenv
 from pathlib import Path
 
-# ---- load env for local dev only -
+# ---- load env for local dev only - test
 if Path(".env").exists():
     load_dotenv(".env")
 if Path(".env.local").exists():
