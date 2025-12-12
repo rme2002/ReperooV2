@@ -32,17 +32,15 @@ Each app README details its own environment variables and additional prerequisit
 
 ### Supabase (required for auth + Postgres)
 
-This stack assumes you have a Supabase project providing Auth + Postgres locally or in the cloud. The FastAPI service expects a `profiles` table linked to Supabase Auth—create it once in the SQL editor before running the stack:
+This stack assumes you have a Supabase project providing Auth + Postgres locally or in the cloud. The FastAPI service ships with Alembic migrations, so instead of running SQL by hand just point `DATABASE_URL` at your Supabase instance and apply the initial revision:
 
-```sql
-create table if not exists public.profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
+```bash
+cd apps/api
+uv sync --all-extras --dev   # one-time tooling install
+uv run alembic upgrade head
 ```
 
-Emails (and other auth claims) already live in `auth.users`, so this table only tracks profile lifecycle timestamps for now—you can add more columns later.
+That migration creates `public.profiles` with an `id` FK to `auth.users(id)` + `ON DELETE CASCADE`, so deleting a Supabase auth user automatically removes the profile row. Emails (and other auth claims) already live in `auth.users`, so the profile table only tracks timestamps until you add custom fields.
 
 ---
 

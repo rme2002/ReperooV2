@@ -48,17 +48,15 @@ The service exposes a synchronous [`SQLAlchemy`](https://docs.sqlalchemy.org/en/
 
 ### Supabase schema
 
-Create the `profiles` table (linked to `auth.users`) in your Supabase project before hitting the signup endpoint:
+Before hitting the signup endpoint, run the initial Alembic migration against your Supabase database so the `profiles` table exists:
 
-```sql
-create table if not exists public.profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
+```bash
+cd apps/api
+uv sync --all-extras --dev   # installs alembic + tooling
+DATABASE_URL=<supabase connection string> uv run alembic upgrade head
 ```
 
-The email is already stored on `auth.users`, so this table only needs the user id and timestamps until you’re ready to add custom profile fields.
+That revision creates `public.profiles` with `id uuid primary key references auth.users (id) on delete cascade`, so deleting a Supabase auth user automatically cascades to the profile row. The email already lives on `auth.users`, so this table only stores lifecycle timestamps until you add custom profile fields.
 
 ### Database migrations (Alembic)
 

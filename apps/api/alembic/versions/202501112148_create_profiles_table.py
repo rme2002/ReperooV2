@@ -41,6 +41,12 @@ def upgrade() -> None:
             server_onupdate=sa.text("now()"),
             nullable=False,
         ),
+        sa.ForeignKeyConstraint(
+            ["id"],
+            ["auth.users.id"],
+            ondelete="CASCADE",
+            name="profiles_id_fkey",
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
 
