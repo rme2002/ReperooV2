@@ -37,7 +37,10 @@ This stack assumes you have a Supabase project providing Auth + Postgres locally
 ```bash
 cd apps/api
 uv sync --all-extras --dev   # one-time tooling install
-uv run alembic upgrade head
+uv run --env-file .env.local alembic upgrade head
+
+# When you need a new migration from model changes
+uv run --env-file .env.local alembic revision --autogenerate -m "describe change"
 ```
 
 That migration creates `public.profiles` with an `id` FK to `auth.users(id)` + `ON DELETE CASCADE`, so deleting a Supabase auth user automatically removes the profile row. Emails (and other auth claims) already live in `auth.users`, so the profile table only tracks timestamps until you add custom fields.

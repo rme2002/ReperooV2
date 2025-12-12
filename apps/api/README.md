@@ -21,7 +21,7 @@ uv sync   # or run `make setup` from the repo root
 
 ## Environment Variables
 
-Create `apps/api/.env` (loaded via `python-dotenv`) with your Supabase service credentials:
+Create `apps/api/.env.local` (preferred for local dev) or `.env` with your Supabase service credentials. `python-dotenv` loads `.env.local` first, then `.env`, so you can keep machine-specific secrets out of git:
 
 ```env
 SUPABASE_URL=...
@@ -53,7 +53,7 @@ Before hitting the signup endpoint, run the initial Alembic migration against yo
 ```bash
 cd apps/api
 uv sync --all-extras --dev   # installs alembic + tooling
-DATABASE_URL=<supabase connection string> uv run alembic upgrade head
+uv run --env-file .env.local alembic upgrade head
 ```
 
 That revision creates `public.profiles` with `id uuid primary key references auth.users (id) on delete cascade`, so deleting a Supabase auth user automatically cascades to the profile row. The email already lives on `auth.users`, so this table only stores lifecycle timestamps until you add custom profile fields.
@@ -74,14 +74,14 @@ Common commands (run them from `apps/api`):
 
 ```bash
 # Create a new revision from your SQLAlchemy models
-uv run alembic revision --autogenerate -m "add widget table"
+uv run --env-file .env.local alembic revision --autogenerate -m "add widget table"
 
 # Apply the latest revision(s) to the target database
-uv run alembic upgrade head
+uv run --env-file .env.local alembic upgrade head
 
 # Inspect the current DB state and outstanding heads
-uv run alembic current
-uv run alembic heads
+uv run --env-file .env.local alembic current
+uv run --env-file .env.local alembic heads
 ```
 
 Recommended mental model:

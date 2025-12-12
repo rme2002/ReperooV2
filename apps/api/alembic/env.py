@@ -34,6 +34,21 @@ def _require_database_url() -> str:
     return url
 
 
+def _include_object(
+    object_: object, name: str, type_: str, reflected: bool, compare_to: object | None
+):
+    info = getattr(object_, "info", None)
+    if info and info.get("skip_autogenerate"):
+        return False
+
+    if compare_to is not None:
+        compare_info = getattr(compare_to, "info", None)
+        if compare_info and compare_info.get("skip_autogenerate"):
+            return False
+
+    return True
+
+
 _apply_database_url()
 target_metadata = Base.metadata
 
@@ -47,6 +62,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         compare_type=True,
+        include_object=_include_object,
         dialect_opts={"paramstyle": "named"},
     )
 
@@ -71,6 +87,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
+            include_object=_include_object,
         )
 
         with context.begin_transaction():

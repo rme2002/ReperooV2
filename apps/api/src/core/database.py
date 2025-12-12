@@ -6,6 +6,7 @@ from functools import lru_cache
 from typing import Iterator
 
 from sqlalchemy import Engine, create_engine
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 
 
@@ -25,9 +26,17 @@ def _build_engine(database_url: str) -> Engine:
     can swap DATABASE_URL without restarting the process.
     """
 
+    execution_options = None
+    url = make_url(database_url)
+    if url.get_backend_name() == "sqlite":
+        # SQLite does not support schemas. Translate "auth" schema references to
+        # the default schema so metadata.create_all() works in tests.
+        execution_options = {"schema_translate_map": {"auth": None}}
+
     return create_engine(
         database_url,
         pool_pre_ping=True,
+        execution_options=execution_options,
     )
 
 
