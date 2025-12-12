@@ -16,11 +16,12 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const theme: keyof typeof Colors = colorScheme === "dark" ? "dark" : "light";
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: Colors[theme].tint,
         headerShown: useClientOnlyValue(true, true),
         headerStyle: { backgroundColor: "#050814" },
         headerTitleStyle: { color: "#fff", fontWeight: "600" },
