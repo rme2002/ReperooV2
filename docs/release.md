@@ -73,6 +73,7 @@ Use the GCP Console + GitHub UI to configure CI/CD without JSON key files.
 | `Artifact Registry Writer` | Push Docker images. |
 | `Cloud Run Developer` | Deploy new revisions. |
 | `Service Account User` | Let Cloud Run set the runtime service account. |
+| `Secret Manager Secret Accessor` | Allow CI to pull runtime secrets at deploy time. |
 
 Copy the generated email (`github-actions@<PROJECT_ID>.iam.gserviceaccount.com`) for `WIF_SERVICE_ACCOUNT`.
 
@@ -97,7 +98,7 @@ Copy the generated email (`github-actions@<PROJECT_ID>.iam.gserviceaccount.com`)
 3. Copy the provider resource (`projects/.../providers/...`) as `WIF_PROVIDER`.
 
 ### 3. Grant WIF access to the service account
-1. **IAM & Admin → Service Accounts → github-actions → Permissions → Grant access**.
+1. **IAM & Admin → Service Accounts → github-actions → Permissions → Grant access** (under **Principals with access**).
 2. Principal: `principalSet://iam.googleapis.com/projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github-actions/attribute.repository/<GH_OWNER>/<GH_REPO>`
 3. Role: `Workload Identity User`.
 
@@ -146,7 +147,7 @@ Vercel must already know about the `apps/web` project before CI can deploy it. R
 3. `cd apps/web` – move into the Next.js app.
 4. `vercel` – when prompted, select **No** for linking, provide the project name, choose the correct scope/team, and confirm the initial deploy.
 
-This creates the project under your team without wiring up Git. Afterwards, copy the **Project ID** and **Team ID** (org) from Vercel → **Settings → General** into GitHub (either as repo variables or secrets) and create a `VERCEL_TOKEN` for CI. The first CI build may still fail until you add the Supabase env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, etc.) inside Vercel → Project → Settings → Environment Variables; expect the export error shown in the logs until those keys exist.
+This creates the project under your team without wiring up Git. Afterwards, copy the **Project ID** and **Team ID** (org) from Vercel → **Settings → General** into GitHub (either as repo variables or secrets) and create a `VERCEL_TOKEN` for CI. The first CI build may still fail until you add the Supabase env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, etc.) inside Vercel → Project → Settings → Environment Variables; expect the export error shown in the logs until those keys exist. Add `NEXT_PUBLIC_API_URL=<API URL LOCATION>` alongside those env vars so Vercel web builds know where to reach the deployed API.
 
 ## Cutting a Prd Release
 1. **Verify `main` is releasable**  
