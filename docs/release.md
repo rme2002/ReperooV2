@@ -42,13 +42,13 @@ Populate these GitHub Action secrets/variables so `monorepo-ci-cd.yml` can authe
 |------|------|--------|---------|
 | `VERCEL_TOKEN` | Secret | Web jobs | Authenticates `vercel pull/build/deploy`. |
 | `EXPO_TOKEN` | Secret | Mobile jobs | Authenticates Expo/EAS for dev + prod builds. |
-| `SUPABASE_SECRET_API_KEY` | Secret | API integration tests | Service role key so tests can hit Supabase directly. |
+| `SUPABASE_SECRET_API_KEY_DEV` | Secret | API integration tests | Service role key so tests can hit Supabase directly. |
 | `DB_URL_DEV` | Secret | API jobs | Postgres DSN for dev (migrations + integration tests). |
 | `DB_URL_PRD` | Secret | API jobs | Postgres DSN for prod migrations. |
 
 | Name | Type | Used by | Purpose |
 |------|------|--------|---------|
-| `SUPABASE_URL` | Variable | API integration tests | Supabase project URL used during integration tests. |
+| `SUPABASE_URL_DEV` | Variable | API integration tests | Supabase dev project URL used during integration tests. |
 | `GCP_PROJECT_ID` | Variable | API jobs | Google Cloud project hosting Artifact Registry + Cloud Run. |
 | `GAR_LOCATION` | Variable | API jobs | Artifact Registry region, e.g., `us-central1`. |
 | `GAR_REPOSITORY` | Variable | API jobs | Artifact Registry repo that stores the API image. |

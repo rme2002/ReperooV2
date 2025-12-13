@@ -316,8 +316,8 @@ jobs:
       - name: Run integration tests
         env:
           DATABASE_URL: ${{ secrets.DB_URL_DEV }}
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          SUPABASE_SECRET_API_KEY: ${{ secrets.SUPABASE_SECRET_API_KEY }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL_DEV }}
+          SUPABASE_SECRET_API_KEY: ${{ secrets.SUPABASE_SECRET_API_KEY_DEV }}
         run: uv run pytest -m integration .
 
   test-web:
