@@ -3,6 +3,7 @@ export default ({ config }) => {
   // APP_VARIANT comes from EAS / CI: "dev" or "prd"
   const variant = process.env.APP_VARIANT || "dev";
   const isProd = variant === "prd";
+  const easProjectId = process.env.EXPO_EAS_PROJECT_ID;
 
   // Base identifier from your original app.json
   const baseId = "com.rjaay23.startermono";
@@ -67,7 +68,7 @@ export default ({ config }) => {
       ...(config.extra || {}),
       router: {},
       eas: {
-        projectId: "61f3bcf4-6efc-4be7-87a9-ff4dfdffa6f2"
+        projectId: easProjectId
       },
       appVariant: variant // handy to read inside the app if needed
     },
