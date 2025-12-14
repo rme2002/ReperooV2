@@ -35,6 +35,14 @@ Use **Run workflow** sparingly (CI spot checks or mobile deploys):
 - `mobile_deploy_env=none` reruns lint/test for every surface without deploying.
 - `mobile_deploy_env=dev` runs only the mobile CI + Expo dev-profile build (`eas build --profile dev --platform all`), leaving API/web jobs untouched.
 
+### Expo configuration checklist
+Before cutting a mobile release (dev or prod), confirm the Expo project metadata matches your org so builds land under the correct bundle IDs:
+
+- `apps/mobile/app.config.js` drives the Expo config. It reads `APP_VARIANT` (from EAS profiles or CI) to flip the display name/icon suffixes and bundle identifiers (`com.rjaay23.startermono` for prod vs `com.rjaay23.startermono.dev` for dev). Update the `baseId`, `name`, `owner`, icon paths, and `extra.eas.projectId` to your Expo project before publishing.
+- `apps/mobile/eas.json` defines the build profiles the pipelines call. `dev` sets `distribution: internal` with `APP_VARIANT=dev`, while `prd` sets `distribution: store` with `APP_VARIANT=prd`. Let the CI workflows (`deploy-mobile-dev` / `deploy-mobile-prod`) run `eas build` for you; only reach for the CLI when you need to refresh signing assets as described below.
+- Runtime configuration (Supabase + API URLs) is bundled at build time: set `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `EXPO_PUBLIC_API_BASE_URL` in `apps/mobile/.env(.local)` for local builds and replicate the same keys/secrets inside the EAS project for both `dev` and `prd` profiles. GitHub Actions does not inject these automatically.
+- Keep Expo credentials current by running `npx eas build --profile dev|prd --platform ios|android` once per platform whenever you rotate signing certs. That primes EAS so subsequent CI builds can reuse the stored credentials.
+
 ### Secrets & variables required by CI
 Populate these GitHub Action secrets/variables so `monorepo-ci-cd.yml` can authenticate with external services (keep API tokens under **Secrets** and infra coordinates under **Variables**):
 
