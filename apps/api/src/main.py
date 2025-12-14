@@ -37,4 +37,4 @@ app.add_middleware(
 
 from src.routes.router import api_v1  # noqa: E402
 
-app.include_router(api_v1, prefix="/api/v1")
+app.include_router(api_v1)
