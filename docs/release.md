@@ -139,6 +139,18 @@ env:
 
 Pushes to `main` deploy to `${{ env.CLOUD_RUN_SERVICE_DEV }}`; `v*` tags deploy to `${{ env.CLOUD_RUN_SERVICE_PRD }}`. Monitor Cloud Run + Artifact Registry to confirm the shared image is reused across environments.
 
+### 8. Store runtime secrets in Secret Manager
+1. GCP → **Security → Secret Manager → Create secret**.
+2. Create the following entries:
+   - `dev-database-url`: Supabase **direct connection** string (Settings → Database → Connection string → `psql`). Use the pooled host/port (`db.<ref>.supabase.co:6543`) and append `?sslmode=require` so every Cloud Run connection enforces TLS, e.g. `postgresql://postgres:<password>@db.xxxxx.supabase.co:6543/postgres?sslmode=require`.
+   - `dev-supabase-url`: the REST base URL, e.g. `https://someproject.supabase.co`.
+   - `dev-supabase-secret-api-key`: the Supabase service-role key used by FastAPI.
+3. Open the dev Cloud Run service and add environment variables sourced from those secrets (Console: **Variables & Secrets → Add secret** or CLI:  
+   `gcloud run services update ${CLOUD_RUN_SERVICE_DEV} --set-secrets=DATABASE_URL=dev-database-url:latest,SUPABASE_URL=dev-supabase-url:latest,SUPABASE_SECRET_API_KEY=dev-supabase-secret-api-key:latest`).
+4. Repeat for prod (e.g. `prod-database-url`, `prod-supabase-url`, `prod-supabase-secret-api-key`) so each service reads the right credentials without baking them into the image.
+
+Cloud Run now injects `DATABASE_URL`, `SUPABASE_URL`, and `SUPABASE_SECRET_API_KEY` at runtime straight from Secret Manager, matching what FastAPI expects in `apps/api/src/core/database.py`.
+
 ### First-time web deployment prerequisites
 Vercel must already know about the `apps/web` project before CI can deploy it. Run the following once (locally) to bootstrap the project and obtain the IDs referenced above:
 
