@@ -12,12 +12,12 @@ export default ({ config }) => {
     ...config,
 
     // ----- generic app settings -----
-    name: isProd ? "Starter" : "Starter dev",
-    slug: "mobile",
+    name: isProd ? "Starter Mono" : "Starter Mono dev",
+    slug: "starter-mono-mobile",
     version: "0.0.9",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "mobile",
+    scheme: "startermono",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
 
@@ -34,8 +34,6 @@ export default ({ config }) => {
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false
       },
-      // prod: com.anonymous.mobile
-      // dev:  com.anonymous.mobile.dev  (so you *can* install both later)
       bundleIdentifier: isProd ? baseId : `${baseId}.dev`
     },
 
