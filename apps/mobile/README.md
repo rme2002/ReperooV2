@@ -28,7 +28,7 @@ EXPO_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
 
 These are bundled at build time, so restart Expo whenever you change them.
 
-`EXPO_EAS_PROJECT_ID` lives in `apps/mobile/eas.json` under each build profile so local + CI builds stay linked to the right Expo project—update it after creating your own Expo app.
+Expo project metadata is intentionally unlinked in this template. On your first `npx eas build --profile dev --platform android` run, Expo prompts you to create or link a project and writes the resulting project ID into your local `apps/mobile/eas.json`. Keep this template branch with `extra.eas.projectId` set to `undefined`; downstream copies should commit their own ID once linked.
 
 ---
 
@@ -75,7 +75,7 @@ Shortcuts:
 - **Auth flow** – Sign-in + forgot password use Supabase directly; registration posts to the FastAPI `/auth/sign-up` endpoint via the Orval client in `lib/gen/authentication/authentication.ts`.
 - **Session guard** – `hooks/useSupabaseAuthSync.ts` keeps Expo Router stacks aligned with Supabase auth state.
 - **API client** – Whenever `packages/openapi/api.yaml` changes, run `npm run generate-api` (or `make generate-api`) to rebuild the TypeScript client + models in `lib/gen/**`.
-- **App config** – `app.config.js` reads `APP_VARIANT` to toggle the app name and bundle identifiers (`com.rjaay23.startermono` vs `*.dev`). Update the base ID, icons, owner, and set the `EXPO_EAS_PROJECT_ID` entry in `apps/mobile/eas.json` so `extra.eas.projectId` points at your Expo project before shipping. Keep the `dev`/`prd` profiles aligned with your release strategy.
+- **App config** – `app.config.js` reads `APP_VARIANT` to toggle the app name and bundle identifiers (`com.rjaay23.startermono` vs `*.dev`). Update the base ID, icons, owner, and, once your fork is linked to an Expo project, keep `extra.eas.projectId` pointing at that ID (EAS writes it into `apps/mobile/eas.json` the first time you link). Keep the `dev`/`prd` profiles aligned with your release strategy.
 - **CI builds** – Rely on the GitHub workflows (`mobile_deploy_env=dev` or `make release-mobile` → `mobile-v*`) to run EAS builds. Only use `npx eas build ...` locally when bootstrapping or rotating signing certs as outlined in `docs/release.md`.
 - **Metro vs. native build** – Only run `npx expo run:ios` when you need a fresh native build. Day-to-day edits only require Metro (`npm run start`) and the simulator already open.
 - **Troubleshooting ports** – If the Expo CLI reports “port in use”, specify `npm run start -- --port 8083`.

@@ -7,16 +7,14 @@
       "distribution": "internal",
       "environment": "development",
       "env": {
-        "APP_VARIANT": "dev",
-        "EXPO_EAS_PROJECT_ID": "61f3bcf4-6efc-4be7-87a9-ff4dfdffa6f2"
+        "APP_VARIANT": "dev"
       }
     },
     "prd": {
       "distribution": "store",
       "environment": "production",
       "env": {
-        "APP_VARIANT": "prd",
-        "EXPO_EAS_PROJECT_ID": "61f3bcf4-6efc-4be7-87a9-ff4dfdffa6f2"
+        "APP_VARIANT": "prd"
       }
     }
   }
