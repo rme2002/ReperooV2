@@ -5,13 +5,13 @@ info:
     Core API
   version: 0.0.1
 servers:
-  - url: http://localhost:8080/api/v1
+  - url: http://localhost:8080
 tags:
   - name: Health
   - name: Authentication
 
 paths:
-  /health:
+  /api/v1/health:
     get:
       tags:
         - Health
@@ -33,7 +33,7 @@ paths:
           $ref: '#/components/responses/ErrorResponse500'
 
   # Authentication
-  /auth/sign-up:
+  /api/v1/auth/sign-up:
     post:
       tags:
         - Authentication

@@ -52,7 +52,7 @@ export const getHealthCheckUrl = () => {
 
   
 
-  return `http://example.com/health`
+  return `http://example.com/api/v1/health`
 }
 
 export const healthCheck = async ( options?: RequestInit): Promise<healthCheckResponse> => {

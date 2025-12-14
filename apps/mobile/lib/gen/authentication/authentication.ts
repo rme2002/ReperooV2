@@ -53,7 +53,7 @@ export const getSignUpByEmailAndPasswordUrl = () => {
 
   
 
-  return `http://example.com/auth/sign-up`
+  return `http://example.com/api/v1/auth/sign-up`
 }
 
 export const signUpByEmailAndPassword = async (signUpEmailPasswordPayload: SignUpEmailPasswordPayload, options?: RequestInit): Promise<signUpByEmailAndPasswordResponse> => {

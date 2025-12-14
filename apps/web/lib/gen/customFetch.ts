@@ -19,9 +19,7 @@ const getUrl = (contextUrl: string): string => {
   const pathname = url.pathname;
   const search = url.search;
   const baseUrl =
-    process.env.NODE_ENV === "production"
-      ? "http://localhost:8080/api/v1"
-      : "http://localhost:8080/api/v1";
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
   const requestUrl = new URL(`${baseUrl}${pathname}${search}`);
 

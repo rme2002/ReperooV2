@@ -147,7 +147,7 @@ Vercel must already know about the `apps/web` project before CI can deploy it. R
 3. `cd apps/web` – move into the Next.js app.
 4. `vercel` – when prompted, select **No** for linking, provide the project name, choose the correct scope/team, and confirm the initial deploy.
 
-This creates the project under your team without wiring up Git. Afterwards, copy the **Project ID** and **Team ID** (org) from Vercel → **Settings → General** into GitHub (either as repo variables or secrets) and create a `VERCEL_TOKEN` for CI. The first CI build may still fail until you add the Supabase env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, etc.) inside Vercel → Project → Settings → Environment Variables; expect the export error shown in the logs until those keys exist. Add `NEXT_PUBLIC_API_URL=<API URL LOCATION>` alongside those env vars so Vercel web builds know where to reach the deployed API.
+This creates the project under your team without wiring up Git. Afterwards, copy the **Project ID** and **Team ID** (org) from Vercel → **Settings → General** into GitHub (either as repo variables or secrets) and create a `VERCEL_TOKEN` for CI. The first CI build may still fail until you add the Supabase env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, etc.) inside Vercel → Project → Settings → Environment Variables; expect the export error shown in the logs until those keys exist. Add `NEXT_PUBLIC_API_BASE_URL=<API URL LOCATION>` alongside those env vars so Vercel web builds know where to reach the deployed API.
 
 ## Cutting a Prd Release
 1. **Verify `main` is releasable**  
