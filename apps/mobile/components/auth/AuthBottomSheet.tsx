@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
   Animated,
+  ScrollView,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
-import { supabase } from "@/lib/supabase";
-import { signUpByEmailAndPassword } from "@/lib/gen/authentication/authentication";
+
+import { LoginPanel } from "./components/LoginPanel";
+import { RegisterPanel } from "./components/RegisterPanel";
 
 type AuthBottomSheetProps = {
   visible: boolean;
@@ -20,7 +21,10 @@ type AuthBottomSheetProps = {
   onClose: () => void;
 };
 
-const SHEET_HEIGHT = 520;
+const MIN_SHEET_HEIGHT = 600;
+const SHEET_VERTICAL_MARGIN = 24;
+const KEYBOARD_BEHAVIOR = Platform.OS === "ios" ? "padding" : "height";
+const KEYBOARD_VERTICAL_OFFSET = Platform.OS === "ios" ? 16 : 0;
 
 export function AuthBottomSheet({
   visible,
@@ -29,8 +33,23 @@ export function AuthBottomSheet({
 }: AuthBottomSheetProps) {
   const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [mounted, setMounted] = useState(visible);
-  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+  const translateY = useRef(new Animated.Value(1)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const { height: windowHeight } = useWindowDimensions();
+
+  const sheetHeight = useMemo(() => {
+    const availableHeight = Math.max(windowHeight - SHEET_VERTICAL_MARGIN, 0);
+    if (availableHeight === 0) {
+      return MIN_SHEET_HEIGHT;
+    }
+    const desiredHeight = Math.max(windowHeight * 0.92, MIN_SHEET_HEIGHT);
+    return Math.min(desiredHeight, availableHeight);
+  }, [windowHeight]);
+
+  const sheetTranslateY = translateY.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, sheetHeight],
+  });
 
   useEffect(() => {
     if (visible) {
@@ -51,7 +70,7 @@ export function AuthBottomSheet({
     } else if (mounted) {
       Animated.parallel([
         Animated.timing(translateY, {
-          toValue: SHEET_HEIGHT,
+          toValue: 1,
           duration: 260,
           useNativeDriver: true,
         }),
@@ -81,7 +100,8 @@ export function AuthBottomSheet({
     >
       <KeyboardAvoidingView
         style={StyleSheet.absoluteFill}
-        behavior={Platform.select({ ios: "padding", android: undefined })}
+        behavior={KEYBOARD_BEHAVIOR}
+        keyboardVerticalOffset={KEYBOARD_VERTICAL_OFFSET}
       >
         <Animated.View
           style={[
@@ -97,7 +117,8 @@ export function AuthBottomSheet({
           style={[
             styles.sheet,
             {
-              transform: [{ translateY }],
+              height: sheetHeight,
+              transform: [{ translateY: sheetTranslateY }],
             },
           ]}
         >
@@ -133,203 +154,22 @@ export function AuthBottomSheet({
             ))}
           </View>
 
-          <View style={styles.sheetContent}>
+          <ScrollView
+            style={styles.sheetContent}
+            contentContainerStyle={styles.sheetContentContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            keyboardDismissMode="on-drag"
+          >
             {mode === "login" ? (
               <LoginPanel onSubmitSuccess={handleClose} />
             ) : (
               <RegisterPanel onSubmitSuccess={() => setMode("login")} />
             )}
-          </View>
+          </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
-  );
-}
-
-type LoginPanelProps = {
-  onSubmitSuccess: () => void;
-};
-
-function LoginPanel({ onSubmitSuccess }: LoginPanelProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleLogin = async () => {
-    if (loading) return;
-    if (!email || !password) {
-      Alert.alert(
-        "Missing information",
-        "Enter email and password to continue.",
-      );
-      return;
-    }
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    setLoading(false);
-
-    if (error) {
-      Alert.alert("Unable to sign in", error.message);
-      return;
-    }
-
-    onSubmitSuccess();
-  };
-
-  return (
-    <View style={styles.form}>
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        placeholder="you@domain.com"
-        placeholderTextColor="rgba(255,255,255,0.5)"
-        style={styles.input}
-      />
-
-      <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Password</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          placeholder="••••••••"
-          placeholderTextColor="rgba(255,255,255,0.5)"
-          style={styles.input}
-        />
-      </View>
-
-      <Pressable
-        style={({ pressed }) => [
-          styles.primaryButton,
-          (pressed || loading) && styles.primaryButtonPressed,
-        ]}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        <Text style={styles.primaryButtonText}>
-          {loading ? "Signing in…" : "Continue"}
-        </Text>
-      </Pressable>
-    </View>
-  );
-}
-
-type RegisterPanelProps = {
-  onSubmitSuccess: () => void;
-};
-
-function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const passwordsMismatch = useMemo(
-    () =>
-      password.length > 0 &&
-      confirmPassword.length > 0 &&
-      password !== confirmPassword,
-    [password, confirmPassword],
-  );
-
-  const handleRegister = async () => {
-    if (loading) return;
-    if (!email || !password || !confirmPassword) {
-      Alert.alert("Missing information", "Complete every field to continue.");
-      return;
-    }
-
-    if (passwordsMismatch) {
-      Alert.alert(
-        "Passwords do not match",
-        "Please re-enter matching passwords.",
-      );
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await signUpByEmailAndPassword({ email, password });
-
-      if (response.status < 200 || response.status >= 300) {
-        throw new Error(
-          response.data.message || "Unable to create account right now.",
-        );
-      }
-
-      Alert.alert(
-        "Check your inbox",
-        response.data.message ||
-          "Confirm your email to finish creating the account.",
-      );
-      onSubmitSuccess();
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unable to create account right now.";
-      Alert.alert("Unable to register", message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <View style={styles.form}>
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        placeholder="you@domain.com"
-        placeholderTextColor="rgba(255,255,255,0.5)"
-        style={styles.input}
-      />
-
-      <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Password</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          placeholder="••••••••"
-          placeholderTextColor="rgba(255,255,255,0.5)"
-          style={styles.input}
-        />
-      </View>
-
-      <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Confirm password</Text>
-        <TextInput
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          placeholder="••••••••"
-          placeholderTextColor="rgba(255,255,255,0.5)"
-          style={[styles.input, passwordsMismatch && styles.inputError]}
-        />
-      </View>
-
-      <Pressable
-        style={({ pressed }) => [
-          styles.primaryButton,
-          (pressed || loading) && styles.primaryButtonPressed,
-        ]}
-        onPress={handleRegister}
-        disabled={loading}
-      >
-        <Text style={styles.primaryButtonText}>
-          {loading ? "Creating…" : "Create account"}
-        </Text>
-      </Pressable>
-    </View>
   );
 }
 
@@ -342,7 +182,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    minHeight: SHEET_HEIGHT,
     backgroundColor: "#050814",
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
@@ -398,47 +237,10 @@ const styles = StyleSheet.create({
   },
   sheetContent: {
     marginTop: 20,
+    flex: 1,
   },
-  form: {
-    gap: 16,
-  },
-  label: {
-    color: "rgba(248,250,252,0.8)",
-    fontSize: 13,
-    fontWeight: "600",
-    letterSpacing: 0.4,
-  },
-  fieldGroup: {
-    gap: 8,
-  },
-  input: {
-    marginTop: 8,
-    height: 52,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    color: "#ffffff",
-    fontSize: 16,
-  },
-  inputError: {
-    borderColor: "rgba(248,113,113,0.8)",
-  },
-  primaryButton: {
-    marginTop: 8,
-    backgroundColor: "#2563eb",
-    borderRadius: 18,
-    height: 56,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  primaryButtonPressed: {
-    opacity: 0.85,
-  },
-  primaryButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
+  sheetContentContainer: {
+    paddingBottom: 24,
+    flexGrow: 1,
   },
 });
