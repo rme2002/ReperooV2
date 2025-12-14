@@ -40,7 +40,15 @@ Before cutting a mobile release (dev or prod), confirm the Expo project metadata
 
 - `apps/mobile/app.config.js` drives the Expo config. It reads `APP_VARIANT` (from EAS profiles or CI) to flip the display name/icon suffixes and bundle identifiers (`com.rjaay23.startermono` for prod vs `com.rjaay23.startermono.dev` for dev). Update the `baseId`, `name`, `owner`, icon paths, and, after linking the app to your Expo project, ensure `extra.eas.projectId` (checked into your fork’s `apps/mobile/eas.json`) matches that project before publishing so CI builds don’t prompt for linkage.
 - `apps/mobile/eas.json` defines the build profiles the pipelines call. `dev` sets `distribution: internal` with `APP_VARIANT=dev`, while `prd` sets `distribution: store` with `APP_VARIANT=prd`. Let the CI workflows (`deploy-mobile-dev` / `deploy-mobile-prod`) run `eas build` for you; only reach for the CLI when you need to refresh signing assets as described below.
-- Runtime configuration (Supabase + API URLs) is bundled at build time: set `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `EXPO_PUBLIC_API_BASE_URL` in `apps/mobile/.env(.local)` for local builds and replicate the same keys/secrets inside the EAS project for both `dev` and `prd` profiles. GitHub Actions does not inject these automatically.
+- Runtime configuration (Supabase + API URLs) is bundled at build time: set `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `EXPO_PUBLIC_API_BASE_URL` in `apps/mobile/.env(.local)` for local builds **and** create the same variables inside the Expo project (EAS dashboard or `eas secret:create`) so hosted builds see them. Example values:
+
+  ```env
+  EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+  EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=public-anon-key
+  EXPO_PUBLIC_API_BASE_URL=https://api.yourapp.com/api/v1
+  ```
+
+  GitHub Actions never injects these automatically, so missing Expo-side values will break dev/prod builds.
 - Keep Expo credentials current by running `npx eas build --profile dev|prd --platform ios|android` once per platform whenever you rotate signing certs. That primes EAS so subsequent CI builds can reuse the stored credentials.
 
 ### Secrets & variables required by CI

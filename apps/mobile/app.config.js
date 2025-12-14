@@ -67,7 +67,7 @@ export default ({ config }) => {
       ...(config.extra || {}),
       router: {},
       eas: {
-        projectId: undefined // replace with your own expo eas project id
+        projectId: "a03dd2a6-0203-4177-9330-880a4a87e3be" // replace with your own expo eas project id, set to undefined for first build so cli generates on for you
       },
       appVariant: variant // handy to read inside the app if needed
     },
