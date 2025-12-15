@@ -74,7 +74,7 @@ export function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
         keyboardType="email-address"
         autoCapitalize="none"
         placeholder="you@domain.com"
-        placeholderTextColor="rgba(255,255,255,0.5)"
+        placeholderTextColor="rgba(15,23,42,0.4)"
         style={styles.input}
       />
 
@@ -85,7 +85,7 @@ export function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
           onChangeText={setPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="rgba(255,255,255,0.5)"
+          placeholderTextColor="rgba(15,23,42,0.4)"
           style={styles.input}
         />
       </View>
@@ -97,7 +97,7 @@ export function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
           onChangeText={setConfirmPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="rgba(255,255,255,0.5)"
+          placeholderTextColor="rgba(15,23,42,0.4)"
           style={[styles.input, passwordsMismatch && styles.inputError]}
         />
       </View>

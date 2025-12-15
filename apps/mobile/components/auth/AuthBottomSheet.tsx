@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   ScrollView,
   KeyboardAvoidingView,
   Modal,
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
@@ -25,6 +26,9 @@ const MIN_SHEET_HEIGHT = 600;
 const SHEET_VERTICAL_MARGIN = 24;
 const KEYBOARD_BEHAVIOR = Platform.OS === "ios" ? "padding" : "height";
 const KEYBOARD_VERTICAL_OFFSET = Platform.OS === "ios" ? 16 : 0;
+const DISMISS_DISTANCE_THRESHOLD = 0.55;
+const DISMISS_VELOCITY_THRESHOLD = 1.1;
+const PAN_ACTIVATION_THRESHOLD = 6;
 
 export function AuthBottomSheet({
   visible,
@@ -50,6 +54,59 @@ export function AuthBottomSheet({
     inputRange: [0, 1],
     outputRange: [0, sheetHeight],
   });
+
+  const handleClose = useCallback(() => {
+    if (visible) {
+      onClose();
+    }
+  }, [onClose, visible]);
+
+  const animateTo = useCallback(
+    (toValue: number, onComplete?: () => void) => {
+      Animated.spring(translateY, {
+        toValue,
+        stiffness: 220,
+        damping: 28,
+        mass: 0.9,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) {
+          onComplete?.();
+        }
+      });
+    },
+    [translateY],
+  );
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: (_, gestureState) =>
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx) &&
+          Math.abs(gestureState.dy) > PAN_ACTIVATION_THRESHOLD,
+        onPanResponderMove: (_, gestureState) => {
+          const delta = clamp(gestureState.dy, 0, sheetHeight);
+          translateY.setValue(delta / sheetHeight);
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          const normalized = clamp(gestureState.dy / sheetHeight, 0, 1);
+          const shouldDismiss =
+            normalized > DISMISS_DISTANCE_THRESHOLD ||
+            gestureState.vy > DISMISS_VELOCITY_THRESHOLD;
+          if (shouldDismiss) {
+            animateTo(1);
+            handleClose();
+            return;
+          }
+          animateTo(0);
+        },
+        onPanResponderTerminate: () => {
+          animateTo(0);
+        },
+      }),
+    [animateTo, handleClose, sheetHeight, translateY],
+  );
 
   useEffect(() => {
     if (visible) {
@@ -85,12 +142,6 @@ export function AuthBottomSheet({
 
   if (!mounted) return null;
 
-  const handleClose = () => {
-    if (visible) {
-      onClose();
-    }
-  };
-
   return (
     <Modal
       transparent
@@ -122,14 +173,11 @@ export function AuthBottomSheet({
             },
           ]}
         >
-          <View style={styles.dragIndicator} />
-          <View style={styles.sheetHeader}>
+          <View style={styles.dragRegion} {...panResponder.panHandlers}>
+            <View style={styles.dragIndicator} />
             <Text style={styles.sheetTitle}>
               {mode === "login" ? "Welcome back" : "Create your account"}
             </Text>
-            <Pressable onPress={handleClose} hitSlop={16}>
-              <Text style={styles.closeText}>Close</Text>
-            </Pressable>
           </View>
 
           <View style={styles.segmented}>
@@ -173,74 +221,88 @@ export function AuthBottomSheet({
   );
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
 const styles = StyleSheet.create({
   backdrop: {
-    backgroundColor: "rgba(3, 7, 18, 0.75)",
+    backgroundColor: "rgba(15, 23, 42, 0.25)",
   },
   sheet: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#050814",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    padding: 20,
-    paddingBottom: 32,
+    backgroundColor: "#f4f6ff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 28,
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.25)",
+    shadowColor: "rgba(15,23,42,0.06)",
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: -6 },
+    elevation: 2,
   },
   dragIndicator: {
     width: 60,
     height: 5,
     borderRadius: 999,
     alignSelf: "center",
-    backgroundColor: "rgba(148,163,184,0.6)",
-    marginBottom: 16,
+    backgroundColor: "rgba(100,116,139,0.3)",
+    marginBottom: 14,
   },
-  sheetHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  dragRegion: {
+    paddingBottom: 12,
+    gap: 8,
   },
   sheetTitle: {
-    color: "#f8fafc",
-    fontSize: 20,
-    fontWeight: "600",
-  },
-  closeText: {
-    color: "#94a3b8",
-    fontSize: 15,
+    color: "#0f172a",
+    fontSize: 18,
     fontWeight: "600",
   },
   segmented: {
     flexDirection: "row",
-    backgroundColor: "rgba(148,163,184,0.16)",
+    backgroundColor: "#e2e8f0",
     borderRadius: 14,
     padding: 4,
-    marginTop: 20,
+    marginTop: 16,
   },
   segmentButton: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: 10,
     alignItems: "center",
   },
   segmentButtonActive: {
-    backgroundColor: "rgba(59, 130, 246, 0.2)",
+    backgroundColor: "#ffffff",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.35)",
+    shadowColor: "rgba(15,23,42,0.08)",
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   segmentText: {
-    color: "#94a3b8",
-    fontSize: 14,
+    color: "#334155",
+    fontSize: 13,
     fontWeight: "600",
   },
   segmentTextActive: {
-    color: "#f8fafc",
+    color: "#0f172a",
   },
   sheetContent: {
-    marginTop: 20,
+    marginTop: 18,
     flex: 1,
   },
   sheetContentContainer: {
-    paddingBottom: 24,
+    paddingBottom: 20,
     flexGrow: 1,
   },
 });

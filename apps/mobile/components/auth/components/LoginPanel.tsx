@@ -48,7 +48,7 @@ export function LoginPanel({ onSubmitSuccess }: LoginPanelProps) {
         keyboardType="email-address"
         autoCapitalize="none"
         placeholder="you@domain.com"
-        placeholderTextColor="rgba(255,255,255,0.5)"
+        placeholderTextColor="rgba(15,23,42,0.4)"
         style={styles.input}
       />
 
@@ -59,7 +59,7 @@ export function LoginPanel({ onSubmitSuccess }: LoginPanelProps) {
           onChangeText={setPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="rgba(255,255,255,0.5)"
+          placeholderTextColor="rgba(15,23,42,0.4)"
           style={styles.input}
         />
       </View>
