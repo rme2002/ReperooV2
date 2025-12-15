@@ -6,10 +6,12 @@ import { IconAlertCircle, IconCheck } from "@tabler/icons-react";
 import {
   Alert,
   Anchor,
+  Badge,
   Button,
   Container,
   Paper,
   PasswordInput,
+  Stack,
   Text,
   TextInput,
   Title,
@@ -56,85 +58,98 @@ export function Register() {
   };
 
   return (
-    <Container size={420} my={40}>
-      <Title ta="center" className={classes.title}>
-        Create an account
-      </Title>
+    <section className={classes.page}>
+      <Container size="lg" className={classes.grid}>
+        <div className={classes.info}>
+          <Badge size="lg" radius="xl" className={classes.badge}>
+            Build with Starter
+          </Badge>
+          <Title className={classes.title}>Create your Starter HQ</Title>
+          <Text className={classes.subtitle}>
+            Centralize venue requests, automate host schedules, and keep your
+            roster synced across the team.
+          </Text>
+        </div>
 
-      <Text className={classes.subtitle}>
-        Already have an account?{" "}
-        <Anchor component={Link} href="/login">
-          Sign in
-        </Anchor>
-      </Text>
-
-      <Paper
-        withBorder
-        shadow="sm"
-        p={22}
-        mt={30}
-        radius="md"
-        component="form"
-        onSubmit={handleSubmit}
-      >
-        {error && (
-          <Alert
-            icon={<IconAlertCircle size={16} />}
-            color="red"
-            variant="light"
-            mb="md"
-          >
-            {error}
-          </Alert>
-        )}
-
-        {success && (
-          <Alert
-            icon={<IconCheck size={16} />}
-            color="green"
-            variant="light"
-            mb="md"
-          >
-            {success}{" "}
-            <Anchor component={Link} href="/login">
-              Go to login
-            </Anchor>
-          </Alert>
-        )}
-
-        <TextInput
-          label="Email"
-          placeholder="you@mantine.dev"
-          required
-          radius="md"
-          value={email}
-          onChange={(event) => setEmail(event.currentTarget.value)}
-          type="email"
-          autoComplete="email"
-          disabled={loading || Boolean(success)}
-        />
-        <PasswordInput
-          label="Password"
-          placeholder="Your secure password"
-          required
-          mt="md"
-          radius="md"
-          value={password}
-          onChange={(event) => setPassword(event.currentTarget.value)}
-          autoComplete="new-password"
-          disabled={loading || Boolean(success)}
-        />
-        <Button
-          type="submit"
-          fullWidth
-          mt="xl"
-          radius="md"
-          loading={loading}
-          disabled={loading || Boolean(success)}
+        <Paper
+          withBorder
+          shadow="sm"
+          radius="lg"
+          p="xl"
+          component="form"
+          onSubmit={handleSubmit}
+          className={classes.card}
         >
-          Create account
-        </Button>
-      </Paper>
-    </Container>
+          <Stack gap="xs" mb="lg">
+            <Text size="sm" c="dimmed">
+              Already have an account?{" "}
+              <Anchor component={Link} href="/login">
+                Sign in
+              </Anchor>
+            </Text>
+          </Stack>
+
+          {error && (
+            <Alert
+              icon={<IconAlertCircle size={16} />}
+              color="red"
+              variant="light"
+              mb="md"
+            >
+              {error}
+            </Alert>
+          )}
+
+          {success && (
+            <Alert
+              icon={<IconCheck size={16} />}
+              color="green"
+              variant="light"
+              mb="md"
+            >
+              {success}{" "}
+              <Anchor component={Link} href="/login">
+                Go to login
+              </Anchor>
+            </Alert>
+          )}
+
+          <Stack gap="md">
+            <TextInput
+              label="Email"
+              placeholder="you@starter.com"
+              required
+              radius="md"
+              value={email}
+              onChange={(event) => setEmail(event.currentTarget.value)}
+              type="email"
+              autoComplete="email"
+              disabled={loading || Boolean(success)}
+            />
+            <PasswordInput
+              label="Password"
+              placeholder="Your secure password"
+              required
+              radius="md"
+              value={password}
+              onChange={(event) => setPassword(event.currentTarget.value)}
+              autoComplete="new-password"
+              disabled={loading || Boolean(success)}
+            />
+          </Stack>
+
+          <Button
+            type="submit"
+            fullWidth
+            mt="xl"
+            radius="md"
+            loading={loading}
+            disabled={loading || Boolean(success)}
+          >
+            Create account
+          </Button>
+        </Paper>
+      </Container>
+    </section>
   );
 }

@@ -1,49 +1,63 @@
 "use client";
 
-import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import {
   Anchor,
-  Box,
+  Badge,
   Button,
-  Center,
   Container,
-  Group,
   Paper,
+  Stack,
   Text,
   TextInput,
   Title,
 } from "@mantine/core";
+import { IconArrowLeft } from "@tabler/icons-react";
 import classes from "./ForgotPassword.module.css";
 
 export function ForgotPassword() {
   return (
-    <Container size={460} my={30}>
-      <Title className={classes.title} ta="center">
-        Forgot your password?
-      </Title>
-      <Text c="dimmed" fz="sm" ta="center">
-        Enter your email to get a reset link
-      </Text>
+    <section className={classes.page}>
+      <Container size="lg" className={classes.grid}>
+        <div className={classes.info}>
+          <Badge size="lg" radius="xl" className={classes.badge}>
+            Reset access
+          </Badge>
+          <Title className={classes.title}>Forgot your password?</Title>
+          <Text className={classes.subtitle}>
+            Enter your email and we&apos;ll send a secure reset link so you can
+            get back into Starter.
+          </Text>
+        </div>
 
-      <Paper withBorder shadow="md" p={30} radius="md" mt="xl">
-        <TextInput label="Your email" placeholder="me@mantine.dev" required />
-        <Group justify="space-between" mt="lg" className={classes.controls}>
-          <Anchor
-            component={Link}
-            href="/login"
-            c="dimmed"
-            size="sm"
-            className={classes.control}
-          >
-            <Center inline>
-              <IconArrowLeft size={12} stroke={1.5} />
-              <Box ml={5}>Back to the login page</Box>
-            </Center>
-          </Anchor>
-          <Button className={classes.control}>Reset password</Button>
-        </Group>
-      </Paper>
-    </Container>
+        <Paper
+          withBorder
+          radius="lg"
+          shadow="sm"
+          p="xl"
+          className={classes.card}
+        >
+          <TextInput
+            label="Email"
+            placeholder="you@starter.com"
+            required
+            radius="md"
+          />
+
+          <Stack gap="xs" mt="lg">
+            <Button radius="md">Send reset link</Button>
+            <Button
+              variant="subtle"
+              color="dark"
+              component={Link}
+              href="/login"
+              leftSection={<IconArrowLeft size={16} />}
+            >
+              Back to sign in
+            </Button>
+          </Stack>
+        </Paper>
+      </Container>
+    </section>
   );
 }

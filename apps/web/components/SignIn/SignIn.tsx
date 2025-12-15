@@ -14,6 +14,7 @@ import {
   TextInput,
   Title,
   Alert,
+  Badge,
 } from "@mantine/core";
 import type { LoginState } from "@/components/SignIn/actions";
 import classes from "./SignIn.module.css";
@@ -41,59 +42,83 @@ function SubmitButton({ pending }: SubmitButtonProps) {
   );
 }
 
+const INFO_POINTS = [
+  "View every booking request in one place",
+  "Keep host shifts and guest rosters synced",
+  "Answer live chat from anywhere",
+] as const;
+
 export function SignIn({ action }: SignInProps) {
   const [state, formAction, pending] = useActionState(action, { error: null });
 
   return (
-    <Container size={420} my={40}>
-      <Title ta="center" className={classes.title}>
-        Welcome back!
-      </Title>
+    <section className={classes.page}>
+      <Container size="lg" className={classes.grid}>
+        <div className={classes.info}>
+          <Badge size="lg" radius="xl" className={classes.badge}>
+            Welcome back
+          </Badge>
+          <Title className={classes.title}>Sign in to Starter</Title>
+          <Text className={classes.subtitle}>
+            Access your venue dashboard to manage bookings, guests, and hosts.
+          </Text>
+          <Stack gap="sm" mt="lg" className={classes.highlights}>
+            {INFO_POINTS.map((point) => (
+              <Group key={point} gap="xs" align="flex-start">
+                <div className={classes.dot} />
+                <Text>{point}</Text>
+              </Group>
+            ))}
+          </Stack>
+        </div>
 
-      <Text className={classes.subtitle}>
-        Do not have an account yet?{" "}
-        <Anchor component={Link} href="/register">
-          Create account
-        </Anchor>
-      </Text>
+        <Paper
+          withBorder
+          shadow="sm"
+          radius="lg"
+          p="xl"
+          component="form"
+          action={formAction}
+          aria-busy={pending}
+          className={classes.card}
+        >
+          {state.error ? (
+            <Alert color="red" variant="light" mb="md">
+              {state.error}
+            </Alert>
+          ) : null}
 
-      <Paper
-        withBorder
-        shadow="sm"
-        p={22}
-        mt={30}
-        radius="md"
-        component="form"
-        action={formAction}
-        aria-busy={pending}
-      >
-        {state.error ? (
-          <Alert color="red" variant="light" mb="md">
-            {state.error}
-          </Alert>
-        ) : null}
-        <TextInput
-          label="Email"
-          name="email"
-          placeholder="you@mantine.dev"
-          required
-          radius="md"
-        />
-        <PasswordInput
-          label="Password"
-          name="password"
-          placeholder="Your password"
-          required
-          mt="md"
-          radius="md"
-        />
-        <Group justify="flex-end" mt="lg">
-          <Anchor component={Link} href="/forgot-password" size="sm">
-            Forgot password?
-          </Anchor>
-        </Group>
-        <SubmitButton pending={pending} />
-      </Paper>
-    </Container>
+          <Stack gap="md">
+            <TextInput
+              label="Email"
+              name="email"
+              placeholder="you@starter.com"
+              required
+              radius="md"
+            />
+            <PasswordInput
+              label="Password"
+              name="password"
+              placeholder="••••••••"
+              required
+              radius="md"
+            />
+          </Stack>
+
+          <Group justify="space-between" mt="lg" mb="sm">
+            <Anchor component={Link} href="/forgot-password" size="sm">
+              Forgot password?
+            </Anchor>
+            <Text size="sm" c="dimmed">
+              New here?{" "}
+              <Anchor component={Link} href="/register">
+                Create account
+              </Anchor>
+            </Text>
+          </Group>
+          <SubmitButton pending={pending} />
+        </Paper>
+      </Container>
+    </section>
   );
 }
