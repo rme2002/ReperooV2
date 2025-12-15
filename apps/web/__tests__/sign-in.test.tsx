@@ -15,7 +15,7 @@ describe("SignIn", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /welcome back!/i })
+      screen.getByRole("heading", { name: /sign in to starter/i })
     ).toBeInTheDocument();
   });
 });
