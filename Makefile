@@ -9,7 +9,7 @@ DEV_WEB ?= true
 DEV_MOBILE ?= true
 
 # ===== targets =====
-.PHONY: setup clean setup-clean lint lint-fix dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop generate-api release release-mobile
+.PHONY: setup clean setup-clean lint lint-fix test test-integration dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop generate-api release release-mobile
 
 ## Bootstrap dependencies (uv + npm installs)
 setup:
@@ -83,9 +83,27 @@ lint:
 	@cd apps/api && uvx ruff check .
 	@echo "[WEB] 🧼 npm run lint"
 	@npm run lint --prefix $(WEB_DIR)
+	@echo "[WEB] 🔎 npm run typecheck"
+	@npm run typecheck --prefix $(WEB_DIR)
 	@echo "[MOBILE] 🧼 npm run lint"
 	@npm run lint --prefix $(MOBILE_DIR)
+	@echo "[MOBILE] 🔎 npm run typecheck"
+	@npm run typecheck --prefix $(MOBILE_DIR)
 	@echo "✅ Lint checks completed."
+
+test:
+	@echo "[API] 🧪 uv run pytest"
+	@cd apps/api && uv run pytest
+	@echo "[WEB] 🧪 npm run test"
+	@npm run test --prefix $(WEB_DIR)
+	@echo "[MOBILE] 🧪 npm run test"
+	@npm run test --prefix $(MOBILE_DIR)
+	@echo "✅ Tests completed."
+
+test-integration:
+	@echo "[API] 🔐 uv run pytest -m integration"
+	@cd apps/api && uv run pytest -m integration
+	@echo "✅ Integration tests completed."
 
 lint-fix:
 	@echo "[API] 🧹 uvx ruff check . --fix"
