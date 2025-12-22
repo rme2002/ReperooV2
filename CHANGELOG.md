@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.11 - 2025-12-22
+### API
+- No changes
+
+### Web
+- fix web tests
+
+
+### Other
+- update makefile
+
+
 ## v0.0.10 - 2025-12-08
 ### API
 - chore(release): v0.0.9
