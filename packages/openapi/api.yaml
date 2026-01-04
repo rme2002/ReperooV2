@@ -9,6 +9,7 @@ servers:
 tags:
   - name: Health
   - name: Authentication
+  - name: Transactions
 
 paths:
   /api/v1/health:
@@ -64,6 +65,38 @@ paths:
           description: Error 500
           $ref: '#/components/responses/ErrorResponse500'
 
+  # Transactions
+  /api/v1/transactions/create:
+    post:
+      tags:
+        - Transactions
+      summary: Create transaction
+      description: Append a new transaction to the transactions table
+      operationId: createTransaction
+      requestBody:
+        required: true
+        description: Transaction payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionPayload'
+      responses:
+        '201':
+          description: Transaction created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Error 400
+          $ref: '#/components/responses/ErrorResponse400'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
 components:
   schemas:
     UID:
@@ -109,6 +142,139 @@ components:
       required:
         - id
         - email
+
+    TransactionType:
+      type: string
+      enum:
+        - expense
+        - income
+      example: expense
+    TransactionAmount:
+      type: string
+      example: "42.50"
+      description: Positive decimal amount with 2 decimal places
+      pattern: "^(?:0\\.[0-9]{1,2}|[1-9][0-9]*\\.[0-9]{2})$"
+    TransactionBase:
+      type: object
+      properties:
+        user_id:
+          $ref: "#/components/schemas/UID"
+        occurred_at:
+          type: string
+          format: date-time
+          example: "2024-06-01T13:45:00Z"
+        amount:
+          $ref: "#/components/schemas/TransactionAmount"
+        type:
+          $ref: "#/components/schemas/TransactionType"
+        expense_category_id:
+          type: string
+          nullable: true
+          example: "personal"
+        expense_subcategory_id:
+          type: string
+          nullable: true
+          example: "beauty_care"
+        income_category_id:
+          type: string
+          nullable: true
+          example: null
+        notes:
+          type: string
+          nullable: true
+          example: "makeup"
+        transaction_tag:
+          type: string
+          nullable: true
+          example: "want"
+      required:
+        - user_id
+        - occurred_at
+        - amount
+        - type
+
+    CreateExpenseTransactionPayload:
+      allOf:
+        - $ref: "#/components/schemas/TransactionBase"
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - expense
+            expense_category_id:
+              type: string
+            transaction_tag:
+              type: string
+          required:
+            - type
+            - expense_category_id
+            - transaction_tag
+    CreateIncomeTransactionPayload:
+      allOf:
+        - $ref: "#/components/schemas/TransactionBase"
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - income
+            income_category_id:
+              type: string
+          required:
+            - type
+            - income_category_id
+    CreateTransactionPayload:
+      oneOf:
+        - $ref: "#/components/schemas/CreateExpenseTransactionPayload"
+        - $ref: "#/components/schemas/CreateIncomeTransactionPayload"
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UID"
+        user_id:
+          $ref: "#/components/schemas/UID"
+        occurred_at:
+          type: string
+          format: date-time
+          example: "2024-06-01T13:45:00Z"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-06-01T13:45:00Z"
+        amount:
+          $ref: "#/components/schemas/TransactionAmount"
+        type:
+          $ref: "#/components/schemas/TransactionType"
+        expense_category_id:
+          type: string
+          nullable: true
+          example: "personal"
+        expense_subcategory_id:
+          type: string
+          nullable: true
+          example: "beauty_care"
+        income_category_id:
+          type: string
+          nullable: true
+          example: null
+        notes:
+          type: string
+          nullable: true
+          example: "makeup"
+        transaction_tag:
+          type: string
+          nullable: true
+          example: "want"
+      required:
+        - id
+        - user_id
+        - occurred_at
+        - created_at
+        - amount
+        - type
 
     GenericSuccess:
       type: object

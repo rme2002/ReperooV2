@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   Alert,
   Pressable,
@@ -9,12 +9,19 @@ import {
   View,
 } from "react-native";
 import { AuthScreenShell } from "@/components/auth/AuthScreenShell";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ email?: string }>();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof params.email === "string") {
+      setEmail(params.email);
+    }
+  }, [params.email]);
 
   const handleReset = async () => {
     if (loading) return;
@@ -26,6 +33,15 @@ export default function ForgotPasswordScreen() {
       return;
     }
     setLoading(true);
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      Alert.alert(
+        "Reset link sent",
+        "Mock mode: we'd email you a reset link once Supabase is configured.",
+      );
+      return;
+    }
+
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     setLoading(false);
 

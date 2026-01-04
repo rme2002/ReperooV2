@@ -1,21 +1,62 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+
+const MOCK_SESSION: Session = {
+  access_token: "mock-access-token",
+  refresh_token: "mock-refresh-token",
+  token_type: "bearer",
+  expires_in: 3600,
+  expires_at: Math.floor(Date.now() / 1000) + 3600,
+  provider_token: null,
+  provider_refresh_token: null,
+  user: {
+    id: "00000000-0000-0000-0000-000000000001",
+    aud: "authenticated",
+    role: "authenticated",
+    email: "jane.smith@email.com",
+    email_confirmed_at: new Date().toISOString(),
+    confirmed_at: new Date().toISOString(),
+    last_sign_in_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    phone: "",
+    app_metadata: { provider: "email" },
+    user_metadata: {
+      display_name: "Jane Smith",
+      preferred_currency: "EUR",
+    },
+    identities: [],
+  },
+};
 
 export function useSupabaseAuthSync() {
   const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setSession(MOCK_SESSION);
+      setInitializing(false);
+      return;
+    }
+
     let isMounted = true;
 
     const init = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (isMounted) {
-        setSession(session);
-        setInitializing(false);
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (isMounted) {
+          setSession(session);
+          setInitializing(false);
+        }
+      } catch (error) {
+        console.warn("Failed to fetch Supabase session", error);
+        if (isMounted) {
+          setInitializing(false);
+        }
       }
     };
 
@@ -33,5 +74,5 @@ export function useSupabaseAuthSync() {
     };
   }, []);
 
-  return { session, initializing };
+  return { session, initializing, isMockSession: !isSupabaseConfigured };
 }

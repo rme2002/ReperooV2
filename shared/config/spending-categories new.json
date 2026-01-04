@@ -1,0 +1,81 @@
+{
+  "categories": [
+    {
+      "id": "essentials",
+      "label": "Essentials",
+      "icon": "🥕",
+      "subcategories": [
+        { "id": "groceries", "label": "Groceries" },
+        { "id": "housing_bills", "label": "Housing & Bills" },
+        { "id": "debt_loans", "label": "Debt & Loans" },
+        { "id": "transport", "label": "Transport" },
+        { "id": "health_insurance", "label": "Health & Insurance" },
+        { "id": "essentials_other", "label": "Other" }
+      ]
+    },
+    {
+      "id": "lifestyle",
+      "label": "Lifestyle",
+      "icon": "🌞",
+      "subcategories": [
+        { "id": "food_drinks_out", "label": "Food & Drinks Out" },
+        { "id": "entertainment", "label": "Entertainment" },
+        { "id": "hobbies", "label": "Hobbies" },
+        { "id": "travel", "label": "Travel" },
+        { "id": "fitness", "label": "Fitness & Sports" },
+        { "id": "lifestyle_other", "label": "Other" }
+      ]
+    },
+    {
+      "id": "personal",
+      "label": "Personal",
+      "icon": "🧺",
+      "subcategories": [
+        { "id": "shopping", "label": "Shopping (Clothing/Tech/Home)" },
+        { "id": "beauty_care", "label": "Beauty & Care" },
+        { "id": "home_household", "label": "Home & Household" },
+        { "id": "gifts_giving", "label": "Gifts & Giving" },
+        { "id": "electronics_tech", "label": "Electronics & Tech" },
+        { "id": "personal_other", "label": "Other" }
+      ]
+    },
+    {
+      "id": "savings",
+      "label": "Savings",
+      "icon": "💰",
+      "subcategories": [
+        { "id": "emergency_fund", "label": "Emergency Fund" },
+        { "id": "general_savings", "label": "General Savings" },
+        { "id": "holiday_fund", "label": "Holiday Fund" },
+        { "id": "big_purchases", "label": "Big Purchases"},
+        { "id": "savings_other", "label": "Other" }
+      ]
+    },
+    {
+      "id": "investments",
+      "label": "Investments",
+      "icon": "📈",
+      "subcategories": [
+        { "id": "market_investing", "label": "Market Investing (Stocks/ETFs)" },
+        { "id": "retirement_pension", "label": "Retirement / Pension" },
+        { "id": "crypto", "label": "Crypto" },
+        { "id": "investments_other", "label": "Other" }
+      ]
+    },
+    {
+      "id": "other",
+      "label": "Other",
+      "icon": "✨",
+      "subcategories": [
+        { "id": "fees_interest", "label": "Fees & Interest" },
+        { "id": "cash_withdrawal", "label": "Cash Withdrawal" },
+        { "id": "transfers", "label": "Transfers" },
+        { "id": "other_misc", "label": "Other" }
+      ]
+    }
+  ],
+  "transaction_tags": [
+    { "id": "need", "label": "Need" },
+    { "id": "want", "label": "Want" }
+  ]
+}

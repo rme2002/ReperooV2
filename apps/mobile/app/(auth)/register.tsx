@@ -58,7 +58,7 @@ export default function RegisterScreen() {
 
   return (
     <AuthScreenShell
-      title="Create your space 🚀"
+      title="Create your space"
       subtitle="Personalize your workspace and invite your team in seconds."
       highlights={["Shared workspaces", "Secure access", "Instant insights"]}
       footer={
@@ -81,7 +81,7 @@ export default function RegisterScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           placeholder="you@domain.com"
-          placeholderTextColor="rgba(255,255,255,0.5)"
+          placeholderTextColor="#9ca3af"
           style={styles.input}
         />
       </View>
@@ -93,7 +93,7 @@ export default function RegisterScreen() {
           onChangeText={setPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="rgba(255,255,255,0.5)"
+          placeholderTextColor="#9ca3af"
           style={styles.input}
         />
       </View>
@@ -105,7 +105,7 @@ export default function RegisterScreen() {
           onChangeText={setConfirmPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="rgba(255,255,255,0.5)"
+          placeholderTextColor="#9ca3af"
           style={styles.input}
         />
       </View>
@@ -128,20 +128,20 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   label: {
-    color: "rgba(255,255,255,0.8)",
+    color: "#6b7280",
     fontSize: 13,
     fontWeight: "600",
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
   input: {
     marginTop: 8,
     height: 52,
     borderRadius: 14,
     paddingHorizontal: 16,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    color: "#ffffff",
+    borderColor: "#ede7dc",
+    color: "#111827",
     fontSize: 16,
   },
   fieldGroup: {
@@ -149,17 +149,19 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     marginTop: 24,
-    backgroundColor: "#10b981",
+    backgroundColor: "#111827",
     borderRadius: 18,
     height: 56,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#0b1222",
   },
   primaryButtonPressed: {
     opacity: 0.85,
   },
   primaryButtonText: {
-    color: "#041019",
+    color: "#f8fafc",
     fontSize: 17,
     fontWeight: "700",
     letterSpacing: 0.3,
@@ -168,12 +170,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   secondaryText: {
-    color: "rgba(255,255,255,0.65)",
+    color: "#6b7280",
     fontSize: 14,
     marginTop: 8,
   },
   secondaryTextAccent: {
-    color: "#38bdf8",
+    color: "#111827",
     fontWeight: "600",
   },
 });

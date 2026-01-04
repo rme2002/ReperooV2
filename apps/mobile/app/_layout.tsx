@@ -5,12 +5,14 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
+import { BudgetProvider } from "@/src/features/budget/BudgetProvider";
+import { UserPreferencesProvider } from "@/src/features/profile/UserPreferencesProvider";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
 
 export {
@@ -18,7 +20,6 @@ export {
   ErrorBoundary,
 } from "expo-router";
 
-// mock changes to mobile
 export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
@@ -52,7 +53,23 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { initializing } = useSupabaseAuthSync();
+  const { session, initializing } = useSupabaseAuthSync();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (initializing) return;
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (!session && !inAuthGroup) {
+      router.replace("/(auth)/login");
+      return;
+    }
+
+    if (session && inAuthGroup) {
+      router.replace("/(tabs)");
+    }
+  }, [initializing, router, segments, session]);
 
   if (initializing) {
     return null;
@@ -60,14 +77,19 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="(tabs)"
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-      </Stack>
+      <UserPreferencesProvider session={session}>
+        <BudgetProvider>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(tabs)"
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+          </Stack>
+        </BudgetProvider>
+      </UserPreferencesProvider>
     </ThemeProvider>
   );
 }

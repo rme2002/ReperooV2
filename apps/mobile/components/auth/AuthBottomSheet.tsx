@@ -1,20 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
-  ScrollView,
   KeyboardAvoidingView,
   Modal,
-  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
-  useWindowDimensions,
 } from "react-native";
-
-import { LoginPanel } from "./components/LoginPanel";
-import { RegisterPanel } from "./components/RegisterPanel";
+import { supabase } from "@/lib/supabase";
+import { signUpByEmailAndPassword } from "@/lib/gen/authentication/authentication";
 
 type AuthBottomSheetProps = {
   visible: boolean;
@@ -22,13 +20,7 @@ type AuthBottomSheetProps = {
   onClose: () => void;
 };
 
-const MIN_SHEET_HEIGHT = 600;
-const SHEET_VERTICAL_MARGIN = 24;
-const KEYBOARD_BEHAVIOR = Platform.OS === "ios" ? "padding" : "height";
-const KEYBOARD_VERTICAL_OFFSET = Platform.OS === "ios" ? 16 : 0;
-const DISMISS_DISTANCE_THRESHOLD = 0.55;
-const DISMISS_VELOCITY_THRESHOLD = 1.1;
-const PAN_ACTIVATION_THRESHOLD = 6;
+const SHEET_HEIGHT = 520;
 
 export function AuthBottomSheet({
   visible,
@@ -37,76 +29,8 @@ export function AuthBottomSheet({
 }: AuthBottomSheetProps) {
   const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [mounted, setMounted] = useState(visible);
-  const translateY = useRef(new Animated.Value(1)).current;
+  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const { height: windowHeight } = useWindowDimensions();
-
-  const sheetHeight = useMemo(() => {
-    const availableHeight = Math.max(windowHeight - SHEET_VERTICAL_MARGIN, 0);
-    if (availableHeight === 0) {
-      return MIN_SHEET_HEIGHT;
-    }
-    const desiredHeight = Math.max(windowHeight * 0.92, MIN_SHEET_HEIGHT);
-    return Math.min(desiredHeight, availableHeight);
-  }, [windowHeight]);
-
-  const sheetTranslateY = translateY.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, sheetHeight],
-  });
-
-  const handleClose = useCallback(() => {
-    if (visible) {
-      onClose();
-    }
-  }, [onClose, visible]);
-
-  const animateTo = useCallback(
-    (toValue: number, onComplete?: () => void) => {
-      Animated.spring(translateY, {
-        toValue,
-        stiffness: 220,
-        damping: 28,
-        mass: 0.9,
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (finished) {
-          onComplete?.();
-        }
-      });
-    },
-    [translateY],
-  );
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: (_, gestureState) =>
-          Math.abs(gestureState.dy) > Math.abs(gestureState.dx) &&
-          Math.abs(gestureState.dy) > PAN_ACTIVATION_THRESHOLD,
-        onPanResponderMove: (_, gestureState) => {
-          const delta = clamp(gestureState.dy, 0, sheetHeight);
-          translateY.setValue(delta / sheetHeight);
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          const normalized = clamp(gestureState.dy / sheetHeight, 0, 1);
-          const shouldDismiss =
-            normalized > DISMISS_DISTANCE_THRESHOLD ||
-            gestureState.vy > DISMISS_VELOCITY_THRESHOLD;
-          if (shouldDismiss) {
-            animateTo(1);
-            handleClose();
-            return;
-          }
-          animateTo(0);
-        },
-        onPanResponderTerminate: () => {
-          animateTo(0);
-        },
-      }),
-    [animateTo, handleClose, sheetHeight, translateY],
-  );
 
   useEffect(() => {
     if (visible) {
@@ -127,7 +51,7 @@ export function AuthBottomSheet({
     } else if (mounted) {
       Animated.parallel([
         Animated.timing(translateY, {
-          toValue: 1,
+          toValue: SHEET_HEIGHT,
           duration: 260,
           useNativeDriver: true,
         }),
@@ -142,6 +66,12 @@ export function AuthBottomSheet({
 
   if (!mounted) return null;
 
+  const handleClose = () => {
+    if (visible) {
+      onClose();
+    }
+  };
+
   return (
     <Modal
       transparent
@@ -151,8 +81,7 @@ export function AuthBottomSheet({
     >
       <KeyboardAvoidingView
         style={StyleSheet.absoluteFill}
-        behavior={KEYBOARD_BEHAVIOR}
-        keyboardVerticalOffset={KEYBOARD_VERTICAL_OFFSET}
+        behavior={Platform.select({ ios: "padding", android: undefined })}
       >
         <Animated.View
           style={[
@@ -168,16 +97,18 @@ export function AuthBottomSheet({
           style={[
             styles.sheet,
             {
-              height: sheetHeight,
-              transform: [{ translateY: sheetTranslateY }],
+              transform: [{ translateY }],
             },
           ]}
         >
-          <View style={styles.dragRegion} {...panResponder.panHandlers}>
-            <View style={styles.dragIndicator} />
+          <View style={styles.dragIndicator} />
+          <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>
               {mode === "login" ? "Welcome back" : "Create your account"}
             </Text>
+            <Pressable onPress={handleClose} hitSlop={16}>
+              <Text style={styles.closeText}>Close</Text>
+            </Pressable>
           </View>
 
           <View style={styles.segmented}>
@@ -202,107 +133,312 @@ export function AuthBottomSheet({
             ))}
           </View>
 
-          <ScrollView
-            style={styles.sheetContent}
-            contentContainerStyle={styles.sheetContentContainer}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            keyboardDismissMode="on-drag"
-          >
+          <View style={styles.sheetContent}>
             {mode === "login" ? (
               <LoginPanel onSubmitSuccess={handleClose} />
             ) : (
               <RegisterPanel onSubmitSuccess={() => setMode("login")} />
             )}
-          </ScrollView>
+          </View>
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );
 }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
+type LoginPanelProps = {
+  onSubmitSuccess: () => void;
+};
+
+function LoginPanel({ onSubmitSuccess }: LoginPanelProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (loading) return;
+    if (!email || !password) {
+      Alert.alert(
+        "Missing information",
+        "Enter email and password to continue.",
+      );
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setLoading(false);
+
+    if (error) {
+      Alert.alert("Unable to sign in", error.message);
+      return;
+    }
+
+    onSubmitSuccess();
+  };
+
+  return (
+    <View style={styles.form}>
+      <Text style={styles.label}>Email</Text>
+      <TextInput
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        placeholder="you@domain.com"
+        placeholderTextColor="rgba(255,255,255,0.5)"
+        style={styles.input}
+      />
+
+      <View style={styles.fieldGroup}>
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          placeholder="••••••••"
+          placeholderTextColor="rgba(255,255,255,0.5)"
+          style={styles.input}
+        />
+      </View>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.primaryButton,
+          (pressed || loading) && styles.primaryButtonPressed,
+        ]}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        <Text style={styles.primaryButtonText}>
+          {loading ? "Signing in…" : "Continue"}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+type RegisterPanelProps = {
+  onSubmitSuccess: () => void;
+};
+
+function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const passwordsMismatch = useMemo(
+    () =>
+      password.length > 0 &&
+      confirmPassword.length > 0 &&
+      password !== confirmPassword,
+    [password, confirmPassword],
+  );
+
+  const handleRegister = async () => {
+    if (loading) return;
+    if (!email || !password || !confirmPassword) {
+      Alert.alert("Missing information", "Complete every field to continue.");
+      return;
+    }
+
+    if (passwordsMismatch) {
+      Alert.alert(
+        "Passwords do not match",
+        "Please re-enter matching passwords.",
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await signUpByEmailAndPassword({ email, password });
+
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error(
+          response.data.message || "Unable to create account right now.",
+        );
+      }
+
+      Alert.alert(
+        "Check your inbox",
+        response.data.message ||
+          "Confirm your email to finish creating the account.",
+      );
+      onSubmitSuccess();
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to create account right now.";
+      Alert.alert("Unable to register", message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.form}>
+      <Text style={styles.label}>Email</Text>
+      <TextInput
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        placeholder="you@domain.com"
+        placeholderTextColor="rgba(255,255,255,0.5)"
+        style={styles.input}
+      />
+
+      <View style={styles.fieldGroup}>
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          placeholder="••••••••"
+          placeholderTextColor="rgba(255,255,255,0.5)"
+          style={styles.input}
+        />
+      </View>
+
+      <View style={styles.fieldGroup}>
+        <Text style={styles.label}>Confirm password</Text>
+        <TextInput
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+          placeholder="••••••••"
+          placeholderTextColor="rgba(255,255,255,0.5)"
+          style={[styles.input, passwordsMismatch && styles.inputError]}
+        />
+      </View>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.primaryButton,
+          (pressed || loading) && styles.primaryButtonPressed,
+        ]}
+        onPress={handleRegister}
+        disabled={loading}
+      >
+        <Text style={styles.primaryButtonText}>
+          {loading ? "Creating…" : "Create account"}
+        </Text>
+      </Pressable>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   backdrop: {
-    backgroundColor: "rgba(15, 23, 42, 0.25)",
+    backgroundColor: "rgba(3, 7, 18, 0.75)",
   },
   sheet: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#f4f6ff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 28,
-    borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.25)",
-    shadowColor: "rgba(15,23,42,0.06)",
-    shadowOpacity: 1,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: -6 },
-    elevation: 2,
+    minHeight: SHEET_HEIGHT,
+    backgroundColor: "#050814",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 20,
+    paddingBottom: 32,
   },
   dragIndicator: {
     width: 60,
     height: 5,
     borderRadius: 999,
     alignSelf: "center",
-    backgroundColor: "rgba(100,116,139,0.3)",
-    marginBottom: 14,
+    backgroundColor: "rgba(148,163,184,0.6)",
+    marginBottom: 16,
   },
-  dragRegion: {
-    paddingBottom: 12,
-    gap: 8,
+  sheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   sheetTitle: {
-    color: "#0f172a",
-    fontSize: 18,
+    color: "#f8fafc",
+    fontSize: 20,
+    fontWeight: "600",
+  },
+  closeText: {
+    color: "#94a3b8",
+    fontSize: 15,
     fontWeight: "600",
   },
   segmented: {
     flexDirection: "row",
-    backgroundColor: "#e2e8f0",
+    backgroundColor: "rgba(148,163,184,0.16)",
     borderRadius: 14,
     padding: 4,
-    marginTop: 16,
+    marginTop: 20,
   },
   segmentButton: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 10,
     alignItems: "center",
   },
   segmentButtonActive: {
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.35)",
-    shadowColor: "rgba(15,23,42,0.08)",
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    backgroundColor: "rgba(59, 130, 246, 0.2)",
   },
   segmentText: {
-    color: "#334155",
-    fontSize: 13,
+    color: "#94a3b8",
+    fontSize: 14,
     fontWeight: "600",
   },
   segmentTextActive: {
-    color: "#0f172a",
+    color: "#f8fafc",
   },
   sheetContent: {
-    marginTop: 18,
-    flex: 1,
+    marginTop: 20,
   },
-  sheetContentContainer: {
-    paddingBottom: 20,
-    flexGrow: 1,
+  form: {
+    gap: 16,
+  },
+  label: {
+    color: "rgba(248,250,252,0.8)",
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 0.4,
+  },
+  fieldGroup: {
+    gap: 8,
+  },
+  input: {
+    marginTop: 8,
+    height: 52,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    color: "#ffffff",
+    fontSize: 16,
+  },
+  inputError: {
+    borderColor: "rgba(248,113,113,0.8)",
+  },
+  primaryButton: {
+    marginTop: 8,
+    backgroundColor: "#2563eb",
+    borderRadius: 18,
+    height: 56,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryButtonPressed: {
+    opacity: 0.85,
+  },
+  primaryButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

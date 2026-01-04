@@ -4,15 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
 import { AuthBottomSheet } from "@/components/auth/AuthBottomSheet";
 
-type SettingItem = {
-  key: string;
-  title: string;
-  description: string;
-  accent?: boolean;
-  danger?: boolean;
-};
-
-const baseSettings: SettingItem[] = [
+const baseSettings = [
   {
     key: "profile",
     title: "Profile & Identity",
@@ -35,7 +27,7 @@ export default function SettingsScreen() {
   const [authSheetOpen, setAuthSheetOpen] = useState(false);
   const { session } = useSupabaseAuthSync();
 
-  const settingsItems = useMemo<SettingItem[]>(() => {
+  const settingsItems = useMemo(() => {
     if (session) {
       return [
         ...baseSettings,
@@ -89,7 +81,7 @@ export default function SettingsScreen() {
         more.
       </Text>
 
-      <FlatList<SettingItem>
+      <FlatList
         data={settingsItems}
         keyExtractor={(item) => item.key}
         scrollEnabled={false}

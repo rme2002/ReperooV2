@@ -146,7 +146,7 @@ Use this checklist whenever you add or expand a capability so the API contract, 
 
 1. **Capture requirements + spec intent**
    - Write user-facing requirements (“User must be able to…”) and note constraints.
-   - If the change is significant (new endpoint, breaking behavior, infra shift), follow the OpenSpec process in `openspec/AGENTS.md` before touching code.
+   - If the change is significant (new endpoint, breaking behavior, infra shift), draft a short change proposal before touching code.
 2. **Update the OpenAPI contract**
    - Edit `packages/openapi/api.yaml` first; add/modify schemas, params, and responses that reflect the requirements.
    - Keep naming + status codes consistent with existing endpoints under `/api/v1/*`.
