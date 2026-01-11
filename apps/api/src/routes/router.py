@@ -2,8 +2,14 @@
 from fastapi import APIRouter
 from src.routes.health import router as health_router
 from src.routes.auth_routes import router as auth_router
+from src.routes.transaction_routes import router as transaction_router
+from src.routes.recurring_template_routes import router as recurring_template_router
+from src.routes.budget_plan_routes import router as budget_plan_router
 
 api_v1 = APIRouter(prefix="/api/v1")
 api_v1.include_router(health_router, tags=["health"])
 api_v1.include_router(auth_router, prefix="/auth", tags=["auth"])
+api_v1.include_router(transaction_router, prefix="/transactions", tags=["transactions"])
+api_v1.include_router(recurring_template_router, prefix="/transactions", tags=["recurring-templates"])
+api_v1.include_router(budget_plan_router, prefix="/budget-plans", tags=["budget-plans"])
 # api_v1.include_router(reservations_router, prefix="/reservations", tags=["reservations"])

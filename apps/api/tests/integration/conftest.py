@@ -10,8 +10,11 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import delete
 
-from src.core.database import session_scope
+from src.core.database import get_session, session_scope
 from src.db.models import Profile as ProfileDB
+from src.db.models.expense_category import ExpenseCategory
+from src.db.models.income_category import IncomeCategory
+from src.db.models.transaction import Transaction
 from src.main import app
 
 logger = logging.getLogger(__name__)
@@ -63,12 +66,16 @@ class IntegrationCleanup:
         self._supabase = supabase_client
         self._profile_ids: set[str] = set()
         self._supabase_user_ids: set[str] = set()
+        self._transaction_ids: set[str] = set()
 
     def track_profile(self, profile_id: str) -> None:
         self._profile_ids.add(profile_id)
 
     def track_supabase_user(self, user_id: str) -> None:
         self._supabase_user_ids.add(user_id)
+
+    def track_transaction(self, transaction_id: str) -> None:
+        self._transaction_ids.add(transaction_id)
 
     async def run(self) -> None:
         # Cleanup temporarily disabled; re-enable once we want Supabase/auth cleanup again.
@@ -98,6 +105,22 @@ class IntegrationCleanup:
             session.execute(delete(ProfileDB).where(ProfileDB.id.in_(profile_ids)))
             session.commit()
 
+    def _cleanup_transactions(self) -> None:
+        if not self._transaction_ids:
+            return
+
+        try:
+            transaction_ids = [UUID(value) for value in self._transaction_ids]
+        except ValueError as exc:  # pragma: no cover - guarded for unexpected input
+            logger.warning("Invalid transaction IDs queued for cleanup: %s", exc)
+            return
+
+        with session_scope() as session:
+            session.execute(
+                delete(Transaction).where(Transaction.id.in_(transaction_ids))
+            )
+            session.commit()
+
 
 @pytest_asyncio.fixture
 async def cleanup_manager(
@@ -116,3 +139,71 @@ async def cleanup_manager(
         yield cleanup
     finally:
         await cleanup.run()
+
+
+@pytest_asyncio.fixture
+async def authenticated_user(
+    async_client: AsyncClient, cleanup_manager: IntegrationCleanup
+) -> dict[str, str]:
+    """
+    Create a user and return their ID and JWT token for authenticated requests.
+    """
+    import secrets
+
+    # Generate unique email for this test
+    email = f"test_{secrets.token_hex(8)}@example.com"
+    password = "TestPassword123!"
+
+    # Sign up the user
+    response = await async_client.post(
+        "/api/v1/auth/sign-up",
+        json={"email": email, "password": password},
+    )
+    assert response.status_code == 201
+    user_data = response.json()
+    user_id = user_data["id"]
+
+    # Track for cleanup
+    cleanup_manager.track_supabase_user(user_id)
+    cleanup_manager.track_profile(user_id)
+
+    # Sign in to get JWT token
+    supabase_client = getattr(app.state, "supabase", None)
+    auth_response = await supabase_client.auth.sign_in_with_password(
+        {"email": email, "password": password}
+    )
+    token = auth_response.session.access_token
+
+    return {"user_id": user_id, "token": token}
+
+
+@pytest.fixture
+def valid_expense_category() -> str:
+    """
+    Return a valid expense category ID from the database.
+    Assumes seed data exists.
+    """
+    session = next(get_session())
+    try:
+        category = session.query(ExpenseCategory).first()
+        if not category:
+            pytest.fail("No expense categories found in database. Please seed data.")
+        return category.id
+    finally:
+        session.close()
+
+
+@pytest.fixture
+def valid_income_category() -> str:
+    """
+    Return a valid income category ID from the database.
+    Assumes seed data exists.
+    """
+    session = next(get_session())
+    try:
+        category = session.query(IncomeCategory).first()
+        if not category:
+            pytest.fail("No income categories found in database. Please seed data.")
+        return category.id
+    finally:
+        session.close()

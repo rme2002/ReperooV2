@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, Numeric
+from sqlalchemy import CheckConstraint, ForeignKey, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -12,6 +12,25 @@ from src.db.models.utils.mixins import TimestampMixin
 
 class BudgetPlan(TimestampMixin, Base):
     __tablename__ = "budget_plans"
+    __table_args__ = (
+        CheckConstraint(
+            "savings_goal IS NULL OR savings_goal >= 0",
+            name="ck_budget_plans_savings_goal_positive",
+        ),
+        CheckConstraint(
+            "investment_goal IS NULL OR investment_goal >= 0",
+            name="ck_budget_plans_investment_goal_positive",
+        ),
+        CheckConstraint(
+            "payday_day_of_month IS NULL OR (payday_day_of_month >= 1 AND payday_day_of_month <= 31)",
+            name="ck_budget_plans_payday_range",
+        ),
+        CheckConstraint(
+            "pay_schedule IS NULL OR pay_schedule IN ('monthly', 'irregular')",
+            name="ck_budget_plans_pay_schedule",
+        ),
+        UniqueConstraint("user_id", name="uq_budget_plans_user_id"),
+    )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
     user_id: Mapped[UUID] = mapped_column(
@@ -19,5 +38,7 @@ class BudgetPlan(TimestampMixin, Base):
         ForeignKey("profiles.id", ondelete="CASCADE"),
         nullable=False,
     )
-    savings_goal: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
-    investment_goal: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    savings_goal: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    investment_goal: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    payday_day_of_month: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    pay_schedule: Mapped[str | None] = mapped_column(String(20), nullable=True)

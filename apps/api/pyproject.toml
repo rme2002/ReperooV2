@@ -9,6 +9,7 @@ dependencies = [
     "fastapi>=0.116.1",
     "google-cloud-secret-manager>=2.21.0",
     "psycopg[binary]>=3.3.2",
+    "pyjwt>=2.9.0",
     "python-dotenv>=1.1.1",
     "sqlalchemy>=2.0.44",
     "supabase>=2.18.1",
