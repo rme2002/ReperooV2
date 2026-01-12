@@ -10,6 +10,7 @@ tags:
   - name: Health
   - name: Authentication
   - name: Transactions
+  - name: Budget Plans
 
 paths:
   /api/v1/health:
@@ -66,30 +67,359 @@ paths:
           $ref: '#/components/responses/ErrorResponse500'
 
   # Transactions
-  /api/v1/transactions/create:
+  /api/v1/transactions/create-expense:
     post:
       tags:
         - Transactions
-      summary: Create transaction
-      description: Append a new transaction to the transactions table
-      operationId: createTransaction
+      summary: Create expense transaction
+      description: Create a new expense transaction in the transactions table
+      operationId: createExpenseTransaction
       requestBody:
         required: true
-        description: Transaction payload
+        description: Expense transaction payload
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateTransactionPayload'
+              $ref: '#/components/schemas/CreateExpenseTransactionPayload'
       responses:
         '201':
-          description: Transaction created
+          description: Expense transaction created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Transaction'
+                $ref: '#/components/schemas/TransactionExpense'
         '400':
           description: Error 400
           $ref: '#/components/responses/ErrorResponse400'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/transactions/create-income:
+    post:
+      tags:
+        - Transactions
+      summary: Create income transaction
+      description: Create a new income transaction in the transactions table
+      operationId: createIncomeTransaction
+      requestBody:
+        required: true
+        description: Income transaction payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIncomeTransactionPayload'
+      responses:
+        '201':
+          description: Income transaction created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionIncome'
+        '400':
+          description: Error 400
+          $ref: '#/components/responses/ErrorResponse400'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/transactions/list:
+    get:
+      tags:
+        - Transactions
+      summary: List transactions
+      description: List all transactions for the current user within a date range. This endpoint automatically materializes recurring transactions before returning the list.
+      operationId: listTransactions
+      parameters:
+        - name: start_date
+          in: query
+          description: Start date for transaction range
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-01-01T00:00:00Z"
+        - name: end_date
+          in: query
+          description: End date for transaction range
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-12-31T23:59:59Z"
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/TransactionExpense'
+                    - $ref: '#/components/schemas/TransactionIncome'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/transactions/update/{id}:
+    patch:
+      tags:
+        - Transactions
+      summary: Update transaction
+      description: Update an existing transaction (partial update). Transaction type cannot be changed.
+      operationId: updateTransaction
+      parameters:
+        - name: id
+          in: path
+          description: Transaction ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UID'
+      requestBody:
+        required: true
+        description: Transaction update payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTransactionPayload'
+      responses:
+        '200':
+          description: Transaction updated
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/TransactionExpense'
+                  - $ref: '#/components/schemas/TransactionIncome'
+        '400':
+          description: Error 400
+          $ref: '#/components/responses/ErrorResponse400'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '404':
+          description: Transaction not found
+          $ref: '#/components/responses/ErrorResponse404'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/transactions/delete/{id}:
+    delete:
+      tags:
+        - Transactions
+      summary: Delete transaction
+      description: Delete an existing transaction
+      operationId: deleteTransaction
+      parameters:
+        - name: id
+          in: path
+          description: Transaction ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/UID'
+      responses:
+        '204':
+          description: Transaction deleted successfully
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '404':
+          description: Transaction not found
+          $ref: '#/components/responses/ErrorResponse404'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  # Recurring Templates
+  /api/v1/transactions/recurring/create:
+    post:
+      tags:
+        - Recurring Templates
+      summary: Create recurring expense template
+      description: Create a new recurring expense transaction template
+      operationId: createRecurringExpenseTemplate
+      requestBody:
+        required: true
+        description: Recurring expense template payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecurringExpenseTemplatePayload'
+      responses:
+        '201':
+          description: Recurring expense template created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringTemplateExpense'
+        '400':
+          description: Error 400
+          $ref: '#/components/responses/ErrorResponse400'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/transactions/recurring/create-income:
+    post:
+      tags:
+        - Recurring Templates
+      summary: Create recurring income template
+      description: Create a new recurring income transaction template
+      operationId: createRecurringIncomeTemplate
+      requestBody:
+        required: true
+        description: Recurring income template payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecurringIncomeTemplatePayload'
+      responses:
+        '201':
+          description: Recurring income template created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringTemplateIncome'
+        '400':
+          description: Error 400
+          $ref: '#/components/responses/ErrorResponse400'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/transactions/recurring/list:
+    get:
+      tags:
+        - Recurring Templates
+      summary: List recurring templates
+      description: List all recurring transaction templates for the current user
+      operationId: listRecurringTemplates
+      parameters:
+        - name: include_paused
+          in: query
+          description: Include paused templates
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of recurring templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/RecurringTemplateExpense'
+                    - $ref: '#/components/schemas/RecurringTemplateIncome'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  # Budget Plans
+  /api/v1/budget-plans/create:
+    post:
+      tags:
+        - Budget Plans
+      summary: Create budget plan
+      description: Create a new budget plan for the authenticated user
+      operationId: createBudgetPlan
+      requestBody:
+        required: true
+        description: Budget plan creation payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBudgetPlanPayload'
+      responses:
+        '201':
+          description: Budget plan created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPlan'
+        '400':
+          description: Error 400
+          $ref: '#/components/responses/ErrorResponse400'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/budget-plans/get:
+    get:
+      tags:
+        - Budget Plans
+      summary: Get budget plan
+      description: Get the budget plan for the authenticated user
+      operationId: getBudgetPlan
+      responses:
+        '200':
+          description: Budget plan retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPlan'
+        '404':
+          description: Error 404
+          $ref: '#/components/responses/ErrorResponse404'
+        '401':
+          description: Error 401
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/budget-plans/update:
+    patch:
+      tags:
+        - Budget Plans
+      summary: Update budget plan
+      description: Update the budget plan for the authenticated user
+      operationId: updateBudgetPlan
+      requestBody:
+        required: true
+        description: Budget plan update payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBudgetPlanPayload'
+      responses:
+        '200':
+          description: Budget plan updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPlan'
+        '400':
+          description: Error 400
+          $ref: '#/components/responses/ErrorResponse400'
+        '404':
+          description: Error 404
+          $ref: '#/components/responses/ErrorResponse404'
         '401':
           description: Error 401
           $ref: '#/components/responses/ErrorResponse401'
@@ -150,10 +480,10 @@ components:
         - income
       example: expense
     TransactionAmount:
-      type: string
-      example: "42.50"
-      description: Positive decimal amount with 2 decimal places
-      pattern: "^(?:0\\.[0-9]{1,2}|[1-9][0-9]*\\.[0-9]{2})$"
+      type: number
+      format: double
+      example: 42.5
+      description: Positive decimal amount
     TransactionBase:
       type: object
       properties:
@@ -165,33 +495,27 @@ components:
           example: "2024-06-01T13:45:00Z"
         amount:
           $ref: "#/components/schemas/TransactionAmount"
-        type:
-          $ref: "#/components/schemas/TransactionType"
-        expense_category_id:
-          type: string
-          nullable: true
-          example: "personal"
-        expense_subcategory_id:
-          type: string
-          nullable: true
-          example: "beauty_care"
-        income_category_id:
-          type: string
-          nullable: true
-          example: null
         notes:
           type: string
           nullable: true
           example: "makeup"
-        transaction_tag:
-          type: string
-          nullable: true
-          example: "want"
       required:
         - user_id
         - occurred_at
         - amount
-        - type
+
+    TransactionMeta:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UID"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-06-01T13:45:00Z"
+      required:
+        - id
+        - created_at
 
     CreateExpenseTransactionPayload:
       allOf:
@@ -200,16 +524,22 @@ components:
           properties:
             type:
               type: string
-              enum:
-                - expense
-            expense_category_id:
-              type: string
+              pattern: '^expense$'
+              example: "expense"
             transaction_tag:
               type: string
+              example: "want"
+            expense_category_id:
+              type: string
+              example: "personal"
+            expense_subcategory_id:
+              type: string
+              nullable: true
+              example: "beauty_care"
           required:
             - type
-            - expense_category_id
             - transaction_tag
+            - expense_category_id
     CreateIncomeTransactionPayload:
       allOf:
         - $ref: "#/components/schemas/TransactionBase"
@@ -217,10 +547,11 @@ components:
           properties:
             type:
               type: string
-              enum:
-                - income
+              pattern: '^income$'
+              example: "income"
             income_category_id:
               type: string
+              example: "salary"
           required:
             - type
             - income_category_id
@@ -228,53 +559,287 @@ components:
       oneOf:
         - $ref: "#/components/schemas/CreateExpenseTransactionPayload"
         - $ref: "#/components/schemas/CreateIncomeTransactionPayload"
+      discriminator:
+        propertyName: type
+        mapping:
+          expense: "#/components/schemas/CreateExpenseTransactionPayload"
+          income: "#/components/schemas/CreateIncomeTransactionPayload"
 
-    Transaction:
+    UpdateExpenseTransactionPayload:
       type: object
       properties:
-        id:
-          $ref: "#/components/schemas/UID"
-        user_id:
-          $ref: "#/components/schemas/UID"
-        occurred_at:
+        type:
           type: string
-          format: date-time
-          example: "2024-06-01T13:45:00Z"
-        created_at:
+          pattern: '^expense$'
+          example: "expense"
+        occurred_at:
           type: string
           format: date-time
           example: "2024-06-01T13:45:00Z"
         amount:
           $ref: "#/components/schemas/TransactionAmount"
-        type:
-          $ref: "#/components/schemas/TransactionType"
-        expense_category_id:
-          type: string
-          nullable: true
-          example: "personal"
-        expense_subcategory_id:
-          type: string
-          nullable: true
-          example: "beauty_care"
-        income_category_id:
-          type: string
-          nullable: true
-          example: null
         notes:
           type: string
           nullable: true
           example: "makeup"
         transaction_tag:
           type: string
-          nullable: true
           example: "want"
+        expense_category_id:
+          type: string
+          example: "personal"
+        expense_subcategory_id:
+          type: string
+          nullable: true
+          example: "beauty_care"
+      required:
+        - type
+
+    UpdateIncomeTransactionPayload:
+      type: object
+      properties:
+        type:
+          type: string
+          pattern: '^income$'
+          example: "income"
+        occurred_at:
+          type: string
+          format: date-time
+          example: "2024-06-01T13:45:00Z"
+        amount:
+          $ref: "#/components/schemas/TransactionAmount"
+        notes:
+          type: string
+          nullable: true
+          example: "salary payment"
+        income_category_id:
+          type: string
+          example: "salary"
+      required:
+        - type
+
+    UpdateTransactionPayload:
+      oneOf:
+        - $ref: "#/components/schemas/UpdateExpenseTransactionPayload"
+        - $ref: "#/components/schemas/UpdateIncomeTransactionPayload"
+      discriminator:
+        propertyName: type
+        mapping:
+          expense: "#/components/schemas/UpdateExpenseTransactionPayload"
+          income: "#/components/schemas/UpdateIncomeTransactionPayload"
+
+    TransactionExpense:
+      allOf:
+        - $ref: "#/components/schemas/TransactionBase"
+        - $ref: "#/components/schemas/TransactionMeta"
+        - type: object
+          properties:
+            type:
+              type: string
+              pattern: '^expense$'
+              example: "expense"
+            transaction_tag:
+              type: string
+              example: "want"
+            expense_category_id:
+              type: string
+              example: "personal"
+            expense_subcategory_id:
+              type: string
+              nullable: true
+              example: "beauty_care"
+          required:
+            - type
+            - transaction_tag
+            - expense_category_id
+
+    TransactionIncome:
+      allOf:
+        - $ref: "#/components/schemas/TransactionBase"
+        - $ref: "#/components/schemas/TransactionMeta"
+        - type: object
+          properties:
+            type:
+              type: string
+              pattern: '^income$'
+              example: "income"
+            income_category_id:
+              type: string
+              example: "salary"
+          required:
+            - type
+            - income_category_id
+
+    Transaction:
+      oneOf:
+        - $ref: "#/components/schemas/TransactionExpense"
+        - $ref: "#/components/schemas/TransactionIncome"
+      discriminator:
+        propertyName: type
+        mapping:
+          expense: "#/components/schemas/TransactionExpense"
+          income: "#/components/schemas/TransactionIncome"
+
+    # Recurring Templates
+    RecurringFrequency:
+      type: string
+      enum:
+        - weekly
+        - biweekly
+        - monthly
+      example: monthly
+
+    RecurringTemplateBase:
+      type: object
+      properties:
+        amount:
+          $ref: "#/components/schemas/TransactionAmount"
+        notes:
+          type: string
+          nullable: true
+          example: "Netflix subscription"
+        frequency:
+          $ref: "#/components/schemas/RecurringFrequency"
+        day_of_week:
+          type: integer
+          minimum: 0
+          maximum: 6
+          nullable: true
+          example: 0
+          description: Day of week for weekly/biweekly (0=Monday, 6=Sunday)
+        day_of_month:
+          type: integer
+          minimum: 1
+          maximum: 31
+          nullable: true
+          example: 15
+          description: Day of month for monthly recurrence (1-31)
+        start_date:
+          type: string
+          format: date-time
+          example: "2024-06-01T00:00:00Z"
+        end_date:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-06-01T00:00:00Z"
+        total_occurrences:
+          type: integer
+          nullable: true
+          example: 12
+          description: Total number of occurrences (alternative to end_date)
+      required:
+        - amount
+        - frequency
+        - start_date
+
+    RecurringTemplateMeta:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UID"
+        user_id:
+          $ref: "#/components/schemas/UID"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-06-01T13:45:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-06-01T13:45:00Z"
+        is_paused:
+          type: boolean
+          default: false
+          description: Whether template is paused
       required:
         - id
         - user_id
-        - occurred_at
         - created_at
-        - amount
-        - type
+        - updated_at
+        - is_paused
+
+    CreateRecurringExpenseTemplatePayload:
+      allOf:
+        - $ref: "#/components/schemas/RecurringTemplateBase"
+        - type: object
+          properties:
+            type:
+              type: string
+              pattern: '^expense$'
+              example: "expense"
+            transaction_tag:
+              type: string
+              example: "want"
+            expense_category_id:
+              type: string
+              example: "personal"
+            expense_subcategory_id:
+              type: string
+              nullable: true
+              example: "beauty_care"
+          required:
+            - type
+            - transaction_tag
+            - expense_category_id
+
+    CreateRecurringIncomeTemplatePayload:
+      allOf:
+        - $ref: "#/components/schemas/RecurringTemplateBase"
+        - type: object
+          properties:
+            type:
+              type: string
+              pattern: '^income$'
+              example: "income"
+            income_category_id:
+              type: string
+              example: "salary"
+          required:
+            - type
+            - income_category_id
+
+    RecurringTemplateExpense:
+      allOf:
+        - $ref: "#/components/schemas/RecurringTemplateBase"
+        - $ref: "#/components/schemas/RecurringTemplateMeta"
+        - type: object
+          properties:
+            type:
+              type: string
+              pattern: '^expense$'
+              example: "expense"
+            transaction_tag:
+              type: string
+              example: "want"
+            expense_category_id:
+              type: string
+              example: "personal"
+            expense_subcategory_id:
+              type: string
+              nullable: true
+              example: "beauty_care"
+          required:
+            - type
+            - transaction_tag
+            - expense_category_id
+
+    RecurringTemplateIncome:
+      allOf:
+        - $ref: "#/components/schemas/RecurringTemplateBase"
+        - $ref: "#/components/schemas/RecurringTemplateMeta"
+        - type: object
+          properties:
+            type:
+              type: string
+              pattern: '^income$'
+              example: "income"
+            income_category_id:
+              type: string
+              example: "salary"
+          required:
+            - type
+            - income_category_id
 
     GenericSuccess:
       type: object
@@ -305,6 +870,67 @@ components:
         - error
         - message
 
+    CreateBudgetPlanPayload:
+      type: object
+      properties:
+        savings_goal:
+          type: number
+          format: float
+          nullable: true
+          description: Monthly savings goal
+          example: 400.0
+        investment_goal:
+          type: number
+          format: float
+          nullable: true
+          description: Monthly investment goal
+          example: 280.0
+
+    UpdateBudgetPlanPayload:
+      type: object
+      properties:
+        savings_goal:
+          type: number
+          format: float
+          nullable: true
+          description: Monthly savings goal
+        investment_goal:
+          type: number
+          format: float
+          nullable: true
+          description: Monthly investment goal
+
+    BudgetPlan:
+      allOf:
+        - $ref: '#/components/schemas/CreateBudgetPlanPayload'
+        - type: object
+          required:
+            - id
+            - user_id
+            - expected_income
+            - created_at
+            - updated_at
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "550e8400-e29b-41d4-a716-446655440000"
+            user_id:
+              type: string
+              format: uuid
+              example: "550e8400-e29b-41d4-a716-446655440001"
+            expected_income:
+              type: number
+              format: float
+              description: Calculated from recurring income templates
+              example: 3600.0
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+
   responses:
     SuccessResponse200:
       description: Ok
@@ -320,6 +946,12 @@ components:
             $ref: '#/components/schemas/GenericError'
     ErrorResponse401:
       description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericError'
+    ErrorResponse404:
+      description: Not found
       content:
         application/json:
           schema:
