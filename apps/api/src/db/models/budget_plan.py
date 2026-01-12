@@ -21,14 +21,6 @@ class BudgetPlan(TimestampMixin, Base):
             "investment_goal IS NULL OR investment_goal >= 0",
             name="ck_budget_plans_investment_goal_positive",
         ),
-        CheckConstraint(
-            "payday_day_of_month IS NULL OR (payday_day_of_month >= 1 AND payday_day_of_month <= 31)",
-            name="ck_budget_plans_payday_range",
-        ),
-        CheckConstraint(
-            "pay_schedule IS NULL OR pay_schedule IN ('monthly', 'irregular')",
-            name="ck_budget_plans_pay_schedule",
-        ),
         UniqueConstraint("user_id", name="uq_budget_plans_user_id"),
     )
 
@@ -40,5 +32,3 @@ class BudgetPlan(TimestampMixin, Base):
     )
     savings_goal: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     investment_goal: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
-    payday_day_of_month: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    pay_schedule: Mapped[str | None] = mapped_column(String(20), nullable=True)

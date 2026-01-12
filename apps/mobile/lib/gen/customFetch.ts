@@ -16,25 +16,47 @@ const getBody = <T>(c: Response | Request): Promise<T> => {
 // NOTE: Update just base url
 const getUrl = (contextUrl: string): string => {
   const url = new URL(contextUrl);
-  const pathname = url.pathname;
+  let pathname = url.pathname;
   const search = url.search;
-  const baseUrl =
-    process.env.NODE_ENV === "production"
-      ? "http://localhost:8080/api/v1"
-      : "http://localhost:8080/api/v1";
+
+  // Use environment variable for API base URL
+  // For iOS simulator, localhost won't work - use your machine's IP or the env variable
+  const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
+
+  console.log('[customFetch] Environment variable EXPO_PUBLIC_API_BASE_URL:', process.env.EXPO_PUBLIC_API_BASE_URL);
+  console.log('[customFetch] Using baseUrl:', baseUrl);
+  console.log('[customFetch] Original contextUrl:', contextUrl);
+  console.log('[customFetch] Original pathname:', pathname);
+
+  // Remove leading /api/v1 if it exists in the pathname since baseUrl already includes it
+  // This prevents duplication when the generated client already includes /api/v1
+  if (pathname.startsWith('/api/v1')) {
+    pathname = pathname.substring(7); // Remove /api/v1 prefix
+    console.log('[customFetch] Removed /api/v1 prefix, new pathname:', pathname);
+  }
 
   const requestUrl = new URL(`${baseUrl}${pathname}${search}`);
+  console.log('[customFetch] Final request URL:', requestUrl.toString());
 
   return requestUrl.toString();
 };
 
 // NOTE: Add headers
-const getHeaders = (headers?: HeadersInit): HeadersInit => {
+const getHeaders = async (headers?: HeadersInit): Promise<HeadersInit> => {
+  // Import supabase dynamically to avoid circular dependencies
+  const { supabase } = await import('../supabase');
+
+  // Get the current session to extract the access token
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const authHeaders: HeadersInit = {};
+  if (session?.access_token) {
+    authHeaders['Authorization'] = `Bearer ${session.access_token}`;
+  }
+
   return {
     ...(headers || {}),
-    // ...headers,
-    // Authorization: 'token',
-    // 'Content-Type': 'multipart/form-data',
+    ...authHeaders,
   };
 };
 
@@ -43,7 +65,7 @@ export const customFetch = async <T>(
   options: RequestInit,
 ): Promise<T> => {
   const requestUrl = getUrl(url);
-  const requestHeaders = getHeaders(options.headers);
+  const requestHeaders = await getHeaders(options.headers);
 
   const requestInit: RequestInit = {
     ...options,

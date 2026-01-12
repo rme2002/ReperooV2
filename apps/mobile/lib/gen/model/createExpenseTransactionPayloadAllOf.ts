@@ -5,10 +5,12 @@
  * Core API
  * OpenAPI spec version: 0.0.1
  */
-import type { CreateExpenseTransactionPayloadAllOfType } from './createExpenseTransactionPayloadAllOfType';
 
 export type CreateExpenseTransactionPayloadAllOf = {
-  type: CreateExpenseTransactionPayloadAllOfType;
-  expense_category_id: string;
+  /** @pattern ^expense$ */
+  type: string;
   transaction_tag: string;
+  expense_category_id: string;
+  /** @nullable */
+  expense_subcategory_id?: string | null;
 };

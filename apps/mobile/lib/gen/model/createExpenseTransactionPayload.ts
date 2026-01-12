@@ -7,5 +7,8 @@
  */
 import type { TransactionBase } from './transactionBase';
 import type { CreateExpenseTransactionPayloadAllOf } from './createExpenseTransactionPayloadAllOf';
+import type { CreateExpenseTransactionPayloadType } from './createExpenseTransactionPayloadType';
 
-export type CreateExpenseTransactionPayload = TransactionBase & CreateExpenseTransactionPayloadAllOf;
+export type CreateExpenseTransactionPayload = TransactionBase & CreateExpenseTransactionPayloadAllOf & {
+  type: CreateExpenseTransactionPayloadType;
+};

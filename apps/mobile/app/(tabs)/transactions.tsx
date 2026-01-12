@@ -15,21 +15,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import spendingCategories from "../../../../shared/config/spending-categories.json";
-import { AddIncomeModal } from "@/components/AddIncomeModal";
-import { AddSpendingModal } from "@/components/AddSpendingModal";
-import { recurringExpensesSeed } from "@/src/dummy_data/recurringExpenses";
-import { ledgerMonths } from "@/src/dummy_data/transactions";
-import type { LedgerMonth, TransactionEntry } from "@/src/dummy_data/transactions";
-import { useBudgetContext } from "@/src/features/budget/BudgetProvider";
-import { getIncomeTypeLabel } from "@/src/features/budget/types";
-import type { IncomeEvent } from "@/src/features/budget/types";
-import { useCurrencyFormatter } from "@/src/features/profile/useCurrencyFormatter";
-import {
-  createTemplateFromPayload,
-  materializeRecurringTransactions,
-  markManualOccurrence,
-  type RecurringExpenseTemplate,
-} from "@/src/features/transactions/recurring";
+import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
+import { AddIncomeModal } from "@/components/modals/AddIncomeModal";
+import type { LedgerMonth, TransactionEntry } from "@/components/dummy_data/transactions";
+import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
+import { createExpenseTransaction, listTransactions } from "@/lib/gen/transactions/transactions";
+import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
+import type { ListTransactions200Item } from "@/lib/gen/model";
+import type { IncomeEvent } from "@/components/budget/types";
 
 type SubCategory = { id: string; label: string };
 type CategoryConfig = {
@@ -60,8 +53,6 @@ const categoryAccent: Record<string, { bg: string; fill: string }> = {
   other: { bg: "#ede9fe", fill: "#a855f7" },
 };
 
-const initialMonths = ledgerMonths;
-
 const formatRelativeDate = (value: Date, reference: Date) => {
   const dayMs = 24 * 60 * 60 * 1000;
   const normalizedTarget = new Date(value);
@@ -85,12 +76,30 @@ const getSubcategoryLabel = (categoryId: string, subId?: string) =>
 
 export default function TransactionsScreen() {
   const { height } = useWindowDimensions();
-  const [baseMonths, setBaseMonths] = useState<LedgerMonth[]>(initialMonths);
-  const [recurringTemplates, setRecurringTemplates] = useState<RecurringExpenseTemplate[]>(recurringExpensesSeed);
-  const months = useMemo(
-    () => materializeRecurringTransactions(baseMonths, recurringTemplates),
-    [baseMonths, recurringTemplates],
-  );
+  const { session } = useSupabaseAuthSync();
+
+  // Generate months dynamically for month navigation
+  const months = useMemo(() => {
+    const result: LedgerMonth[] = [];
+    const now = new Date();
+
+    // Generate 12 months (current month and 11 previous months)
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 15);
+      const key = `${date.toLocaleString('en-US', { month: 'short' }).toLowerCase()}-${date.getFullYear()}`;
+      const label = date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+      result.push({
+        key,
+        label,
+        currentDate: date.toISOString(),
+        transactions: [], // Will be populated from API
+      });
+    }
+
+    return result;
+  }, []);
+
   const [monthIndex, setMonthIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -102,64 +111,125 @@ export default function TransactionsScreen() {
   const [incomeModalVisible, setIncomeModalVisible] = useState(false);
   const [incomeModalMode, setIncomeModalMode] = useState<"add" | "edit" | "view">("add");
   const [editingIncome, setEditingIncome] = useState<IncomeEvent | null>(null);
-  const [showRecurringOnly, setShowRecurringOnly] = useState(false);
-  const { incomeByMonth, deleteIncome } = useBudgetContext();
   const { formatCurrency } = useCurrencyFormatter();
+  const [savingExpense, setSavingExpense] = useState(false);
+  const [apiTransactions, setApiTransactions] = useState<TransactionEntry[]>([]);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const formatMoney = (value: number) =>
     formatCurrency(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const activeMonth = months[monthIndex];
   const activeReference = new Date(activeMonth?.currentDate ?? Date.now());
   const activeMonthKey = activeMonth?.key ?? months[0].key;
-  const monthIncomes = incomeByMonth[activeMonthKey] ?? [];
-  const expenseTransactions = activeMonth?.transactions ?? [];
-  const incomeTransactions: TransactionEntry[] = monthIncomes.map((income) => {
-    const [year, month, day] = income.date.split("-").map(Number);
-    const timestamp = new Date(year, (month ?? 1) - 1, day ?? 1, 9, 0, 0);
-    return {
-      id: income.id,
-      kind: "income",
-      amount: income.amount,
-      incomeType: income.type,
-      note: income.note,
-      timestamp: timestamp.toISOString(),
-      isRecurringInstance: Boolean(income.isRecurring),
-      recurringDayOfMonth: income.recurringDayOfMonth ?? null,
-    };
-  });
-  const monthTransactions = [...expenseTransactions, ...incomeTransactions];
 
-  useEffect(() => {
+  // Transform API transactions to local format (both expense and income)
+  const transformApiTransaction = (apiTx: ListTransactions200Item): TransactionEntry | null => {
+    if (apiTx.type === "expense") {
+      return {
+        id: apiTx.id?.toString() ?? `api-${Date.now()}`,
+        kind: "expense",
+        amount: apiTx.amount,
+        categoryId: apiTx.expense_category_id,
+        subcategoryId: apiTx.expense_subcategory_id ?? undefined,
+        note: apiTx.notes ?? undefined,
+        timestamp: apiTx.occurred_at,
+        isRecurringInstance: false,
+        recurringDayOfMonth: null,
+      };
+    } else if (apiTx.type === "income") {
+      return {
+        id: apiTx.id?.toString() ?? `api-${Date.now()}`,
+        kind: "income",
+        amount: apiTx.amount,
+        incomeCategoryId: apiTx.income_category_id,
+        note: apiTx.notes ?? undefined,
+        timestamp: apiTx.occurred_at,
+        isRecurringInstance: false,
+        recurringDayOfMonth: null,
+      };
+    }
+
+    return null;
+  };
+
+  // Fetch transactions from API
+  const fetchTransactions = async () => {
+    if (!session?.user?.id) {
+      setApiTransactions([]);
+      return;
+    }
+
     setLoading(true);
-    const timer = setTimeout(() => setLoading(false), 360);
-    return () => clearTimeout(timer);
-  }, [monthIndex]);
+    setFetchError(null);
+
+    try {
+      // Calculate date range for the current month
+      const currentDate = new Date(activeMonth?.currentDate ?? Date.now());
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const startDate = new Date(year, month, 1);
+      const endDate = new Date(year, month + 1, 0, 23, 59, 59);
+
+      const response = await listTransactions({
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+      });
+
+      if (response.status === 200) {
+        const transformed = response.data.map(transformApiTransaction).filter((tx): tx is TransactionEntry => tx !== null);
+        setApiTransactions(transformed);
+      } else {
+        setFetchError("Failed to load transactions");
+        setApiTransactions([]);
+      }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      setFetchError("Failed to load transactions");
+      setApiTransactions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use API transactions
+  const monthTransactions = apiTransactions;
+
+  // Fetch transactions when component mounts or month changes
+  useEffect(() => {
+    fetchTransactions();
+  }, [monthIndex, session?.user?.id]);
 
   const filteredTransactions = useMemo(() => {
     const base = monthTransactions.slice();
     const query = searchQuery.trim().toLowerCase();
     const filtered = base.filter((tx) => {
-      if (showRecurringOnly && !tx.isRecurringInstance) {
-        return false;
+      // For expense transactions, filter by category
+      if (tx.kind === "expense") {
+        if (activeCategory && tx.categoryId !== activeCategory) {
+          return false;
+        }
+        if (!query) {
+          return true;
+        }
+        const searchTarget = `${getCategoryLabel(tx.categoryId).toLowerCase()} ${(getSubcategoryLabel(tx.categoryId, tx.subcategoryId) ?? "").toLowerCase()} ${(tx.note ?? "").toLowerCase()}`;
+        return searchTarget.includes(query);
       }
-      if (tx.kind === "income" && activeCategory) {
-        return false;
+      // For income transactions, skip category filter and just search notes
+      if (tx.kind === "income") {
+        if (activeCategory) {
+          return false; // Income doesn't match expense categories
+        }
+        if (!query) {
+          return true;
+        }
+        const searchTarget = `income ${tx.incomeCategoryId.toLowerCase()} ${(tx.note ?? "").toLowerCase()}`;
+        return searchTarget.includes(query);
       }
-      if (tx.kind !== "income" && activeCategory && tx.categoryId !== activeCategory) {
-        return false;
-      }
-      if (!query) {
-        return true;
-      }
-      const searchTarget =
-        tx.kind === "income"
-          ? `${getIncomeTypeLabel(tx.incomeType)} ${(tx.note ?? "").toLowerCase()}`
-          : `${getCategoryLabel(tx.categoryId).toLowerCase()} ${(getSubcategoryLabel(tx.categoryId, tx.subcategoryId) ?? "").toLowerCase()} ${(tx.note ?? "").toLowerCase()}`;
-      return searchTarget.includes(query);
+      return true;
     });
     filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     return filtered;
-  }, [monthTransactions, activeCategory, searchQuery, showRecurringOnly]);
+  }, [monthTransactions, activeCategory, searchQuery]);
 
   const sections: TransactionSection[] = useMemo(() => {
     const map = new Map<string, TransactionSection>();
@@ -178,8 +248,9 @@ export default function TransactionsScreen() {
       }
       const section = map.get(key)!;
       section.data.push(tx);
-      if (tx.kind !== "income") {
-        section.total += tx.amount;
+      section.total += tx.amount;
+      // Only track category totals for expenses
+      if (tx.kind === "expense") {
         section.categoryTotals[tx.categoryId] = (section.categoryTotals[tx.categoryId] ?? 0) + tx.amount;
       }
     });
@@ -200,7 +271,7 @@ export default function TransactionsScreen() {
     setMonthIndex((prev) => Math.max(prev - 1, 0));
   };
 
-  const openAddModal = () => {
+  const openAddExpenseModal = () => {
     setShowAddMenu(false);
     setModalMode("add");
     setEditingTx(null);
@@ -214,28 +285,10 @@ export default function TransactionsScreen() {
     setIncomeModalVisible(true);
   };
 
-  const openEditIncomeModal = (income: IncomeEvent) => {
-    setIncomeModalMode("edit");
-    setEditingIncome(income);
-    setIncomeModalVisible(true);
-  };
-
-  const openIncomeOverview = (income: IncomeEvent) => {
-    setIncomeModalMode("view");
-    setEditingIncome(income);
-    setIncomeModalVisible(true);
-  };
-
   const openEditModal = (tx: TransactionEntry) => {
     setModalMode("edit");
     setEditingTx(tx);
     setModalVisible(true);
-  };
-
-  const closeIncomeModal = () => {
-    setIncomeModalVisible(false);
-    setIncomeModalMode("add");
-    setEditingIncome(null);
   };
 
   const openOverviewModal = (tx: TransactionEntry) => {
@@ -257,131 +310,66 @@ export default function TransactionsScreen() {
     setModalMode("add");
   };
 
-  const handleIncomeOverviewEdit = () => {
-    if (!editingIncome) {
-      return;
-    }
-    setIncomeModalMode("edit");
-  };
 
-  const handleModalSubmit = (payload: {
+  const handleModalSubmit = async (payload: {
     amount: number;
     categoryId: string;
     subcategoryId?: string | null;
     note: string;
     date: Date;
+    transactionTag?: "need" | "want";
     recurring?: { dayOfMonth: number };
   }) => {
     const isoDate = payload.date.toISOString();
-    const dateKey = isoDate.split("T")[0] ?? isoDate;
 
     if (modalMode === "edit" && editingTx) {
-      setBaseMonths((prev) =>
-        prev.map((month, idx) => {
-          if (idx !== monthIndex) return month;
-          const updated = month.transactions.map((tx) =>
-            tx.id === editingTx.id
-              ? {
-                  ...tx,
-                  amount: payload.amount,
-                  categoryId: payload.categoryId,
-                  subcategoryId: payload.subcategoryId ?? undefined,
-                  note: payload.note,
-                  timestamp: isoDate,
-                }
-              : tx,
-          );
-          updated.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-          return { ...month, transactions: updated };
-        }),
-      );
+      // TODO: Implement edit transaction API endpoint
+      Alert.alert("Info", "Edit functionality coming soon!");
       return;
     }
 
-    const createdTemplate = payload.recurring
-      ? createTemplateFromPayload({
+    // Create expense transaction via API
+    if (modalMode === "add" && session?.user?.id) {
+      setSavingExpense(true);
+      try {
+        const response = await createExpenseTransaction({
+          user_id: session.user.id,
+          occurred_at: isoDate,
           amount: payload.amount,
-          categoryId: payload.categoryId,
-          subcategoryId: payload.subcategoryId ?? undefined,
-          note: payload.note,
-          date: payload.date,
-          dayOfMonth: payload.recurring.dayOfMonth,
-        })
-      : null;
+          notes: payload.note || null,
+          type: "expense",
+          transaction_tag: payload.transactionTag || "want",
+          expense_category_id: payload.categoryId,
+          expense_subcategory_id: payload.subcategoryId || null,
+        });
 
-    setBaseMonths((prev) =>
-      prev.map((month, idx) => {
-        if (idx !== monthIndex) return month;
-        const newTx: TransactionEntry = {
-          id: `tx-${month.key}-${Date.now()}`,
-          kind: "expense",
-          amount: payload.amount,
-          categoryId: payload.categoryId,
-          subcategoryId: payload.subcategoryId ?? undefined,
-          note: payload.note,
-          timestamp: isoDate,
-          timeLabel: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
-          ...(createdTemplate
-            ? {
-                recurringTemplateId: createdTemplate.id,
-                recurringDateKey: dateKey,
-                isRecurringInstance: true,
-                recurringDayOfMonth: payload.recurring?.dayOfMonth ?? null,
-              }
-            : {}),
-        };
-        const nextTransactions = [newTx, ...month.transactions];
-        nextTransactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-        return { ...month, transactions: nextTransactions };
-      }),
-    );
+        if (response.status === 201) {
+          Alert.alert("Success", "Expense created successfully!");
 
-    if (createdTemplate) {
-      setRecurringTemplates((prev) => [...prev, createdTemplate]);
+          // Refresh transactions from API
+          await fetchTransactions();
+        } else {
+          Alert.alert("Error", "Failed to create expense transaction");
+        }
+      } catch (error) {
+        console.error("Error creating expense:", error);
+        Alert.alert("Error", "Failed to create expense transaction");
+      } finally {
+        setSavingExpense(false);
+      }
     }
   };
 
   const confirmDelete = (txId: string) => {
-    const expense =
-      activeMonth?.transactions.find((tx) => tx.id === txId && tx.kind === "expense") ?? null;
     Alert.alert("Delete transaction", "Are you sure you want to delete this entry?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
         style: "destructive",
         onPress: () => {
-          if (expense?.isRecurringInstance && expense.recurringTemplateId && expense.recurringDateKey) {
-            setRecurringTemplates((prev) =>
-              prev.map((template) =>
-                template.id === expense.recurringTemplateId
-                  ? markManualOccurrence(template, expense.recurringDateKey!)
-                  : template,
-              ),
-            );
-          }
-          setBaseMonths((prev) =>
-            prev.map((month, idx) => {
-              if (idx !== monthIndex) {
-                return month;
-              }
-              return {
-                ...month,
-                transactions: month.transactions.filter((tx) => tx.id !== txId),
-              };
-            }),
-          );
+          // TODO: Implement delete transaction API endpoint
+          Alert.alert("Info", "Delete functionality coming soon!");
         },
-      },
-    ]);
-  };
-
-  const confirmDeleteIncome = (incomeId: string) => {
-    Alert.alert("Delete income", "Are you sure you want to delete this income entry?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => deleteIncome(activeMonthKey, incomeId),
       },
     ]);
   };
@@ -389,64 +377,65 @@ export default function TransactionsScreen() {
   const clearFilters = () => {
     setActiveCategory(null);
     setSearchQuery("");
-    setShowRecurringOnly(false);
   };
 
   const renderTransactionRow = ({ item }: { item: TransactionEntry; section: TransactionSection }) => {
-    const isIncome = item.kind === "income";
-    const categoryMeta = categoryAccent[item.categoryId ?? "other"] ?? { bg: "#e2e8f0", fill: "#0f172a" };
-    const subcategoryLabel = item.kind === "income" ? null : getSubcategoryLabel(item.categoryId, item.subcategoryId);
-    const categoryLabel = item.kind === "income" ? getIncomeTypeLabel(item.incomeType) : getCategoryLabel(item.categoryId);
+    const showRecurringBadge = Boolean(item.isRecurringInstance);
+
+    if (item.kind === "income") {
+      // Render income transaction
+      const displayAmount = formatMoney(item.amount);
+      const subtitleParts: string[] = [];
+      if (item.incomeCategoryId) subtitleParts.push(item.incomeCategoryId);
+      if (item.note) subtitleParts.push(item.note);
+      const subtitle = subtitleParts.join(" · ");
+
+      return (
+        <SwipeRow onEdit={() => openEditModal(item)} onDelete={() => confirmDelete(item.id)}>
+          <Pressable style={styles.txRow} onPress={() => openOverviewModal(item)}>
+            <View style={styles.txLeft}>
+              <View style={[styles.txIcon, styles.txIncomeIcon]}>
+                <Text style={styles.txIconText}>💰</Text>
+              </View>
+              <View style={styles.txInfo}>
+                <Text style={[styles.txTitle, styles.txIncomeTitle]}>Income</Text>
+                {subtitle ? <Text style={styles.txSubtitle}>{subtitle}</Text> : null}
+                {showRecurringBadge ? <Text style={styles.recurringBadge}>Recurring</Text> : null}
+              </View>
+            </View>
+            <View style={styles.txRight}>
+              <Text style={[styles.txAmount, styles.txIncomeAmount]}>+{displayAmount}</Text>
+            </View>
+          </Pressable>
+        </SwipeRow>
+      );
+    }
+
+    // Render expense transaction
+    const categoryMeta = categoryAccent[item.categoryId] ?? { bg: "#e2e8f0", fill: "#0f172a" };
+    const subcategoryLabel = getSubcategoryLabel(item.categoryId, item.subcategoryId);
+    const categoryLabel = getCategoryLabel(item.categoryId);
     const subtitleParts: string[] = [];
     if (subcategoryLabel) subtitleParts.push(subcategoryLabel);
     if (item.note) subtitleParts.push(item.note);
     const subtitle = subtitleParts.join(" · ");
-    const incomeEvent: IncomeEvent | null = isIncome
-      ? {
-          id: item.id,
-          amount: item.amount,
-          type: item.incomeType,
-          date: item.timestamp.split("T")[0],
-          note: item.note,
-          isRecurring: Boolean(item.isRecurringInstance),
-          recurringDayOfMonth: item.recurringDayOfMonth ?? null,
-        }
-      : null;
-    const onEdit = isIncome && incomeEvent ? () => openEditIncomeModal(incomeEvent) : () => openEditModal(item);
-    const onDelete = isIncome && incomeEvent ? () => confirmDeleteIncome(incomeEvent.id) : () => confirmDelete(item.id);
-    const displayAmount = `${isIncome ? "+" : ""}${formatMoney(item.amount)}`;
-    const showRecurringBadge = Boolean(item.isRecurringInstance);
+    const displayAmount = formatMoney(item.amount);
 
     return (
-      <SwipeRow onEdit={onEdit} onDelete={onDelete}>
-        <Pressable
-          style={styles.txRow}
-          onPress={() => {
-            if (isIncome && incomeEvent) {
-              openIncomeOverview(incomeEvent);
-            } else {
-              openOverviewModal(item);
-            }
-          }}
-        >
+      <SwipeRow onEdit={() => openEditModal(item)} onDelete={() => confirmDelete(item.id)}>
+        <Pressable style={styles.txRow} onPress={() => openOverviewModal(item)}>
           <View style={styles.txLeft}>
-            {isIncome ? (
-              <View style={[styles.txIcon, styles.txIncomeIcon]}>
-                <Text style={styles.txIconText}>＋</Text>
-              </View>
-            ) : (
-              <View style={[styles.txIcon, { backgroundColor: categoryMeta.bg }]}>
-                <Text style={styles.txIconText}>{getCategoryIcon(item.categoryId)}</Text>
-              </View>
-            )}
+            <View style={[styles.txIcon, { backgroundColor: categoryMeta.bg }]}>
+              <Text style={styles.txIconText}>{getCategoryIcon(item.categoryId)}</Text>
+            </View>
             <View style={styles.txInfo}>
-              <Text style={[styles.txTitle, isIncome && styles.txIncomeTitle]}>{categoryLabel}</Text>
+              <Text style={styles.txTitle}>{categoryLabel}</Text>
               {subtitle ? <Text style={styles.txSubtitle}>{subtitle}</Text> : null}
               {showRecurringBadge ? <Text style={styles.recurringBadge}>Recurring</Text> : null}
             </View>
           </View>
           <View style={styles.txRight}>
-            <Text style={[styles.txAmount, isIncome && styles.txIncomeAmount]}>{displayAmount}</Text>
+            <Text style={styles.txAmount}>{displayAmount}</Text>
           </View>
         </Pressable>
       </SwipeRow>
@@ -460,31 +449,30 @@ export default function TransactionsScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Transactions</Text>
           <View style={styles.headerActions}>
-            <View style={styles.addMenuWrapper}>
-              {showAddMenu ? (
-                <View style={styles.addMenuCard}>
-                  <Pressable
-                    style={({ pressed }) => [styles.addMenuOption, pressed && styles.addMenuOptionPressed]}
-                    onPress={openAddModal}
-                  >
-                    <Text style={styles.addMenuOptionLabel}>Add expense</Text>
-                  </Pressable>
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.addMenuOption,
-                      styles.addMenuOptionSecondary,
-                      pressed && styles.addMenuOptionPressed,
-                    ]}
-                    onPress={openAddIncomeModal}
-                  >
-                    <Text style={[styles.addMenuOptionLabel, styles.addMenuOptionLabelSecondary]}>Add income</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-              <Pressable style={styles.addButton} onPress={() => setShowAddMenu((prev) => !prev)}>
-                <Text style={styles.addButtonText}>＋</Text>
-              </Pressable>
-            </View>
+            <Pressable
+              style={styles.addButton}
+              onPress={() => setShowAddMenu(!showAddMenu)}
+            >
+              <Text style={styles.addButtonText}>＋</Text>
+            </Pressable>
+            {showAddMenu ? (
+              <View style={styles.addMenuCard}>
+                <Pressable
+                  style={styles.addMenuOption}
+                  onPress={openAddExpenseModal}
+                >
+                  <Text style={styles.addMenuOptionLabel}>Add Expense</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.addMenuOption, styles.addMenuOptionSecondary]}
+                  onPress={openAddIncomeModal}
+                >
+                  <Text style={[styles.addMenuOptionLabel, styles.addMenuOptionLabelSecondary]}>
+                    Add Income
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
           </View>
         </View>
         <View style={styles.monthSelector}>
@@ -521,25 +509,6 @@ export default function TransactionsScreen() {
           ) : null}
         </View>
 
-        <View style={styles.recurringFilterRow}>
-          <Pressable
-            onPress={() => setShowRecurringOnly((prev) => !prev)}
-            style={[
-              styles.recurringFilterChip,
-              showRecurringOnly && styles.recurringFilterChipActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.recurringFilterText,
-                showRecurringOnly && styles.recurringFilterTextActive,
-              ]}
-            >
-              Recurring only
-            </Text>
-          </Pressable>
-        </View>
-
         <ScrollChips
           activeCategory={activeCategory}
           onSelect={setActiveCategory}
@@ -547,7 +516,15 @@ export default function TransactionsScreen() {
         />
 
         <View style={styles.listWrapper}>
-          {loading ? (
+          {fetchError ? (
+            <View style={[styles.emptyState, styles.listCard]}>
+              <Text style={styles.emptyTitle}>Error loading transactions</Text>
+              <Text style={styles.emptyCopy}>{fetchError}</Text>
+              <Pressable style={styles.primaryButton} onPress={fetchTransactions}>
+                <Text style={styles.primaryButtonText}>Retry</Text>
+              </Pressable>
+            </View>
+          ) : loading ? (
             <View style={styles.listCard}>
               {[0, 1, 2].map((row) => (
                 <View key={`skeleton-${row}`} style={styles.skeletonRow}>
@@ -564,7 +541,7 @@ export default function TransactionsScreen() {
             <View style={[styles.emptyState, styles.listCard]}>
               <Text style={styles.emptyTitle}>No transactions yet</Text>
               <Text style={styles.emptyCopy}>Log spending to see it appear here.</Text>
-              <Pressable style={styles.primaryButton} onPress={openAddModal}>
+              <Pressable style={styles.primaryButton} onPress={openAddExpenseModal}>
                 <Text style={styles.primaryButtonText}>Log spending</Text>
               </Pressable>
             </View>
@@ -617,17 +594,16 @@ export default function TransactionsScreen() {
                 }}
                 contentContainerStyle={styles.listContent}
                 ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
-                SectionSeparatorComponent={() => <View style={styles.sectionSeparator} />}
               />
             </View>
           )}
         </View>
       </SafeAreaView>
-      <AddSpendingModal
+      <AddExpenseModal
         visible={modalVisible}
         mode={modalMode}
         initialValues={
-          modalMode !== "add" && editingTx
+          modalMode !== "add" && editingTx && editingTx.kind === "expense"
             ? {
                 amount: editingTx.amount,
                 categoryId: editingTx.categoryId,
@@ -642,15 +618,21 @@ export default function TransactionsScreen() {
         onClose={handleModalClose}
         onSubmit={handleModalSubmit}
         onEditRequest={modalMode === "view" ? handleOverviewEdit : undefined}
+        isSaving={savingExpense}
       />
       <AddIncomeModal
         visible={incomeModalVisible}
-        onClose={closeIncomeModal}
         monthKey={activeMonthKey}
-        currentDate={activeMonth?.currentDate ?? new Date().toISOString()}
+        currentDate={activeReference.toISOString()}
+        onClose={() => {
+          setIncomeModalVisible(false);
+          setEditingIncome(null);
+          setIncomeModalMode("add");
+          fetchTransactions();
+        }}
         mode={incomeModalMode}
-        initialIncome={editingIncome ?? undefined}
-        onEditRequest={incomeModalMode === "view" ? handleIncomeOverviewEdit : undefined}
+        initialIncome={editingIncome}
+        onEditRequest={incomeModalMode === "view" ? () => setIncomeModalMode("edit") : undefined}
       />
     </>
   );
@@ -926,31 +908,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#111827",
     marginTop: -2,
-  },
-  recurringFilterRow: {
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  recurringFilterChip: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#d4d4d8",
-    backgroundColor: "#fff",
-  },
-  recurringFilterChipActive: {
-    backgroundColor: "#0f172a",
-    borderColor: "#0f172a",
-  },
-  recurringFilterText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  recurringFilterTextActive: {
-    color: "#f8fafc",
   },
   chipRow: {
     flexDirection: "row",

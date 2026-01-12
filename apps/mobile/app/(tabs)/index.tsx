@@ -10,12 +10,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { AddIncomeModal } from "@/components/AddIncomeModal";
-import { AddSpendingModal } from "@/components/AddSpendingModal";
-import { profileOverview } from "@/src/dummy_data/profile";
-import { useCurrencyFormatter } from "@/src/features/profile/useCurrencyFormatter";
-import { insightMonths } from "@/src/dummy_data/insights";
-import { useBudgetContext } from "@/src/features/budget/BudgetProvider";
+import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
+import { AddIncomeModal } from "@/components/modals/AddIncomeModal";
+import { profileOverview } from "@/components/dummy_data/profile";
+import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
+import { insightMonths } from "@/components/dummy_data/insights";
+import { useBudgetContext } from "@/components/budget/BudgetProvider";
 
 const overview = profileOverview;
 const currentMonthSnapshot = insightMonths[0];
@@ -30,10 +30,9 @@ export default function OverviewScreen() {
   const { formatCurrency } = useCurrencyFormatter();
   const fabSize = Math.max(52, Math.min(64, width * 0.16));
   const monthSnapshot = currentMonthSnapshot;
-  const monthKey = monthSnapshot.key;
-  const { incomeByMonth, planByMonth } = useBudgetContext();
-  const monthIncomes = incomeByMonth[monthKey] ?? [];
-  const monthPlan = planByMonth[monthKey];
+
+  const { budgetPlan, isLoading } = useBudgetContext();
+
   const monthCurrentDate = useMemo(() => {
     const date = new Date(monthSnapshot.currentDate);
     if (Number.isNaN(date.getTime())) {
@@ -44,40 +43,17 @@ export default function OverviewScreen() {
     date.setHours(0, 0, 0, 0);
     return date;
   }, [monthSnapshot.currentDate]);
-  const incomeReceived = monthIncomes.reduce((sum, income) => {
-    const parsed = new Date(income.date);
-    parsed.setHours(0, 0, 0, 0);
-    if (parsed.getTime() <= monthCurrentDate.getTime()) {
-      return sum + income.amount;
-    }
-    return sum;
-  }, 0);
-  const hasPlan = (monthPlan?.amount ?? 0) > 0;
-  const budgetMode: "income" | "plan" | "none" =
-    incomeReceived > 0 ? "income" : hasPlan ? "plan" : "none";
-  const totalBudget =
-    budgetMode === "income"
-      ? incomeReceived
-      : budgetMode === "plan"
-        ? (monthPlan?.amount ?? 0)
-        : 0;
+
+  const hasBudget = Boolean(budgetPlan);
+  const totalBudget = budgetPlan?.expected_income ?? 0;
   const totalSpent = monthSnapshot.totalSpent;
   const remainingBudget = totalBudget - totalSpent;
-  const hasBudget = budgetMode !== "none";
+
   const headlineValue = hasBudget
     ? formatCurrency(remainingBudget)
-    : "Set your plan to start";
-  const subLabel =
-    budgetMode === "plan"
-      ? "Based on monthly plan"
-      : hasBudget
-        ? "Left this month"
-        : "Add income or set a monthly plan";
-  const budgetHelperLabel = hasBudget
-    ? budgetMode === "plan"
-      ? "Based on your monthly plan"
-      : undefined
-    : undefined;
+    : "No monthly plan";
+  const subLabel = hasBudget ? "Left this month" : "Create a plan in Insights";
+  const budgetHelperLabel = hasBudget ? "Based on recurring income" : undefined;
   const daysLeft = useMemo(() => {
     const endOfMonth = new Date(monthCurrentDate);
     endOfMonth.setMonth(endOfMonth.getMonth() + 1, 0);
@@ -105,8 +81,7 @@ export default function OverviewScreen() {
       ? Math.min(Math.max(totalSpent / totalBudget, 0), 1)
       : 0;
   const progressLabel = `${Math.round(progressUsedPct * 100)}% of budget used`;
-  let statusBadgeLabel: "On track" | "Attention" | "Risk" | "On plan" | null =
-    null;
+  let statusBadgeLabel: "On track" | "Attention" | "Risk" | null = null;
   let badgeTone = styles.badgePositive;
   let badgeTextTone = styles.badgeTextPositive;
   if (hasBudget) {
@@ -119,7 +94,7 @@ export default function OverviewScreen() {
       badgeTone = styles.badgeWarn;
       badgeTextTone = styles.badgeTextWarn;
     } else {
-      statusBadgeLabel = budgetMode === "plan" ? "On plan" : "On track";
+      statusBadgeLabel = "On track";
     }
   }
   const todayFormatted = formatCurrency(overview.todayAmount, {
@@ -201,17 +176,6 @@ export default function OverviewScreen() {
                     </Text>
                   </View>
                 ) : null}
-                {budgetMode === "plan" ? (
-                  <Pressable
-                    onPress={() => setShowIncome(true)}
-                    style={({ pressed }) => [
-                      styles.inlineCta,
-                      pressed && styles.inlineCtaPressed,
-                    ]}
-                  >
-                    <Text style={styles.inlineCtaText}>Add income</Text>
-                  </Pressable>
-                ) : null}
               </View>
             </View>
             {hasBudget ? (
@@ -235,14 +199,19 @@ export default function OverviewScreen() {
                   </View>
                 ) : null}
               </>
+            ) : isLoading ? (
+              <View style={styles.summaryEmpty}>
+                <Text style={styles.summaryEmptyTitle}>
+                  Loading budget plan...
+                </Text>
+              </View>
             ) : (
               <View style={styles.summaryEmpty}>
                 <Text style={styles.summaryEmptyTitle}>
-                  Set your plan to start
+                  Create your monthly plan
                 </Text>
                 <Text style={styles.summaryEmptyCopy}>
-                  Add income or set a monthly plan to unlock pacing and
-                  insights.
+                  Set up your monthly plan in the Insights tab with savings and investment goals.
                 </Text>
                 <View style={styles.summaryEmptyActions}>
                   <Pressable
@@ -250,14 +219,8 @@ export default function OverviewScreen() {
                     onPress={handleSetPlanPress}
                   >
                     <Text style={styles.summaryPrimaryText}>
-                      Set monthly plan
+                      Go to Insights
                     </Text>
-                  </Pressable>
-                  <Pressable
-                    style={styles.summarySecondaryButton}
-                    onPress={() => setShowIncome(true)}
-                  >
-                    <Text style={styles.summarySecondaryText}>Add income</Text>
                   </Pressable>
                 </View>
               </View>
@@ -323,12 +286,12 @@ export default function OverviewScreen() {
           </Pressable>
         )}
       </View>
-      <AddSpendingModal visible={showAdd} onClose={() => setShowAdd(false)} />
+      <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
       <AddIncomeModal
         visible={showIncome}
-        monthKey={monthKey}
-        currentDate={monthSnapshot.currentDate}
         onClose={() => setShowIncome(false)}
+        monthKey={monthSnapshot.key}
+        currentDate={monthSnapshot.currentDate}
       />
     </SafeAreaView>
   );

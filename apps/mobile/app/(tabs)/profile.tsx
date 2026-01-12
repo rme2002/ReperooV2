@@ -21,7 +21,7 @@ import {
   CURRENCY_OPTIONS,
   type CurrencyCode,
   useUserPreferences,
-} from "@/src/features/profile/UserPreferencesProvider";
+} from "@/components/profile/UserPreferencesProvider";
 
 const showToast = (message: string) => {
   if (Platform.OS === "android") {

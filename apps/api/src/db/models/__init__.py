@@ -5,6 +5,7 @@ from .profile import Profile
 from .expense_category import ExpenseCategory
 from .expense_subcategory import ExpenseSubcategory
 from .income_category import IncomeCategory
+from .recurring_template import RecurringTemplate
 from .transaction import Transaction
 
 __all__ = [
@@ -14,5 +15,6 @@ __all__ = [
     "ExpenseCategory",
     "ExpenseSubcategory",
     "IncomeCategory",
+    "RecurringTemplate",
     "Transaction",
 ]

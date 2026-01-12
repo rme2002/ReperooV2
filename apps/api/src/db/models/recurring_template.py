@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, Numeric, Text, func
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, Numeric, Text, func
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -38,6 +38,9 @@ class RecurringTemplate(Base):
             "type IN ('expense', 'income')",
             name="recurring_templates_type_check",
         ),
+        Index("idx_recurring_templates_user_id", "user_id"),
+        Index("idx_recurring_templates_start_date", "start_date"),
+        Index("idx_recurring_templates_is_paused", "is_paused"),
     )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)

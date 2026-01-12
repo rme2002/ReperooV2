@@ -116,8 +116,6 @@ class BudgetPlanService:
                 if payload.investment_goal is not None
                 else None
             ),
-            "payday_day_of_month": payload.payday_day_of_month,
-            "pay_schedule": payload.pay_schedule,
         }
 
         # Create budget plan in database
@@ -140,8 +138,6 @@ class BudgetPlanService:
             investment_goal=(
                 float(db_plan.investment_goal) if db_plan.investment_goal is not None else None
             ),
-            payday_day_of_month=db_plan.payday_day_of_month,
-            pay_schedule=db_plan.pay_schedule,
             created_at=db_plan.created_at,
             updated_at=db_plan.updated_at,
         )
@@ -185,8 +181,6 @@ class BudgetPlanService:
             investment_goal=(
                 float(db_plan.investment_goal) if db_plan.investment_goal is not None else None
             ),
-            payday_day_of_month=db_plan.payday_day_of_month,
-            pay_schedule=db_plan.pay_schedule,
             created_at=db_plan.created_at,
             updated_at=db_plan.updated_at,
         )
@@ -235,10 +229,6 @@ class BudgetPlanService:
             update_data["savings_goal"] = Decimal(str(payload.savings_goal))
         if payload.investment_goal is not None:
             update_data["investment_goal"] = Decimal(str(payload.investment_goal))
-        if payload.payday_day_of_month is not None:
-            update_data["payday_day_of_month"] = payload.payday_day_of_month
-        if payload.pay_schedule is not None:
-            update_data["pay_schedule"] = payload.pay_schedule
 
         # Update budget plan in database
         try:
@@ -260,8 +250,6 @@ class BudgetPlanService:
             investment_goal=(
                 float(db_plan.investment_goal) if db_plan.investment_goal is not None else None
             ),
-            payday_day_of_month=db_plan.payday_day_of_month,
-            pay_schedule=db_plan.pay_schedule,
             created_at=db_plan.created_at,
             updated_at=db_plan.updated_at,
         )

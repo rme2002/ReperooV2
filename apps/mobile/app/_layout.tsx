@@ -11,8 +11,8 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
-import { BudgetProvider } from "@/src/features/budget/BudgetProvider";
-import { UserPreferencesProvider } from "@/src/features/profile/UserPreferencesProvider";
+import { BudgetProvider } from "@/components/budget/BudgetProvider";
+import { UserPreferencesProvider } from "@/components/profile/UserPreferencesProvider";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
 
 export {

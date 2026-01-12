@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Numeric, Text, func
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Numeric, Text, func
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -24,6 +24,7 @@ class Transaction(Base):
             "(type = 'income' AND income_category_id IS NOT NULL AND expense_category_id IS NULL)",
             name="transactions_category_check",
         ),
+        Index("idx_transactions_recurring_template_id", "recurring_template_id"),
     )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)

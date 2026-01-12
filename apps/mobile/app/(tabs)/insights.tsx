@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -13,12 +13,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Circle, Svg } from "react-native-svg";
 
 import spendingCategories from "../../../../shared/config/spending-categories.json";
-import { AddIncomeModal } from "@/components/AddIncomeModal";
-import { AddSpendingModal } from "@/components/AddSpendingModal";
-import { insightMonths } from "@/src/dummy_data/insights";
-import { useBudgetContext } from "@/src/features/budget/BudgetProvider";
-import { getIncomeTypeLabel, type IncomeEvent } from "@/src/features/budget/types";
-import { useCurrencyFormatter } from "@/src/features/profile/useCurrencyFormatter";
+import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
+import { AddIncomeModal } from "@/components/modals/AddIncomeModal";
+import { CreateMonthlyPlanModal } from "@/components/modals/CreateMonthlyPlanModal";
+import { insightMonths } from "@/components/dummy_data/insights";
+import { useBudgetContext } from "@/components/budget/BudgetProvider";
+import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
+import { IncomeBreakdownSection } from "@/components/budget/IncomeBreakdownSection";
+import { listTransactions } from "@/lib/gen/transactions/transactions";
+import { listRecurringTemplates } from "@/lib/gen/recurring-templates/recurring-templates";
+import type { TransactionIncome } from "@/lib/gen/model/transactionIncome";
+import type { RecurringTemplateIncome } from "@/lib/gen/model/recurringTemplateIncome";
 
 type SpendingCategoriesConfig = {
   categories: {
@@ -108,43 +113,39 @@ const formatIncomeSchedule = (dateString: string) => {
 export default function InsightsScreen() {
   const [monthIndex, setMonthIndex] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
-  const [showIncomeModal, setShowIncomeModal] = useState(false);
-  const [incomeModalMode, setIncomeModalMode] = useState<"add" | "edit">("add");
-  const [editingIncome, setEditingIncome] = useState<IncomeEvent | null>(null);
+  const [showIncome, setShowIncome] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [showCreatePlanModal, setShowCreatePlanModal] = useState(false);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [activeWeekIndex, setActiveWeekIndex] = useState<number | null>(null);
   const [isWeeklyLoading, setIsWeeklyLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const snapshot = months[monthIndex];
-  const { incomeByMonth, planByMonth, saveMonthlyPlan } = useBudgetContext();
-  const monthIncomes = incomeByMonth[snapshot.key] ?? [];
-  const monthPlan = planByMonth[snapshot.key];
-  const [isPlanEditing, setIsPlanEditing] = useState(!monthPlan);
-  const [planAmountText, setPlanAmountText] = useState(monthPlan ? String(monthPlan.amount) : "");
-  const [planPaydayText, setPlanPaydayText] = useState(
-    monthPlan?.paydayDayOfMonth ? String(monthPlan.paydayDayOfMonth) : "",
-  );
-  const [planIrregular, setPlanIrregular] = useState(monthPlan?.paySchedule === "irregular");
-  const [planSavingsGoal, setPlanSavingsGoal] = useState(monthPlan?.savingsGoal ?? 0);
-  const [planInvestmentsGoal, setPlanInvestmentsGoal] = useState(monthPlan?.investmentsGoal ?? 0);
+  const { budgetPlan, isLoading, error, createBudgetPlan, updateBudgetPlan } = useBudgetContext();
+
+  // Form state for budget plan
+  const [planSavingsGoal, setPlanSavingsGoal] = useState(budgetPlan?.savings_goal ?? 0);
+  const [planInvestmentsGoal, setPlanInvestmentsGoal] = useState(budgetPlan?.investment_goal ?? 0);
+
+  // Edit mode state
+  const [isEditingPlan, setIsEditingPlan] = useState(false);
+  const [editingSavingsGoal, setEditingSavingsGoal] = useState(0);
+  const [editingInvestmentsGoal, setEditingInvestmentsGoal] = useState(0);
+
+  // Income breakdown state
+  const [incomeTransactions, setIncomeTransactions] = useState<TransactionIncome[]>([]);
+  const [recurringTemplates, setRecurringTemplates] = useState<RecurringTemplateIncome[]>([]);
+  const [loadingIncome, setLoadingIncome] = useState(false);
+  const [incomeError, setIncomeError] = useState<string | null>(null);
+
   const { formatCurrency, currencySymbol } = useCurrencyFormatter();
+  // Sync form state when budget plan changes
   useEffect(() => {
-    if (monthPlan) {
-      setPlanAmountText(String(monthPlan.amount));
-      setPlanPaydayText(monthPlan.paydayDayOfMonth ? String(monthPlan.paydayDayOfMonth) : "");
-      setPlanIrregular(monthPlan.paySchedule === "irregular");
-      setPlanSavingsGoal(monthPlan.savingsGoal ?? 0);
-      setPlanInvestmentsGoal(monthPlan.investmentsGoal ?? 0);
-      setIsPlanEditing(false);
-    } else {
-      setPlanAmountText("");
-      setPlanPaydayText("");
-      setPlanIrregular(false);
-      setPlanSavingsGoal(0);
-      setPlanInvestmentsGoal(0);
-      setIsPlanEditing(true);
+    if (budgetPlan) {
+      setPlanSavingsGoal(budgetPlan.savings_goal ?? 0);
+      setPlanInvestmentsGoal(budgetPlan.investment_goal ?? 0);
     }
-  }, [monthPlan, snapshot.key]);
+  }, [budgetPlan]);
   const { width } = useWindowDimensions();
   const fabSize = Math.max(52, Math.min(64, width * 0.16));
   const scale = Math.min(Math.max(width / 375, 0.85), 1.25);
@@ -167,29 +168,12 @@ export default function InsightsScreen() {
     return date;
   }, [snapshot.currentDate]);
 
-  const incomeReceived = monthIncomes.reduce((sum, income) => {
-    const parsed = new Date(income.date);
-    parsed.setHours(0, 0, 0, 0);
-    if (parsed.getTime() <= monthCurrentDate.getTime()) {
-      return sum + income.amount;
-    }
-    return sum;
-  }, 0);
-
-  let budgetSource: "income" | "plan" | "none" = "none";
-  let availableBudget = 0;
-  if (incomeReceived > 0) {
-    budgetSource = "income";
-    availableBudget = incomeReceived;
-  } else if (monthPlan) {
-    budgetSource = "plan";
-    availableBudget = monthPlan.amount;
-  }
-  const hasBudget = budgetSource !== "none";
-  const totalBudget = hasBudget ? availableBudget : 0;
+  // Use expected_income from budget plan
+  const hasBudget = Boolean(budgetPlan);
+  const totalBudget = budgetPlan?.expected_income ?? 0;
   const totalSpent = snapshot.totalSpent;
   const remainingBudget = totalBudget - totalSpent;
-  const budgetHelperLabel = budgetSource === "plan" ? "Based on your monthly plan" : null;
+  const budgetHelperLabel = hasBudget ? "Based on recurring income" : null;
   const daysLeftInMonth = useMemo(() => {
     const endOfMonth = new Date(monthCurrentDate);
     endOfMonth.setMonth(endOfMonth.getMonth() + 1, 0);
@@ -227,83 +211,204 @@ export default function InsightsScreen() {
     hasBudget && totalBudget > 0 ? Math.min(Math.max(totalSpent / totalBudget, 0), 1) : 0;
   const progressLabel = `${Math.round(progressUsedPct * 100)}% of budget used`;
   const headlineAmount = hasBudget ? formatCurrency(remainingBudget) : "Budget not set";
-  const headlineSubtitle = hasBudget
-    ? budgetSource === "plan"
-      ? "projected left"
-      : "available"
-    : "Add income or set a plan";
-  const planAmountValue = useMemo(() => {
-    const cleaned = planAmountText.replace(/,/g, "");
-    const parsed = parseFloat(cleaned);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }, [planAmountText]);
-  const planDayValue = useMemo(() => parseInt(planPaydayText, 10), [planPaydayText]);
-  const normalizedPayday =
-    !planIrregular && Number.isFinite(planDayValue) && planDayValue >= 1 && planDayValue <= 31 ? planDayValue : undefined;
-  const isPlanFormValid = planAmountValue > 0;
+  const headlineSubtitle = hasBudget ? "projected left" : "Create a budget plan";
+
+  // Budget plan form values
   const planGoalsTotal = planSavingsGoal + planInvestmentsGoal;
-  const planSpendable = planAmountValue > 0 ? Math.max(planAmountValue - planGoalsTotal, 0) : 0;
-  const goalSliderMax = planAmountValue > 0 ? planAmountValue : Math.max(planGoalsTotal, 1);
+  const expectedIncome = budgetPlan?.expected_income ?? 0;
+  const goalSliderMax = expectedIncome > 0 ? expectedIncome : Math.max(planGoalsTotal, 1);
+  // Auto-adjust goals if they exceed expected income
   useEffect(() => {
-    if (planAmountValue <= 0) {
+    if (expectedIncome <= 0) {
       return;
     }
     const totalGoals = planSavingsGoal + planInvestmentsGoal;
-    if (totalGoals <= planAmountValue) {
+    if (totalGoals <= expectedIncome) {
       return;
     }
     if (planInvestmentsGoal >= planSavingsGoal) {
-      const nextInvestments = Math.max(0, planAmountValue - planSavingsGoal);
+      const nextInvestments = Math.max(0, expectedIncome - planSavingsGoal);
       if (nextInvestments !== planInvestmentsGoal) {
         setPlanInvestmentsGoal(nextInvestments);
       }
     } else {
-      const nextSavings = Math.max(0, planAmountValue - planInvestmentsGoal);
+      const nextSavings = Math.max(0, expectedIncome - planInvestmentsGoal);
       if (nextSavings !== planSavingsGoal) {
         setPlanSavingsGoal(nextSavings);
       }
     }
-  }, [planAmountValue, planSavingsGoal, planInvestmentsGoal]);
+  }, [expectedIncome, planSavingsGoal, planInvestmentsGoal]);
   const handleSavingsGoalChange = useCallback(
     (next: number) => {
-      if (planAmountValue > 0) {
-        const capped = Math.max(0, Math.min(next, Math.max(planAmountValue - planInvestmentsGoal, 0)));
+      if (expectedIncome > 0) {
+        const capped = Math.max(0, Math.min(next, Math.max(expectedIncome - planInvestmentsGoal, 0)));
         setPlanSavingsGoal(capped);
       } else {
         setPlanSavingsGoal(Math.max(0, next));
       }
     },
-    [planAmountValue, planInvestmentsGoal],
+    [expectedIncome, planInvestmentsGoal],
   );
   const handleInvestmentsGoalChange = useCallback(
     (next: number) => {
-      if (planAmountValue > 0) {
-        const capped = Math.max(0, Math.min(next, Math.max(planAmountValue - planSavingsGoal, 0)));
+      if (expectedIncome > 0) {
+        const capped = Math.max(0, Math.min(next, Math.max(expectedIncome - planSavingsGoal, 0)));
         setPlanInvestmentsGoal(capped);
       } else {
         setPlanInvestmentsGoal(Math.max(0, next));
       }
     },
-    [planAmountValue, planSavingsGoal],
+    [expectedIncome, planSavingsGoal],
   );
-  const handlePlanSave = () => {
-    if (!isPlanFormValid) {
-      return;
+  const handlePlanSave = async () => {
+    try {
+      setIsSaving(true);
+      const payload = {
+        savings_goal: planSavingsGoal || null,
+        investment_goal: planInvestmentsGoal || null,
+      };
+      await updateBudgetPlan(payload);
+    } catch (err) {
+      console.error("Failed to save budget plan:", err);
+    } finally {
+      setIsSaving(false);
     }
-    saveMonthlyPlan(snapshot.key, {
-      amount: planAmountValue,
-      paydayDayOfMonth: normalizedPayday,
-      paySchedule: planIrregular ? "irregular" : "monthly",
-      savingsGoal: planSavingsGoal,
-      investmentsGoal: planInvestmentsGoal,
-    });
-    setIsPlanEditing(false);
   };
-  const handleIncomeEdit = useCallback((income: IncomeEvent) => {
-    setIncomeModalMode("edit");
-    setEditingIncome(income);
-    setShowIncomeModal(true);
-  }, []);
+
+  const handleCreatePlan = async (payload: {
+    savings_goal: number | null;
+    investment_goal: number | null;
+  }) => {
+    try {
+      setIsSaving(true);
+      await createBudgetPlan(payload);
+    } catch (err) {
+      console.error("Failed to create budget plan:", err);
+      throw err;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Edit mode handlers
+  const handleEditPlan = () => {
+    setEditingSavingsGoal(planSavingsGoal);
+    setEditingInvestmentsGoal(planInvestmentsGoal);
+    setIsEditingPlan(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingPlan(false);
+    setEditingSavingsGoal(0);
+    setEditingInvestmentsGoal(0);
+  };
+
+  const handleSavePlanChanges = async () => {
+    setIsSaving(true);
+    try {
+      if (budgetPlan) {
+        await updateBudgetPlan({
+          savings_goal: editingSavingsGoal || null,
+          investment_goal: editingInvestmentsGoal || null,
+        });
+        // Update display state after successful save
+        setPlanSavingsGoal(editingSavingsGoal);
+        setPlanInvestmentsGoal(editingInvestmentsGoal);
+        setIsEditingPlan(false);
+      } else {
+        // Creating new plan
+        await createBudgetPlan({
+          savings_goal: editingSavingsGoal || null,
+          investment_goal: editingInvestmentsGoal || null,
+        });
+        setIsEditingPlan(false);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save budget plan');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCreateFromEmpty = () => {
+    setEditingSavingsGoal(0);
+    setEditingInvestmentsGoal(0);
+    setIsEditingPlan(true);
+  };
+
+  // Fetch monthly income transactions
+  const fetchMonthlyIncome = useCallback(async () => {
+    setLoadingIncome(true);
+    setIncomeError(null);
+
+    try {
+      const year = monthCurrentDate.getFullYear();
+      const month = monthCurrentDate.getMonth();
+      const start_date = new Date(year, month, 1).toISOString();
+      const end_date = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+
+      const [transactionsRes, templatesRes] = await Promise.all([
+        listTransactions({ start_date, end_date }),
+        listRecurringTemplates(),
+      ]);
+
+      if (transactionsRes.status === 200 && templatesRes.status === 200) {
+        const incomeOnly = transactionsRes.data.filter(
+          (tx) => tx.type === "income"
+        ) as TransactionIncome[];
+        const incomeTemplates = templatesRes.data.filter(
+          (template) => template.type === "income"
+        ) as RecurringTemplateIncome[];
+
+        setIncomeTransactions(incomeOnly);
+        setRecurringTemplates(incomeTemplates);
+      } else {
+        throw new Error("Failed to fetch data");
+      }
+    } catch (error) {
+      console.error("Failed to load income data:", error);
+      setIncomeError("Failed to load income data");
+    } finally {
+      setLoadingIncome(false);
+    }
+  }, [monthCurrentDate]);
+
+  // Fetch income data when month changes
+  useEffect(() => {
+    fetchMonthlyIncome();
+  }, [fetchMonthlyIncome]);
+
+  // Budget plan summary values (needed by handlers below)
+  const planSummaryAmount = budgetPlan?.expected_income ?? 0;
+
+  // Handlers for editing state goal changes
+  const handleEditingSavingsGoalChange = useCallback(
+    (value: number) => {
+      const adjustedValue = Math.min(value, planSummaryAmount);
+      setEditingSavingsGoal(adjustedValue);
+
+      // Auto-adjust investments if total exceeds income
+      const totalGoals = adjustedValue + editingInvestmentsGoal;
+      if (totalGoals > planSummaryAmount) {
+        setEditingInvestmentsGoal(Math.max(0, planSummaryAmount - adjustedValue));
+      }
+    },
+    [planSummaryAmount, editingInvestmentsGoal],
+  );
+
+  const handleEditingInvestmentsGoalChange = useCallback(
+    (value: number) => {
+      const adjustedValue = Math.min(value, planSummaryAmount);
+      setEditingInvestmentsGoal(adjustedValue);
+
+      // Auto-adjust savings if total exceeds income
+      const totalGoals = editingSavingsGoal + adjustedValue;
+      if (totalGoals > planSummaryAmount) {
+        setEditingSavingsGoal(Math.max(0, planSummaryAmount - adjustedValue));
+      }
+    },
+    [planSummaryAmount, editingSavingsGoal],
+  );
 
   const weeklyPoints = snapshot.weekly;
   const weeklyTotals = weeklyPoints.map((point) => point.total);
@@ -314,17 +419,12 @@ export default function InsightsScreen() {
   const displayWeeklyPoints = weeklyPoints;
   const weeklyAxisTicks = hasWeeklySpending ? computeAxisTicks(weeklyPeak) : [];
   const weeklyScaleMax = (weeklyAxisTicks[0] ?? weeklyMax) || 1;
-  const planSummaryAmount = monthPlan?.amount ?? 0;
-  const planSummarySavings = monthPlan?.savingsGoal ?? 0;
-  const planSummaryInvestments = monthPlan?.investmentsGoal ?? 0;
-  const monthPlanSavingsGoal = monthPlan?.savingsGoal;
-  const monthPlanInvestmentsGoal = monthPlan?.investmentsGoal;
-  const hasMonthlyPlan = Boolean(monthPlan);
-  const planHasGoalInputs = hasMonthlyPlan && (monthPlanSavingsGoal !== undefined || monthPlanInvestmentsGoal !== undefined);
-  const planGoalsPositive =
-    hasMonthlyPlan && ((monthPlanSavingsGoal ?? 0) > 0 || (monthPlanInvestmentsGoal ?? 0) > 0);
-  const planGoalsZero =
-    hasMonthlyPlan && planHasGoalInputs && (monthPlanSavingsGoal ?? 0) === 0 && (monthPlanInvestmentsGoal ?? 0) === 0;
+
+  // Budget plan summary values
+  const planSummarySavings = budgetPlan?.savings_goal ?? 0;
+  const planSummaryInvestments = budgetPlan?.investment_goal ?? 0;
+  const planGoalsPositive = (planSummarySavings > 0 || planSummaryInvestments > 0);
+  const planGoalsZero = hasBudget && planSummarySavings === 0 && planSummaryInvestments === 0;
   const planSummaryGoals = planSummarySavings + planSummaryInvestments;
   const planSummarySpendable = Math.max(planSummaryAmount - planSummaryGoals, 0);
   const compactPlanSummary = width < 380;
@@ -334,11 +434,6 @@ export default function InsightsScreen() {
   };
   const goNext = () => {
     setMonthIndex((prev) => Math.max(prev - 1, 0));
-  };
-  const openIncomeModal = () => {
-    setIncomeModalMode("add");
-    setEditingIncome(null);
-    setShowIncomeModal(true);
   };
 
   useEffect(() => {
@@ -443,19 +538,14 @@ export default function InsightsScreen() {
                 ) : null}
               </View>
             </View>
-            {budgetSource === "plan" ? (
-              <Pressable style={[styles.summaryChip, styles.summaryChipGhost]} onPress={openIncomeModal}>
-                <Text style={[styles.summaryChipText, styles.summaryChipGhostText]}>Add income</Text>
-              </Pressable>
-            ) : null}
             {hasBudget ? (
               <>
                 <View style={styles.summaryRow}>
                   <View style={styles.summaryCol}>
-                    <Text style={styles.metricHelper}>Total budget</Text>
+                    <Text style={styles.metricHelper}>Expected income</Text>
                     <Text style={styles.summaryValue}>{formatCurrency(totalBudget)}</Text>
                     <Text style={[styles.summaryMeta, styles.summaryMetaLabel]}>
-                      {budgetSource === "plan" ? "Projected" : "Available"}
+                      From recurring income
                     </Text>
                   </View>
                   <View style={styles.summaryCol}>
@@ -490,149 +580,70 @@ export default function InsightsScreen() {
                   <Text style={styles.summaryValue}>{formatCurrency(weeklyTotal)}</Text>
                 </View>
               </>
+            ) : isLoading ? (
+              <View style={styles.summaryEmpty}>
+                <Text style={styles.summaryEmptyTitle}>Loading budget plan...</Text>
+              </View>
             ) : (
               <View style={styles.summaryEmpty}>
-                <Text style={styles.summaryEmptyTitle}>Plan your month</Text>
+                <Text style={styles.summaryEmptyTitle}>Set up your budget</Text>
                 <Text style={styles.summaryEmptyCopy}>
-                  Add income or set a monthly plan to unlock pacing and insights.
+                  Create a monthly plan with savings and investment goals to track your spending.
                 </Text>
                 <View style={styles.summaryEmptyActions}>
-                  <Pressable style={styles.summarySecondaryButton} onPress={() => setIsPlanEditing(true)}>
-                    <Text style={styles.summarySecondaryText}>Set monthly plan</Text>
-                  </Pressable>
-                  <Pressable style={styles.summaryPrimaryButton} onPress={openIncomeModal}>
-                    <Text style={styles.summaryPrimaryText}>Add income</Text>
+                  <Pressable
+                    style={styles.summaryPrimaryButton}
+                    onPress={() => setShowCreatePlanModal(true)}
+                  >
+                    <Text style={styles.summaryPrimaryText}>
+                      Create monthly plan
+                    </Text>
                   </Pressable>
                 </View>
+                {error ? (
+                  <Text style={styles.errorText}>{error}</Text>
+                ) : null}
               </View>
             )}
           </View>
         </View>
 
         <View style={[styles.surface, styles.planCard]}>
-          {isPlanEditing ? (
-            <View style={styles.planForm}>
-              <View style={styles.planFormHeader}>
-                <View>
-                  <Text style={styles.planFormTitle}>Monthly plan</Text>
-                  <Text style={styles.planFormSubtitle}>Projected income + goal allocations</Text>
-                </View>
+          <View style={styles.planWidget}>
+            {/* Header */}
+            <View style={styles.planWidgetHeader}>
+              <View>
+                <Text style={styles.planFormTitle}>Budget Plan</Text>
+                <Text style={styles.planFormSubtitle}>
+                  {budgetPlan ? 'Expected income + goal allocations' : 'Set up your monthly budget'}
+                </Text>
               </View>
-              <View style={styles.planSummaryCard}>
-                <View style={styles.planSummaryMetric}>
-                  <Text style={styles.planMetricLabel}>Projected income *</Text>
-                  <TextInput
-                    style={styles.planSummaryInput}
-                    placeholder={`${currencySymbol}0`}
-                    keyboardType="decimal-pad"
-                    value={planAmountText}
-                    onChangeText={setPlanAmountText}
-                  />
-                </View>
-                <View style={styles.planSummaryMetric}>
-                  <Text style={styles.planMetricLabel}>Spendable (after goals)</Text>
-                  <Text style={styles.planMetricValue}>{formatCurrency(planSpendable)}</Text>
-                </View>
-              </View>
-              <View style={styles.planFieldRow}>
-                <View style={styles.planFieldColumn}>
-                  <Text style={styles.planFieldLabel}>Payday (day of month)</Text>
-                  <TextInput
-                    style={[styles.planInput, planIrregular && styles.planInputDisabled]}
-                    placeholder="1"
-                    editable={!planIrregular}
-                    keyboardType="number-pad"
-                    value={planIrregular ? "" : planPaydayText}
-                    onChangeText={setPlanPaydayText}
-                  />
-                </View>
+            </View>
+
+            {/* Case 1: No Budget Plan (Empty State) */}
+            {!budgetPlan && !isEditingPlan && (
+              <View style={styles.emptyPlanState}>
+                <Text style={styles.emptyStateText}>
+                  Create a budget plan to track your savings and investment goals
+                </Text>
                 <Pressable
-                  style={[styles.planToggle, planIrregular && styles.planToggleActive]}
-                  onPress={() => setPlanIrregular((prev) => !prev)}
+                  style={styles.createPlanButton}
+                  onPress={handleCreateFromEmpty}
                 >
-                  <Text style={[styles.planToggleLabel, planIrregular && styles.planToggleLabelActive]}>
-                    Irregular
-                  </Text>
+                  <Text style={styles.createPlanButtonText}>Create Plan</Text>
                 </Pressable>
               </View>
-              <View style={styles.planSection}>
-                <View style={styles.planSectionHeader}>
-                  <Text style={styles.planSectionTitle}>Income streams</Text>
-                  <Pressable style={styles.planAddButton} onPress={openIncomeModal}>
-                    <Text style={styles.planAddButtonText}>+ Add</Text>
-                  </Pressable>
-                </View>
-                {monthIncomes.length ? (
-                  <View style={styles.planIncomeList}>
-                    {monthIncomes.map((income) => (
-                      <Pressable
-                        key={income.id}
-                        style={styles.planIncomeRow}
-                        onPress={() => handleIncomeEdit(income)}
-                      >
-                        <View style={styles.planIncomeLeft}>
-                          <View style={styles.planIncomeIndicator} />
-                          <View>
-                            <Text style={styles.planIncomeLabel}>{getIncomeTypeLabel(income.type)}</Text>
-                            <Text style={styles.planIncomeMeta}>
-                              {income.note
-                                ? `${formatIncomeSchedule(income.date)} • ${income.note}`
-                                : formatIncomeSchedule(income.date)}
-                            </Text>
-                          </View>
-                        </View>
-                        <Text style={styles.planIncomeAmount}>{formatCurrency(income.amount)}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                ) : (
-                  <View style={styles.planEmptyIncome}>
-                    <Text style={styles.planEmptyTitle}>No income streams yet</Text>
-                    <Text style={styles.planEmptyCopy}>Add your recurring salary or side gigs.</Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.planSection}>
-                <Text style={styles.planSectionTitle}>Goal allocations</Text>
-                <GoalSlider
-                  label="Savings goal"
-                  value={planSavingsGoal}
-                  max={goalSliderMax}
-                  onChange={handleSavingsGoalChange}
-                  formatValue={(value) => `${formatCurrency(value)} / month`}
-                />
-                <GoalSlider
-                  label="Investments goal"
-                  value={planInvestmentsGoal}
-                  max={goalSliderMax}
-                  onChange={handleInvestmentsGoalChange}
-                  formatValue={(value) => `${formatCurrency(value)} / month`}
-                />
-              </View>
-              <Pressable
-                style={[styles.planSaveButton, !isPlanFormValid && styles.planSaveButtonDisabled]}
-                disabled={!isPlanFormValid}
-                onPress={handlePlanSave}
-              >
-                <Text style={styles.planSaveButtonText}>Save monthly plan</Text>
-              </Pressable>
-            </View>
-          ) : (
-              <View style={styles.planWidget}>
-                <View style={styles.planWidgetHeader}>
-                  <View>
-                    <Text style={styles.planFormTitle}>Monthly plan</Text>
-                    <Text style={styles.planFormSubtitle}>Projected income + goal allocations</Text>
-                  </View>
-                  <Pressable style={styles.planEditButton} onPress={() => setIsPlanEditing(true)}>
-                    <Text style={styles.planEditButtonText}>Edit</Text>
-                  </Pressable>
-                </View>
+            )}
+
+            {/* Case 2: View Mode (Plan Exists, Not Editing) */}
+            {budgetPlan && !isEditingPlan && (
+              <>
+                {/* Summary Card */}
                 <View style={styles.planSummaryCard}>
                   <View style={[styles.planSummaryRow, styles.planSummaryRowFirst]}>
                     <View>
-                      <Text style={styles.planSummaryLabel}>Projected income</Text>
-                      <Text style={styles.planSummaryMeta}>Based on income streams</Text>
+                      <Text style={styles.planSummaryLabel}>Expected income</Text>
+                      <Text style={styles.planSummaryMeta}>From recurring income</Text>
                     </View>
                     <Text
                       style={[
@@ -648,8 +659,8 @@ export default function InsightsScreen() {
                     <View>
                       <Text style={styles.planSummaryLabel}>Goals</Text>
                       <Text style={styles.planSummaryMeta}>
-                        Savings {formatCurrency(planSummarySavings)} · Investments{" "}
-                        {formatCurrency(planSummaryInvestments)}
+                        Savings {formatCurrency(planSavingsGoal)} · Investments{" "}
+                        {formatCurrency(planInvestmentsGoal)}
                       </Text>
                     </View>
                     <Text
@@ -658,7 +669,7 @@ export default function InsightsScreen() {
                         compactPlanSummary && styles.planSummaryValueCompact,
                       ]}
                     >
-                      {formatCurrency(planSummaryGoals)}
+                      {formatCurrency(planSavingsGoal + planInvestmentsGoal)}
                     </Text>
                   </View>
                   <View style={styles.planSummaryDivider} />
@@ -678,43 +689,156 @@ export default function InsightsScreen() {
                     </Text>
                   </View>
                 </View>
-                <View style={styles.planSectionHeader}>
-                  <Text style={styles.planSectionTitle}>Income streams</Text>
+
+                {/* Income Breakdown Section */}
+                <IncomeBreakdownSection
+                  transactions={incomeTransactions}
+                  recurringTemplates={recurringTemplates}
+                  loading={loadingIncome}
+                  error={incomeError}
+                  formatCurrency={formatCurrency}
+                  onRetry={fetchMonthlyIncome}
+                  scale={scale}
+                />
+
+                {/* Read-Only Goal Display */}
+                <View style={styles.planSection}>
+                  <Text style={styles.planSectionTitle}>Goal allocations</Text>
+
+                  <GoalDisplayBar
+                    label="Savings goal"
+                    value={planSummarySavings}
+                    max={planSummaryAmount}
+                    actual={savingsActual}
+                    showProgress={true}
+                    formatValue={(val) => formatCurrency(val)}
+                  />
+
+                  <GoalDisplayBar
+                    label="Investments goal"
+                    value={planSummaryInvestments}
+                    max={planSummaryAmount}
+                    actual={investmentsActual}
+                    showProgress={true}
+                    formatValue={(val) => formatCurrency(val)}
+                  />
                 </View>
-              {monthIncomes.length ? (
-                <View style={styles.planIncomeList}>
-                  {monthIncomes.map((income) => (
-                    <Pressable
-                      key={income.id}
-                      style={styles.planIncomeRow}
-                      onPress={() => handleIncomeEdit(income)}
-                    >
-                      <View style={styles.planIncomeLeft}>
-                        <View style={styles.planIncomeIndicator} />
-                        <View>
-                          <Text style={styles.planIncomeLabel}>{getIncomeTypeLabel(income.type)}</Text>
-                          <Text style={styles.planIncomeMeta}>
-                            {income.note
-                              ? `${formatIncomeSchedule(income.date)} • ${income.note}`
-                              : formatIncomeSchedule(income.date)}
-                          </Text>
-                        </View>
+
+                {/* Edit Button */}
+                <Pressable
+                  style={styles.planEditButton}
+                  onPress={handleEditPlan}
+                >
+                  <Text style={styles.planEditButtonText}>Edit</Text>
+                </Pressable>
+              </>
+            )}
+
+            {/* Case 3: Edit Mode (Creating or Editing) */}
+            {isEditingPlan && (
+              <>
+                {/* Summary Card (if plan exists) */}
+                {budgetPlan && (
+                  <View style={styles.planSummaryCard}>
+                    <View style={[styles.planSummaryRow, styles.planSummaryRowFirst]}>
+                      <View>
+                        <Text style={styles.planSummaryLabel}>Expected income</Text>
+                        <Text style={styles.planSummaryMeta}>From recurring income</Text>
                       </View>
-                      <Text style={styles.planIncomeAmount}>{formatCurrency(income.amount)}</Text>
-                    </Pressable>
-                  ))}
+                      <Text
+                        style={[
+                          styles.planSummaryValue,
+                          compactPlanSummary && styles.planSummaryValueCompact,
+                        ]}
+                      >
+                        {formatCurrency(planSummaryAmount)}
+                      </Text>
+                    </View>
+                    <View style={styles.planSummaryDivider} />
+                    <View style={styles.planSummaryRow}>
+                      <View>
+                        <Text style={styles.planSummaryLabel}>Goals</Text>
+                        <Text style={styles.planSummaryMeta}>
+                          Savings {formatCurrency(editingSavingsGoal)} · Investments{" "}
+                          {formatCurrency(editingInvestmentsGoal)}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[
+                          styles.planSummaryValue,
+                          compactPlanSummary && styles.planSummaryValueCompact,
+                        ]}
+                      >
+                        {formatCurrency(editingSavingsGoal + editingInvestmentsGoal)}
+                      </Text>
+                    </View>
+                    <View style={styles.planSummaryDivider} />
+                    <View style={styles.planSummaryRow}>
+                      <View>
+                        <Text style={styles.planSummaryLabel}>Spendable</Text>
+                        <Text style={styles.planSummaryMeta}>Income - Goals</Text>
+                      </View>
+                      <Text
+                        style={[
+                          styles.planSummaryValue,
+                          styles.planSummaryValueAccent,
+                          compactPlanSummary && styles.planSummaryValueCompact,
+                        ]}
+                      >
+                        {formatCurrency(planSummaryAmount - editingSavingsGoal - editingInvestmentsGoal)}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Interactive Goal Sliders */}
+                <View style={styles.planSection}>
+                  <Text style={styles.planSectionTitle}>Goal allocations</Text>
+
+                  <GoalSlider
+                    label="Savings goal"
+                    value={editingSavingsGoal}
+                    max={planSummaryAmount}
+                    onChange={handleEditingSavingsGoalChange}
+                    formatValue={(val) => `${formatCurrency(val)} / month`}
+                  />
+
+                  <GoalSlider
+                    label="Investments goal"
+                    value={editingInvestmentsGoal}
+                    max={planSummaryAmount}
+                    onChange={handleEditingInvestmentsGoalChange}
+                    formatValue={(val) => `${formatCurrency(val)} / month`}
+                  />
                 </View>
-              ) : (
-                <View style={styles.planEmptyIncome}>
-                  <Text style={styles.planEmptyTitle}>No income streams yet</Text>
-                  <Text style={styles.planEmptyCopy}>Add a plan to unlock pacing.</Text>
-                  <Pressable style={styles.planAddButtonGhost} onPress={openIncomeModal}>
-                    <Text style={styles.planAddButtonGhostText}>Add income</Text>
+
+                {/* Save and Cancel Buttons */}
+                <View style={styles.planEditActions}>
+                  <Pressable
+                    style={[styles.planActionButton, styles.planCancelButton]}
+                    onPress={handleCancelEdit}
+                    disabled={isSaving}
+                  >
+                    <Text style={styles.planCancelButtonText}>Cancel</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.planActionButton, styles.planSaveButton]}
+                    onPress={handleSavePlanChanges}
+                    disabled={isSaving}
+                  >
+                    <Text style={styles.planSaveButtonText}>
+                      {isSaving ? 'Saving...' : 'Save changes'}
+                    </Text>
                   </Pressable>
                 </View>
-              )}
-            </View>
-          )}
+              </>
+            )}
+
+            {error ? (
+              <Text style={styles.errorText}>{error}</Text>
+            ) : null}
+          </View>
         </View>
 
         <View style={[styles.surface, { padding: cardPadding, gap: cardGap }]}>
@@ -901,28 +1025,31 @@ export default function InsightsScreen() {
             <View style={styles.savingsEmptyState}>
               <Text style={styles.savingsEmptyTitle}>Goals set to {currencySymbol}0</Text>
               <Text style={styles.savingsEmptyCopy}>
-                You set both savings and investment goals to zero for this month. Update your monthly plan if you want to
+                You set both savings and investment goals to zero. Update your budget plan above if you want to
                 track contributions.
               </Text>
-              <Pressable style={styles.savingsCtaButton} onPress={() => setIsPlanEditing(true)}>
-                <Text style={styles.savingsCtaButtonText}>Adjust plan goals</Text>
+              <Pressable style={styles.savingsCtaButton} onPress={() => {/* Scroll to top or do nothing */}}>
+                <Text style={styles.savingsCtaButtonText}>Edit goals above</Text>
               </Pressable>
             </View>
           ) : (
             <View style={styles.savingsEmptyState}>
               <Text style={styles.savingsEmptyTitle}>
-                {hasMonthlyPlan ? "Add savings & investment goals" : "Create a monthly plan"}
+                {hasBudget ? "Add savings & investment goals" : "Create a budget plan"}
               </Text>
               <Text style={styles.savingsEmptyCopy}>
-                {hasMonthlyPlan && planHasGoalInputs
-                  ? "Enter goal amounts in your plan to start tracking progress."
-                  : hasMonthlyPlan
+                {hasBudget && planGoalsZero
+                  ? "Enter goal amounts in your budget plan to start tracking progress."
+                  : hasBudget
                     ? "Set targets for savings and investments to unlock this widget."
-                    : "Save a monthly plan with goal allocations to view your progress here."}
+                    : "Create a budget plan with goal allocations to view your progress here."}
               </Text>
-              <Pressable style={styles.savingsCtaButton} onPress={() => setIsPlanEditing(true)}>
+              <Pressable
+                style={styles.savingsCtaButton}
+                onPress={hasBudget ? () => {} : () => setShowCreatePlanModal(true)}
+              >
                 <Text style={styles.savingsCtaButtonText}>
-                  {hasMonthlyPlan ? "Set goals" : "Open monthly plan"}
+                  {hasBudget ? "Edit goals above" : "Create budget plan"}
                 </Text>
               </Pressable>
             </View>
@@ -1195,12 +1322,12 @@ export default function InsightsScreen() {
               ]}
               onPress={() => {
                 setShowActions(false);
-                setIncomeModalMode("add");
-                setEditingIncome(null);
-                setShowIncomeModal(true);
+                setShowIncome(true);
               }}
             >
-              <Text style={[styles.fabActionLabel, styles.fabActionLabelSecondary]}>Add income</Text>
+              <Text style={[styles.fabActionLabel, styles.fabActionLabelSecondary]}>
+                Add income
+              </Text>
             </Pressable>
           </View>
         ) : (
@@ -1220,18 +1347,18 @@ export default function InsightsScreen() {
           </Pressable>
         )}
       </View>
-      <AddSpendingModal visible={showAdd} onClose={() => setShowAdd(false)} />
+      <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
       <AddIncomeModal
-        visible={showIncomeModal}
-        onClose={() => {
-          setShowIncomeModal(false);
-          setIncomeModalMode("add");
-          setEditingIncome(null);
-        }}
+        visible={showIncome}
+        onClose={() => setShowIncome(false)}
         monthKey={snapshot.key}
         currentDate={snapshot.currentDate}
-        mode={incomeModalMode}
-        initialIncome={editingIncome ?? undefined}
+      />
+      <CreateMonthlyPlanModal
+        visible={showCreatePlanModal}
+        onClose={() => setShowCreatePlanModal(false)}
+        onSubmit={handleCreatePlan}
+        isSaving={isSaving}
       />
     </SafeAreaView>
   );
@@ -1268,6 +1395,8 @@ function GoalSlider({ label, value, max, onChange, formatValue }: GoalSliderProp
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: (event) => updateFromLocation(event.nativeEvent.locationX),
         onPanResponderMove: (event) => updateFromLocation(event.nativeEvent.locationX),
+        onPanResponderRelease: (event) => updateFromLocation(event.nativeEvent.locationX),
+        onPanResponderTerminate: (event) => updateFromLocation(event.nativeEvent.locationX),
       }),
     [updateFromLocation],
   );
@@ -1285,6 +1414,60 @@ function GoalSlider({ label, value, max, onChange, formatValue }: GoalSliderProp
       >
         <View style={[styles.goalSliderFill, { width: `${percent * 100}%` }]} />
         <View style={[styles.goalSliderThumb, { left: `${percent * 100}%` }]} />
+      </View>
+    </View>
+  );
+}
+
+type GoalDisplayBarProps = {
+  label: string;
+  value: number;
+  max: number;
+  formatValue: (value: number) => string;
+  // New optional props for progress mode
+  actual?: number;           // Actual amount achieved
+  showProgress?: boolean;    // Enable progress mode
+};
+
+function GoalDisplayBar({ label, value, max, formatValue, actual, showProgress }: GoalDisplayBarProps) {
+  const normalizedMax = Math.max(max, value, 1);
+
+  // Calculate percentage based on mode
+  const percent = showProgress
+    ? (value > 0 ? Math.min((actual ?? 0) / value, 1) : 0)  // Progress mode: actual/goal, capped at 100%
+    : value / normalizedMax;                                  // Original mode: goal/income
+
+  // Format display text based on mode
+  const displayText = showProgress
+    ? `${formatValue(actual ?? 0)} of ${formatValue(value)}`  // "$116 of $232"
+    : formatValue(value);                                       // Original format
+
+  // Calculate actual percentage for display (can exceed 100%)
+  const actualPercent = showProgress && value > 0
+    ? Math.max(0, Math.round(((actual ?? 0) / value) * 100))
+    : null;
+
+  return (
+    <View style={styles.goalSlider}>
+      <View style={styles.goalSliderHeader}>
+        <Text style={styles.goalSliderLabel}>{label}</Text>
+        <View style={styles.goalDisplayValueContainer}>
+          <Text style={styles.goalSliderValue}>{displayText}</Text>
+          {showProgress && actualPercent !== null && (
+            <Text style={styles.goalProgressPercent}>{actualPercent}%</Text>
+          )}
+        </View>
+      </View>
+      <View style={styles.goalSliderTrack}>
+        <View
+          style={[
+            styles.goalSliderFill,
+            styles.goalSliderFillReadonly,
+            showProgress && styles.goalSliderFillProgress,
+            { width: `${percent * 100}%` }
+          ]}
+        />
+        {/* No thumb indicator - read-only */}
       </View>
     </View>
   );
@@ -1578,15 +1761,6 @@ const styles = StyleSheet.create({
     color: "#374151",
     fontWeight: "600",
   },
-  planSummaryCard: {
-    backgroundColor: "#f4f1ea",
-    borderRadius: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    flexDirection: "row",
-    gap: 16,
-    justifyContent: "space-between",
-  },
   planSummaryMetric: {
     flex: 1,
     gap: 6,
@@ -1693,16 +1867,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   planEditButton: {
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: "#f9fafb",
+    backgroundColor: "#111827",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
   },
   planEditButtonText: {
-    fontWeight: "600",
-    color: "#111827",
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
   },
   planWidget: {
     gap: 16,
@@ -1864,6 +2037,27 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#111827",
   },
+  goalSliderFillReadonly: {
+    opacity: 0.6,
+  },
+  goalDisplayValueContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  goalProgressPercent: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#20b2c5",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    backgroundColor: "rgba(32, 178, 197, 0.1)",
+    borderRadius: 6,
+  },
+  goalSliderFillProgress: {
+    backgroundColor: "#20b2c5",
+    opacity: 1,
+  },
   goalSliderThumb: {
     position: "absolute",
     top: "50%",
@@ -1874,6 +2068,49 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#111827",
     transform: [{ translateX: -11 }, { translateY: -11 }],
+  },
+  // Empty state styles
+  emptyPlanState: {
+    paddingVertical: 32,
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  createPlanButton: {
+    backgroundColor: "#111827",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  createPlanButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  // Edit actions (save/cancel buttons)
+  planEditActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 16,
+  },
+  planActionButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  planCancelButton: {
+    backgroundColor: "#F2F2F7",
+  },
+  planCancelButtonText: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "600",
   },
   badgePositive: {
     backgroundColor: "#e6f4ea",
@@ -2441,5 +2678,11 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "800",
     marginTop: -2,
+  },
+  errorText: {
+    color: "#dc2626",
+    fontSize: 13,
+    marginTop: 8,
+    textAlign: "center",
   },
 });

@@ -7,21 +7,11 @@
  */
 import type { Uid } from './uid';
 import type { TransactionAmount } from './transactionAmount';
-import type { TransactionType } from './transactionType';
 
 export interface TransactionBase {
   user_id: Uid;
   occurred_at: string;
   amount: TransactionAmount;
-  type: TransactionType;
-  /** @nullable */
-  expense_category_id?: string | null;
-  /** @nullable */
-  expense_subcategory_id?: string | null;
-  /** @nullable */
-  income_category_id?: string | null;
   /** @nullable */
   notes?: string | null;
-  /** @nullable */
-  transaction_tag?: string | null;
 }

@@ -7,7 +7,6 @@
  */
 
 /**
- * Positive decimal amount with 2 decimal places
- * @pattern ^(?:0\.[0-9]{1,2}|[1-9][0-9]*\.[0-9]{2})$
+ * Positive decimal amount
  */
-export type TransactionAmount = string;
+export type TransactionAmount = number;

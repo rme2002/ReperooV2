@@ -5,9 +5,9 @@
  * Core API
  * OpenAPI spec version: 0.0.1
  */
-import type { CreateIncomeTransactionPayloadAllOfType } from './createIncomeTransactionPayloadAllOfType';
 
 export type CreateIncomeTransactionPayloadAllOf = {
-  type: CreateIncomeTransactionPayloadAllOfType;
+  /** @pattern ^income$ */
+  type: string;
   income_category_id: string;
 };

@@ -5,25 +5,7 @@
  * Core API
  * OpenAPI spec version: 0.0.1
  */
-import type { Uid } from './uid';
-import type { TransactionAmount } from './transactionAmount';
-import type { TransactionType } from './transactionType';
+import type { TransactionExpense } from './transactionExpense';
+import type { TransactionIncome } from './transactionIncome';
 
-export interface Transaction {
-  id: Uid;
-  user_id: Uid;
-  occurred_at: string;
-  created_at: string;
-  amount: TransactionAmount;
-  type: TransactionType;
-  /** @nullable */
-  expense_category_id?: string | null;
-  /** @nullable */
-  expense_subcategory_id?: string | null;
-  /** @nullable */
-  income_category_id?: string | null;
-  /** @nullable */
-  notes?: string | null;
-  /** @nullable */
-  transaction_tag?: string | null;
-}
+export type Transaction = TransactionExpense | TransactionIncome;

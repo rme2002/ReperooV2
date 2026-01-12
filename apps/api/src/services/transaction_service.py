@@ -75,17 +75,6 @@ class TransactionService:
                     f"Expense subcategory '{payload.expense_subcategory_id}' not found"
                 )
 
-        # Validate recurring fields
-        if hasattr(payload, 'is_recurring') and payload.is_recurring:
-            if not hasattr(payload, 'recurring_day_of_month') or payload.recurring_day_of_month is None:
-                raise TransactionValidationError(
-                    "recurring_day_of_month is required when is_recurring is true"
-                )
-            if payload.recurring_day_of_month < 1 or payload.recurring_day_of_month > 31:
-                raise TransactionValidationError(
-                    "recurring_day_of_month must be between 1 and 31"
-                )
-
         # Build transaction data dict with proper type conversions
         transaction_id = uuid4()
         transaction_data = {
@@ -99,8 +88,6 @@ class TransactionService:
             "expense_subcategory_id": payload.expense_subcategory_id,
             "income_category_id": None,  # Expense transactions don't have income category
             "notes": payload.notes,
-            "is_recurring": getattr(payload, 'is_recurring', False),
-            "recurring_day_of_month": getattr(payload, 'recurring_day_of_month', None),
             "recurring_template_id": None,  # New transactions don't have a template
         }
 
@@ -127,8 +114,6 @@ class TransactionService:
             expense_category_id=db_transaction.expense_category_id,
             expense_subcategory_id=db_transaction.expense_subcategory_id,
             notes=db_transaction.notes,
-            is_recurring=db_transaction.is_recurring,
-            recurring_day_of_month=db_transaction.recurring_day_of_month,
         )
 
     async def create_income_transaction(
@@ -163,17 +148,6 @@ class TransactionService:
                 f"Income category '{payload.income_category_id}' not found"
             )
 
-        # Validate recurring fields
-        if hasattr(payload, 'is_recurring') and payload.is_recurring:
-            if not hasattr(payload, 'recurring_day_of_month') or payload.recurring_day_of_month is None:
-                raise TransactionValidationError(
-                    "recurring_day_of_month is required when is_recurring is true"
-                )
-            if payload.recurring_day_of_month < 1 or payload.recurring_day_of_month > 31:
-                raise TransactionValidationError(
-                    "recurring_day_of_month must be between 1 and 31"
-                )
-
         # Build transaction data dict with proper type conversions
         transaction_id = uuid4()
         transaction_data = {
@@ -182,13 +156,11 @@ class TransactionService:
             "occurred_at": payload.occurred_at,
             "amount": Decimal(str(payload.amount.root)),
             "type": payload.type,
-            "transaction_tag": "",  # Income transactions don't have a transaction tag
+            "transaction_tag": None,  # Income transactions don't have a transaction tag
             "expense_category_id": None,  # Income transactions don't have expense category
             "expense_subcategory_id": None,
             "income_category_id": payload.income_category_id,
             "notes": payload.notes,
-            "is_recurring": getattr(payload, 'is_recurring', False),
-            "recurring_day_of_month": getattr(payload, 'recurring_day_of_month', None),
             "recurring_template_id": None,  # New transactions don't have a template
         }
 
@@ -213,8 +185,6 @@ class TransactionService:
             type=db_transaction.type,
             income_category_id=db_transaction.income_category_id,
             notes=db_transaction.notes,
-            is_recurring=db_transaction.is_recurring,
-            recurring_day_of_month=db_transaction.recurring_day_of_month,
         )
 
     async def update_transaction(
