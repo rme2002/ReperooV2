@@ -14,11 +14,10 @@ import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
 import { AddIncomeModal } from "@/components/modals/AddIncomeModal";
 import { profileOverview } from "@/components/dummy_data/profile";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
-import { insightMonths } from "@/components/dummy_data/insights";
+import { useInsightsContext } from "@/components/insights/InsightsProvider";
 import { useBudgetContext } from "@/components/budget/BudgetProvider";
 
 const overview = profileOverview;
-const currentMonthSnapshot = insightMonths[0];
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 export default function OverviewScreen() {
@@ -29,11 +28,18 @@ export default function OverviewScreen() {
   const { width } = useWindowDimensions();
   const { formatCurrency } = useCurrencyFormatter();
   const fabSize = Math.max(52, Math.min(64, width * 0.16));
-  const monthSnapshot = currentMonthSnapshot;
+
+  const { currentSnapshot } = useInsightsContext();
+  const monthSnapshot = currentSnapshot;
 
   const { budgetPlan, isLoading } = useBudgetContext();
 
   const monthCurrentDate = useMemo(() => {
+    if (!monthSnapshot?.currentDate) {
+      const fallback = new Date();
+      fallback.setHours(0, 0, 0, 0);
+      return fallback;
+    }
     const date = new Date(monthSnapshot.currentDate);
     if (Number.isNaN(date.getTime())) {
       const fallback = new Date();
@@ -42,11 +48,11 @@ export default function OverviewScreen() {
     }
     date.setHours(0, 0, 0, 0);
     return date;
-  }, [monthSnapshot.currentDate]);
+  }, [monthSnapshot?.currentDate]);
 
   const hasBudget = Boolean(budgetPlan);
   const totalBudget = budgetPlan?.expected_income ?? 0;
-  const totalSpent = monthSnapshot.totalSpent;
+  const totalSpent = monthSnapshot?.totalSpent ?? 0;
   const remainingBudget = totalBudget - totalSpent;
 
   const headlineValue = hasBudget
@@ -64,7 +70,7 @@ export default function OverviewScreen() {
     }
     return Math.floor(diff / DAY_IN_MS) + 1;
   }, [monthCurrentDate]);
-  const avgSpendPerDay = monthSnapshot.loggedDays
+  const avgSpendPerDay = monthSnapshot?.loggedDays
     ? totalSpent / monthSnapshot.loggedDays
     : totalSpent;
   const safeDaysLeft = Math.max(daysLeft, 0);
@@ -290,8 +296,8 @@ export default function OverviewScreen() {
       <AddIncomeModal
         visible={showIncome}
         onClose={() => setShowIncome(false)}
-        monthKey={monthSnapshot.key}
-        currentDate={monthSnapshot.currentDate}
+        monthKey={monthSnapshot?.key ?? ""}
+        currentDate={monthSnapshot?.currentDate ?? new Date().toISOString()}
       />
     </SafeAreaView>
   );

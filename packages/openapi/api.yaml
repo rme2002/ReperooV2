@@ -11,6 +11,7 @@ tags:
   - name: Authentication
   - name: Transactions
   - name: Budget Plans
+  - name: Insights
 
 paths:
   /api/v1/health:
@@ -425,6 +426,76 @@ paths:
           $ref: '#/components/responses/ErrorResponse401'
         '500':
           description: Error 500
+          $ref: '#/components/responses/ErrorResponse500'
+
+  # Insights
+  /api/v1/insights/month-snapshot:
+    get:
+      tags:
+        - Insights
+      summary: Get month snapshot
+      description: Get detailed spending insights for a specific month including categories, weekly breakdown, and savings
+      operationId: getMonthSnapshot
+      parameters:
+        - name: year
+          in: query
+          description: Year (e.g., 2025)
+          required: true
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2100
+            example: 2025
+        - name: month
+          in: query
+          description: Month (1-12)
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            example: 12
+      responses:
+        '200':
+          description: Month snapshot retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthSnapshot'
+        '400':
+          description: Invalid parameters
+          $ref: '#/components/responses/ErrorResponse400'
+        '401':
+          description: Unauthorized
+          $ref: '#/components/responses/ErrorResponse401'
+        '404':
+          description: No data for month or no budget plan
+          $ref: '#/components/responses/ErrorResponse404'
+        '500':
+          description: Internal server error
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/insights/available-months:
+    get:
+      tags:
+        - Insights
+      summary: List available months
+      description: Get list of months with transaction data, sorted by most recent first
+      operationId: listAvailableMonths
+      responses:
+        '200':
+          description: Available months retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailableMonth'
+        '401':
+          description: Unauthorized
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Internal server error
           $ref: '#/components/responses/ErrorResponse500'
 
 components:
@@ -930,6 +1001,225 @@ components:
             updated_at:
               type: string
               format: date-time
+
+    # Insights Schemas
+    SubCategoryBreakdown:
+      type: object
+      required:
+        - id
+        - total
+        - percent
+        - color
+      properties:
+        id:
+          type: string
+          example: "groceries"
+        total:
+          type: number
+          format: float
+          example: 160.5
+        percent:
+          type: number
+          format: float
+          example: 50.0
+          description: Percentage of parent category total
+        color:
+          type: string
+          example: "#f7b267"
+
+    CategoryBreakdown:
+      type: object
+      required:
+        - id
+        - total
+        - percent
+        - items
+        - color
+      properties:
+        id:
+          type: string
+          example: "essentials"
+        total:
+          type: number
+          format: float
+          example: 320.0
+        percent:
+          type: number
+          format: float
+          example: 42.0
+          description: Percentage of total spending
+        items:
+          type: integer
+          example: 18
+          description: Number of transactions in this category
+        color:
+          type: string
+          example: "#f59a3e"
+        subcategories:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubCategoryBreakdown'
+
+    WeeklySpendingPoint:
+      type: object
+      required:
+        - week
+        - label
+        - total
+      properties:
+        week:
+          type: integer
+          minimum: 1
+          maximum: 6
+          example: 1
+        label:
+          type: string
+          example: "Week 1"
+        total:
+          type: number
+          format: float
+          example: 180.5
+
+    SavingsBreakdown:
+      type: object
+      required:
+        - saved
+        - invested
+      properties:
+        saved:
+          type: number
+          format: float
+          example: 120.0
+          description: Total from 'savings' category
+        invested:
+          type: number
+          format: float
+          example: 85.0
+          description: Total from 'investments' category
+        savedDelta:
+          type: number
+          format: float
+          nullable: true
+          example: 0.08
+          description: Month-over-month percentage change for savings
+        investedDelta:
+          type: number
+          format: float
+          nullable: true
+          example: 0.05
+          description: Month-over-month percentage change for investments
+
+    RecentTransactionSummary:
+      type: object
+      required:
+        - amount
+        - categoryId
+        - date
+      properties:
+        amount:
+          type: number
+          format: float
+          example: 42.5
+        categoryId:
+          type: string
+          example: "essentials"
+        subcategoryId:
+          type: string
+          nullable: true
+          example: "groceries"
+        date:
+          type: string
+          format: date-time
+          example: "2025-12-04T00:00:00Z"
+
+    MonthSnapshot:
+      type: object
+      required:
+        - key
+        - label
+        - currentDate
+        - loggedDays
+        - totalDays
+        - totalSpent
+        - budget
+        - lastMonthDelta
+        - categories
+        - savings
+        - weekly
+        - transactions
+      properties:
+        key:
+          type: string
+          example: "dec-2025"
+          description: Unique month identifier
+        label:
+          type: string
+          example: "December 2025"
+        currentDate:
+          type: string
+          format: date-time
+          example: "2025-12-06T00:00:00Z"
+        loggedDays:
+          type: integer
+          example: 12
+          description: Number of days with expense transactions
+        totalDays:
+          type: integer
+          example: 30
+          description: Total days in the month
+        totalSpent:
+          type: number
+          format: float
+          example: 756.0
+          description: Sum of all expense transactions
+        budget:
+          type: number
+          format: float
+          example: 1200.0
+          description: From budget_plan.expected_income
+        lastMonthDelta:
+          type: number
+          format: float
+          example: 0.12
+          description: Percentage change from previous month (-1.0 to +infinity)
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryBreakdown'
+        savings:
+          $ref: '#/components/schemas/SavingsBreakdown'
+        weekly:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeeklySpendingPoint'
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecentTransactionSummary'
+          description: Last 5 expense transactions
+
+    AvailableMonth:
+      type: object
+      required:
+        - key
+        - label
+        - year
+        - month
+      properties:
+        key:
+          type: string
+          example: "dec-2025"
+        label:
+          type: string
+          example: "December 2025"
+        year:
+          type: integer
+          example: 2025
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+          example: 12
 
   responses:
     SuccessResponse200:

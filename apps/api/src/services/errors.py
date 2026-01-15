@@ -68,3 +68,15 @@ class BudgetPlanAlreadyExistsError(Exception):
     """Raised when trying to create a budget plan when one already exists."""
 
     pass
+
+
+class InsightsValidationError(Exception):
+    """Raised when insights parameters are invalid."""
+
+    pass
+
+
+class InsightsNotFoundError(Exception):
+    """Raised when insights data not found."""
+
+    pass

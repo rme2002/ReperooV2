@@ -16,8 +16,9 @@ import spendingCategories from "../../../../shared/config/spending-categories.js
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
 import { AddIncomeModal } from "@/components/modals/AddIncomeModal";
 import { CreateMonthlyPlanModal } from "@/components/modals/CreateMonthlyPlanModal";
-import { insightMonths } from "@/components/dummy_data/insights";
 import { useBudgetContext } from "@/components/budget/BudgetProvider";
+import { useInsightsContext } from "@/components/insights/InsightsProvider";
+import { InsightsSkeletonLoader } from "@/components/insights/InsightsSkeletonLoader";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
 import { IncomeBreakdownSection } from "@/components/budget/IncomeBreakdownSection";
 import { listTransactions } from "@/lib/gen/transactions/transactions";
@@ -44,8 +45,6 @@ const getSubcategoryLabel = (categoryId: string, subcategoryId: string) =>
 
 const fallbackSubcategoryColors = ["#dbeafe", "#e0e7ff", "#ede9fe", "#fce7f3", "#fef3c7", "#dcfce7", "#ccfbf1"];
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
-
-const months = insightMonths;
 
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
 
@@ -111,7 +110,13 @@ const formatIncomeSchedule = (dateString: string) => {
 };
 
 export default function InsightsScreen() {
-  const [monthIndex, setMonthIndex] = useState(0);
+  // Get current month (January 2026 as default)
+  const getCurrentMonth = () => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() + 1 };
+  };
+
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [showAdd, setShowAdd] = useState(false);
   const [showIncome, setShowIncome] = useState(false);
   const [showActions, setShowActions] = useState(false);
@@ -120,8 +125,20 @@ export default function InsightsScreen() {
   const [activeWeekIndex, setActiveWeekIndex] = useState<number | null>(null);
   const [isWeeklyLoading, setIsWeeklyLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const snapshot = months[monthIndex];
+
+  const {
+    availableMonths,
+    currentSnapshot,
+    isLoading: insightsLoading,
+    error: insightsError,
+    fetchSnapshot,
+    refetchAvailableMonths,
+    prefetchSnapshot,
+  } = useInsightsContext();
+
   const { budgetPlan, isLoading, error, createBudgetPlan, updateBudgetPlan } = useBudgetContext();
+
+  const snapshot = currentSnapshot;
 
   // Form state for budget plan
   const [planSavingsGoal, setPlanSavingsGoal] = useState(budgetPlan?.savings_goal ?? 0);
@@ -139,6 +156,33 @@ export default function InsightsScreen() {
   const [incomeError, setIncomeError] = useState<string | null>(null);
 
   const { formatCurrency, currencySymbol } = useCurrencyFormatter();
+
+  // Fetch snapshot when month changes
+  useEffect(() => {
+    if (selectedMonth) {
+      fetchSnapshot(selectedMonth.year, selectedMonth.month);
+    }
+  }, [selectedMonth, fetchSnapshot]);
+
+  // Prefetch adjacent months after current snapshot loads
+  useEffect(() => {
+    if (currentSnapshot && selectedMonth) {
+      // Calculate previous month
+      const prevMonth = selectedMonth.month === 1
+        ? { year: selectedMonth.year - 1, month: 12 }
+        : { year: selectedMonth.year, month: selectedMonth.month - 1 };
+
+      // Calculate next month
+      const nextMonth = selectedMonth.month === 12
+        ? { year: selectedMonth.year + 1, month: 1 }
+        : { year: selectedMonth.year, month: selectedMonth.month + 1 };
+
+      // Prefetch in background
+      prefetchSnapshot(prevMonth.year, prevMonth.month);
+      prefetchSnapshot(nextMonth.year, nextMonth.month);
+    }
+  }, [currentSnapshot, selectedMonth, prefetchSnapshot]);
+
   // Sync form state when budget plan changes
   useEffect(() => {
     if (budgetPlan) {
@@ -158,6 +202,11 @@ export default function InsightsScreen() {
   const weeklyTooltipWidth = Math.min(160, Math.max(110, width * 0.32));
 
   const monthCurrentDate = useMemo(() => {
+    if (!snapshot?.currentDate) {
+      const fallback = new Date();
+      fallback.setHours(0, 0, 0, 0);
+      return fallback;
+    }
     const date = new Date(snapshot.currentDate);
     if (Number.isNaN(date.getTime())) {
       const fallback = new Date();
@@ -166,12 +215,12 @@ export default function InsightsScreen() {
     }
     date.setHours(0, 0, 0, 0);
     return date;
-  }, [snapshot.currentDate]);
+  }, [snapshot?.currentDate]);
 
   // Use expected_income from budget plan
   const hasBudget = Boolean(budgetPlan);
   const totalBudget = budgetPlan?.expected_income ?? 0;
-  const totalSpent = snapshot.totalSpent;
+  const totalSpent = snapshot?.totalSpent ?? 0;
   const remainingBudget = totalBudget - totalSpent;
   const budgetHelperLabel = hasBudget ? "Based on recurring income" : null;
   const daysLeftInMonth = useMemo(() => {
@@ -185,7 +234,7 @@ export default function InsightsScreen() {
     return Math.floor(diff / DAY_IN_MS) + 1;
   }, [monthCurrentDate]);
   const safeDaysLeft = Math.max(daysLeftInMonth, 0);
-  const avgSpendPerDay = snapshot.loggedDays ? totalSpent / snapshot.loggedDays : totalSpent;
+  const avgSpendPerDay = snapshot?.loggedDays ? totalSpent / snapshot.loggedDays : totalSpent;
   const avgSpendRounded = Math.round(avgSpendPerDay);
   const dailyPace = safeDaysLeft > 0 ? remainingBudget / safeDaysLeft : 0;
   const dailyPaceRounded = safeDaysLeft > 0 ? Math.round(dailyPace) : 0;
@@ -410,7 +459,7 @@ export default function InsightsScreen() {
     [planSummaryAmount, editingSavingsGoal],
   );
 
-  const weeklyPoints = snapshot.weekly;
+  const weeklyPoints = snapshot?.weekly ?? [];
   const weeklyTotals = weeklyPoints.map((point) => point.total);
   const weeklyPeak = weeklyTotals.length ? Math.max(...weeklyTotals) : 0;
   const weeklyMax = Math.max(weeklyPeak, 1);
@@ -430,10 +479,19 @@ export default function InsightsScreen() {
   const compactPlanSummary = width < 380;
 
   const goPrev = () => {
-    setMonthIndex((prev) => Math.min(prev + 1, months.length - 1));
+    // Go to previous month
+    const prevMonth = selectedMonth.month === 1
+      ? { year: selectedMonth.year - 1, month: 12 }
+      : { year: selectedMonth.year, month: selectedMonth.month - 1 };
+    setSelectedMonth(prevMonth);
   };
+
   const goNext = () => {
-    setMonthIndex((prev) => Math.max(prev - 1, 0));
+    // Go to next month
+    const nextMonth = selectedMonth.month === 12
+      ? { year: selectedMonth.year + 1, month: 1 }
+      : { year: selectedMonth.year, month: selectedMonth.month + 1 };
+    setSelectedMonth(nextMonth);
   };
 
   useEffect(() => {
@@ -442,14 +500,14 @@ export default function InsightsScreen() {
     setIsWeeklyLoading(true);
     const timer = setTimeout(() => setIsWeeklyLoading(false), 360);
     return () => clearTimeout(timer);
-  }, [monthIndex]);
+  }, [selectedMonth]);
 
   const handleCategoryPress = (categoryId: string) => {
     setActiveCategoryId((prev) => (prev === categoryId ? null : categoryId));
   };
 
-  const savingsActual = snapshot.savings.saved;
-  const investmentsActual = snapshot.savings.invested;
+  const savingsActual = snapshot?.savings?.saved ?? 0;
+  const investmentsActual = snapshot?.savings?.invested ?? 0;
   const savingsTotal = savingsActual + investmentsActual;
   const hasSavingsSplit = savingsTotal > 0;
   const savedShareWidth = hasSavingsSplit ? (savingsActual / savingsTotal) * 100 : 0;
@@ -471,7 +529,7 @@ export default function InsightsScreen() {
   const pieRadius = chartSize / 2 - pieStroke / 2;
   const centerSize = chartSize * 0.56;
   const circumference = 2 * Math.PI * pieRadius;
-  const pieSegments = snapshot.categories.reduce<
+  const pieSegments = (snapshot?.categories ?? []).reduce<
     { length: number; offset: number; color: string; id: string; label: string }[]
   >((acc, cat) => {
     const prevTotal = acc.reduce((sum, item) => sum + item.length, 0);
@@ -479,6 +537,81 @@ export default function InsightsScreen() {
     const offset = prevTotal;
     return [...acc, { length, offset, color: cat.color, id: cat.id, label: getCategoryLabel(cat.id) }];
   }, []);
+
+  // Loading state
+  if (insightsLoading) {
+    return <InsightsSkeletonLoader />;
+  }
+
+  // No budget plan error state
+  if (insightsError === "NO_BUDGET_PLAN") {
+    const handleCreatePlan = async (payload: { savings_goal: number | null; investment_goal: number | null }) => {
+      try {
+        await createBudgetPlan({
+          savings_goal: payload.savings_goal,
+          investment_goal: payload.investment_goal,
+        });
+        setShowCreatePlanModal(false);
+        // Refetch insights after creating plan
+        await refetchAvailableMonths();
+        await fetchSnapshot(selectedMonth.year, selectedMonth.month);
+      } catch (err) {
+        Alert.alert("Error", "Failed to create budget plan");
+      }
+    };
+
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.container, styles.centerContent]}>
+          <Text style={styles.emptyTitle}>Create a Budget Plan</Text>
+          <Text style={styles.emptyCopy}>Set up your budget plan to see insights about your spending</Text>
+          <Pressable style={styles.primaryButton} onPress={() => setShowCreatePlanModal(true)}>
+            <Text style={styles.primaryButtonText}>Create Plan</Text>
+          </Pressable>
+        </View>
+        <CreateMonthlyPlanModal
+          visible={showCreatePlanModal}
+          onClose={() => setShowCreatePlanModal(false)}
+          onSubmit={handleCreatePlan}
+          isSaving={isSaving}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Other error state
+  if (insightsError) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.container, styles.centerContent]}>
+          <Text style={styles.emptyTitle}>Error loading insights</Text>
+          <Text style={styles.emptyCopy}>We couldn't load your insights data. Please try again.</Text>
+          <Pressable
+            style={styles.primaryButton}
+            onPress={() => fetchSnapshot(selectedMonth.year, selectedMonth.month)}
+          >
+            <Text style={styles.primaryButtonText}>Retry</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Empty state - no snapshot data
+  if (!currentSnapshot) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.container, styles.centerContent]}>
+          <Text style={styles.emptyTitle}>No transactions yet</Text>
+          <Text style={styles.emptyCopy}>You haven't logged any transactions for this month</Text>
+          <Pressable style={styles.primaryButton} onPress={() => setShowAdd(true)}>
+            <Text style={styles.primaryButtonText}>Add Transaction</Text>
+          </Pressable>
+        </View>
+        <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -488,24 +621,17 @@ export default function InsightsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Pressable onPress={goPrev} style={styles.navButton} disabled={monthIndex >= months.length - 1}>
-            <Text
-              style={[
-                styles.navIcon,
-                monthIndex >= months.length - 1 && styles.navIconDisabled,
-              ]}
-            >
-              ‹
-            </Text>
+          <Pressable onPress={goPrev} style={styles.navButton}>
+            <Text style={styles.navIcon}>‹</Text>
           </Pressable>
           <View style={styles.headerCopy}>
-            <Text style={styles.monthLabel}>{snapshot.label}</Text>
+            <Text style={styles.monthLabel}>{snapshot?.label}</Text>
             <Text style={styles.subText}>
-              Logged {snapshot.loggedDays}/{snapshot.totalDays} days
+              Logged {snapshot?.loggedDays}/{snapshot?.totalDays} days
             </Text>
           </View>
-          <Pressable onPress={goNext} style={styles.navButton} disabled={monthIndex === 0}>
-            <Text style={[styles.navIcon, monthIndex === 0 && styles.navIconDisabled]}>›</Text>
+          <Pressable onPress={goNext} style={styles.navButton}>
+            <Text style={styles.navIcon}>›</Text>
           </Pressable>
         </View>
 
@@ -881,15 +1007,16 @@ export default function InsightsScreen() {
                   { width: centerSize, height: centerSize, borderRadius: centerSize / 2 },
                 ]}
               >
-                <Text style={styles.donutValue}>{formatCurrency(snapshot.totalSpent)}</Text>
+                <Text style={styles.donutValue}>{formatCurrency(snapshot?.totalSpent ?? 0)}</Text>
                 <Text style={styles.donutLabel}>This month</Text>
               </View>
             </View>
           <View style={styles.legendColumns}>
             {(() => {
-              const mid = Math.ceil(snapshot.categories.length / 2);
-              const left = snapshot.categories.slice(0, mid);
-              const right = snapshot.categories.slice(mid);
+              const categories = snapshot?.categories ?? [];
+              const mid = Math.ceil(categories.length / 2);
+              const left = categories.slice(0, mid);
+              const right = categories.slice(mid);
               return (
                 <>
                   <View style={styles.legendColumn}>
@@ -1067,7 +1194,7 @@ export default function InsightsScreen() {
             <Text style={[styles.tableCell, styles.tableNumeric]}>%</Text>
             <Text style={[styles.tableCell, styles.tableNumeric]}>Items</Text>
           </View>
-          {snapshot.categories.map((cat) => {
+          {(snapshot?.categories ?? []).map((cat) => {
             const catLabel = getCategoryLabel(cat.id);
             const isActive = activeCategoryId === cat.id;
             const rawSubcategories = cat.subcategories ?? [];
@@ -1125,9 +1252,9 @@ export default function InsightsScreen() {
                     pressed && styles.tableRowPressed,
                   ]}
                 >
-                  <View style={[styles.tableCell, styles.tableCategory, styles.tableCellRow]}>
+                  <View style={[styles.tableCategory, styles.tableCellRow]}>
                     <View style={[styles.legendDot, { backgroundColor: cat.color }]} />
-                    <Text style={styles.tableText}>{catLabel}</Text>
+                    <Text style={[styles.tableText, styles.tableCell]}>{catLabel}</Text>
                   </View>
                   <Text style={[styles.tableCell, styles.tableNumeric]}>{Math.round(cat.total)}</Text>
                   <Text style={[styles.tableCell, styles.tableNumeric]}>{cat.percent}%</Text>
@@ -1351,8 +1478,8 @@ export default function InsightsScreen() {
       <AddIncomeModal
         visible={showIncome}
         onClose={() => setShowIncome(false)}
-        monthKey={snapshot.key}
-        currentDate={snapshot.currentDate}
+        monthKey={snapshot?.key ?? ""}
+        currentDate={snapshot?.currentDate ?? new Date().toISOString()}
       />
       <CreateMonthlyPlanModal
         visible={showCreatePlanModal}
@@ -2684,5 +2811,36 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 8,
     textAlign: "center",
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptyCopy: {
+    fontSize: 15,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  primaryButton: {
+    backgroundColor: "#111827",
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  primaryButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

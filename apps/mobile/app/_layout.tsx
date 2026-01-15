@@ -12,6 +12,7 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { BudgetProvider } from "@/components/budget/BudgetProvider";
+import { InsightsProvider } from "@/components/insights/InsightsProvider";
 import { UserPreferencesProvider } from "@/components/profile/UserPreferencesProvider";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
 
@@ -79,15 +80,17 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <UserPreferencesProvider session={session}>
         <BudgetProvider>
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="(tabs)"
-              options={{ headerShown: false, gestureEnabled: false }}
-            />
-            <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-          </Stack>
+          <InsightsProvider>
+            <Stack>
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(tabs)"
+                options={{ headerShown: false, gestureEnabled: false }}
+              />
+              <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+            </Stack>
+          </InsightsProvider>
         </BudgetProvider>
       </UserPreferencesProvider>
     </ThemeProvider>

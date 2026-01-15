@@ -1,5 +1,7 @@
 from datetime import datetime
 from uuid import UUID
+import logging
+import traceback
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -220,6 +222,9 @@ async def list_transactions(
         return responses
 
     except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to retrieve transactions: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
