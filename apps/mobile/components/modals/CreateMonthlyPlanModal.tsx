@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Modal,
   PanResponder,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
@@ -23,7 +24,7 @@ type Props = {
 export function CreateMonthlyPlanModal({ visible, onClose, onSubmit, isSaving = false }: Props) {
   const [savingsGoal, setSavingsGoal] = useState(0);
   const [investmentsGoal, setInvestmentsGoal] = useState(0);
-  const { formatCurrency } = useCurrencyFormatter();
+  const { formatCurrency, currencySymbol } = useCurrencyFormatter();
 
   const handleSubmit = async () => {
     try {
@@ -43,7 +44,7 @@ export function CreateMonthlyPlanModal({ visible, onClose, onSubmit, isSaving = 
     onClose();
   };
 
-  const sliderMax = 10000; // Default max for sliders when no expected income yet
+  const sliderMax = 10000;
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
@@ -68,6 +69,7 @@ export function CreateMonthlyPlanModal({ visible, onClose, onSubmit, isSaving = 
                 value={savingsGoal}
                 max={sliderMax}
                 onChange={setSavingsGoal}
+                currencySymbol={currencySymbol}
                 formatValue={(value) => `${formatCurrency(value)} / month`}
               />
 
@@ -76,6 +78,7 @@ export function CreateMonthlyPlanModal({ visible, onClose, onSubmit, isSaving = 
                 value={investmentsGoal}
                 max={sliderMax}
                 onChange={setInvestmentsGoal}
+                currencySymbol={currencySymbol}
                 formatValue={(value) => `${formatCurrency(value)} / month`}
               />
 
@@ -113,24 +116,60 @@ type GoalSliderProps = {
   value: number;
   max: number;
   onChange: (value: number) => void;
+  currencySymbol: string;
   formatValue: (value: number) => string;
 };
 
-function GoalSlider({ label, value, max, onChange, formatValue }: GoalSliderProps) {
+const SLIDER_STEP = 10;
+const LINEAR_MAX = 200;
+const LINEAR_PORTION = 0.5;
+
+const formatNumber = (value: number) => value.toLocaleString("en-US");
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const snapGoalValue = (value: number, maxValue: number) =>
+  clamp(Math.round(value / SLIDER_STEP) * SLIDER_STEP, 0, maxValue);
+
+function valueFromPercent(percent: number, maxValue: number) {
+  const pct = clamp(percent, 0, 1);
+  if (pct <= LINEAR_PORTION) {
+    return (pct / LINEAR_PORTION) * LINEAR_MAX;
+  }
+  const t = (pct - LINEAR_PORTION) / (1 - LINEAR_PORTION);
+  return LINEAR_MAX + (maxValue - LINEAR_MAX) * t * t;
+}
+
+function percentFromValue(value: number, maxValue: number) {
+  const clamped = clamp(value, 0, maxValue);
+  if (clamped <= LINEAR_MAX) {
+    return (clamped / LINEAR_MAX) * LINEAR_PORTION;
+  }
+  const t = Math.sqrt((clamped - LINEAR_MAX) / (maxValue - LINEAR_MAX));
+  return LINEAR_PORTION + t * (1 - LINEAR_PORTION);
+}
+
+function GoalSlider({ label, value, max, onChange, currencySymbol, formatValue }: GoalSliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
-  const normalizedMax = Math.max(max, 1);
-  const percent = normalizedMax > 0 ? Math.min(Math.max(value / normalizedMax, 0), 1) : 0;
+  const [inputValue, setInputValue] = useState(formatNumber(value));
+  const maxValue = Math.max(max, LINEAR_MAX, 1);
+  const percent = percentFromValue(value, maxValue);
+
+  useEffect(() => {
+    setInputValue(formatNumber(value));
+  }, [value]);
 
   const updateFromLocation = useCallback(
-    (locationX: number) => {
+    (locationX: number, shouldSnap = false) => {
       if (!trackWidth) {
         return;
       }
       const pct = Math.min(Math.max(locationX / trackWidth, 0), 1);
-      const nextValue = Math.round(pct * normalizedMax);
+      const rawValue = valueFromPercent(pct, maxValue);
+      const nextValue = shouldSnap ? snapGoalValue(rawValue, maxValue) : clamp(rawValue, 0, maxValue);
       onChange(nextValue);
     },
-    [trackWidth, normalizedMax, onChange],
+    [trackWidth, maxValue, onChange],
   );
 
   const panResponder = useMemo(
@@ -140,8 +179,8 @@ function GoalSlider({ label, value, max, onChange, formatValue }: GoalSliderProp
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: (event) => updateFromLocation(event.nativeEvent.locationX),
         onPanResponderMove: (event) => updateFromLocation(event.nativeEvent.locationX),
-        onPanResponderRelease: (event) => updateFromLocation(event.nativeEvent.locationX),
-        onPanResponderTerminate: (event) => updateFromLocation(event.nativeEvent.locationX),
+        onPanResponderRelease: (event) => updateFromLocation(event.nativeEvent.locationX, true),
+        onPanResponderTerminate: (event) => updateFromLocation(event.nativeEvent.locationX, true),
       }),
     [updateFromLocation],
   );
@@ -151,6 +190,32 @@ function GoalSlider({ label, value, max, onChange, formatValue }: GoalSliderProp
       <View style={styles.goalSliderHeader}>
         <Text style={styles.goalSliderLabel}>{label}</Text>
         <Text style={styles.goalSliderValue}>{formatValue(value)}</Text>
+      </View>
+      <View style={styles.goalSliderInputRow}>
+        <Text style={styles.goalSliderInputPrefix}>{currencySymbol}</Text>
+        <TextInput
+          value={inputValue}
+          onChangeText={(text) => {
+            const digitsOnly = text.replace(/[^\d]/g, "");
+            if (!digitsOnly) {
+              setInputValue("");
+              onChange(0);
+              return;
+            }
+            const numericValue = clamp(Number(digitsOnly), 0, maxValue);
+            onChange(numericValue);
+            setInputValue(formatNumber(numericValue));
+          }}
+          onBlur={() => {
+            if (!inputValue) {
+              setInputValue(formatNumber(0));
+            }
+          }}
+          keyboardType="number-pad"
+          style={styles.goalSliderInput}
+          placeholder="0"
+          placeholderTextColor="#9ca3af"
+        />
       </View>
       <View
         style={styles.goalSliderTrack}
@@ -301,6 +366,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#111827",
+  },
+  goalSliderInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  goalSliderInputPrefix: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  goalSliderInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    color: "#111827",
+    backgroundColor: "#fff",
   },
   goalSliderTrack: {
     height: 12,

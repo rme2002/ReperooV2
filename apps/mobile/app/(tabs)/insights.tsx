@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -45,6 +46,38 @@ const getSubcategoryLabel = (categoryId: string, subcategoryId: string) =>
 
 const fallbackSubcategoryColors = ["#dbeafe", "#e0e7ff", "#ede9fe", "#fce7f3", "#fef3c7", "#dcfce7", "#ccfbf1"];
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const SLIDER_MAX = 10000;
+const SLIDER_STEP = 10;
+const LINEAR_MAX = 200;
+const LINEAR_PORTION = 0.5;
+
+const formatNumber = (value: number) => value.toLocaleString("en-US");
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const sanitizeGoalValue = (value: number, maxValue = SLIDER_MAX) =>
+  clamp(value, 0, maxValue);
+
+const snapGoalValue = (value: number, maxValue = SLIDER_MAX) =>
+  clamp(Math.round(value / SLIDER_STEP) * SLIDER_STEP, 0, maxValue);
+
+const valueFromPercent = (percent: number, maxValue: number) => {
+  const pct = clamp(percent, 0, 1);
+  if (pct <= LINEAR_PORTION) {
+    return (pct / LINEAR_PORTION) * LINEAR_MAX;
+  }
+  const t = (pct - LINEAR_PORTION) / (1 - LINEAR_PORTION);
+  return LINEAR_MAX + (maxValue - LINEAR_MAX) * t * t;
+};
+
+const percentFromValue = (value: number, maxValue: number) => {
+  const clamped = clamp(value, 0, maxValue);
+  if (clamped <= LINEAR_MAX) {
+    return (clamped / LINEAR_MAX) * LINEAR_PORTION;
+  }
+  const t = Math.sqrt((clamped - LINEAR_MAX) / (maxValue - LINEAR_MAX));
+  return LINEAR_PORTION + t * (1 - LINEAR_PORTION);
+};
 
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
 
@@ -263,51 +296,17 @@ export default function InsightsScreen() {
   const headlineSubtitle = hasBudget ? "projected left" : "Create a budget plan";
 
   // Budget plan form values
-  const planGoalsTotal = planSavingsGoal + planInvestmentsGoal;
-  const expectedIncome = budgetPlan?.expected_income ?? 0;
-  const goalSliderMax = expectedIncome > 0 ? expectedIncome : Math.max(planGoalsTotal, 1);
-  // Auto-adjust goals if they exceed expected income
-  useEffect(() => {
-    if (expectedIncome <= 0) {
-      return;
-    }
-    const totalGoals = planSavingsGoal + planInvestmentsGoal;
-    if (totalGoals <= expectedIncome) {
-      return;
-    }
-    if (planInvestmentsGoal >= planSavingsGoal) {
-      const nextInvestments = Math.max(0, expectedIncome - planSavingsGoal);
-      if (nextInvestments !== planInvestmentsGoal) {
-        setPlanInvestmentsGoal(nextInvestments);
-      }
-    } else {
-      const nextSavings = Math.max(0, expectedIncome - planInvestmentsGoal);
-      if (nextSavings !== planSavingsGoal) {
-        setPlanSavingsGoal(nextSavings);
-      }
-    }
-  }, [expectedIncome, planSavingsGoal, planInvestmentsGoal]);
   const handleSavingsGoalChange = useCallback(
     (next: number) => {
-      if (expectedIncome > 0) {
-        const capped = Math.max(0, Math.min(next, Math.max(expectedIncome - planInvestmentsGoal, 0)));
-        setPlanSavingsGoal(capped);
-      } else {
-        setPlanSavingsGoal(Math.max(0, next));
-      }
+      setPlanSavingsGoal(sanitizeGoalValue(next));
     },
-    [expectedIncome, planInvestmentsGoal],
+    [],
   );
   const handleInvestmentsGoalChange = useCallback(
     (next: number) => {
-      if (expectedIncome > 0) {
-        const capped = Math.max(0, Math.min(next, Math.max(expectedIncome - planSavingsGoal, 0)));
-        setPlanInvestmentsGoal(capped);
-      } else {
-        setPlanInvestmentsGoal(Math.max(0, next));
-      }
+      setPlanInvestmentsGoal(sanitizeGoalValue(next));
     },
-    [expectedIncome, planSavingsGoal],
+    [],
   );
   const handlePlanSave = async () => {
     try {
@@ -429,35 +428,17 @@ export default function InsightsScreen() {
 
   // Budget plan summary values (needed by handlers below)
   const planSummaryAmount = budgetPlan?.expected_income ?? 0;
+  const editingGoalsTotal = editingSavingsGoal + editingInvestmentsGoal;
+  const editingExceedsIncome = planSummaryAmount > 0 && editingGoalsTotal > planSummaryAmount;
 
   // Handlers for editing state goal changes
-  const handleEditingSavingsGoalChange = useCallback(
-    (value: number) => {
-      const adjustedValue = Math.min(value, planSummaryAmount);
-      setEditingSavingsGoal(adjustedValue);
+  const handleEditingSavingsGoalChange = useCallback((value: number) => {
+    setEditingSavingsGoal(sanitizeGoalValue(value));
+  }, []);
 
-      // Auto-adjust investments if total exceeds income
-      const totalGoals = adjustedValue + editingInvestmentsGoal;
-      if (totalGoals > planSummaryAmount) {
-        setEditingInvestmentsGoal(Math.max(0, planSummaryAmount - adjustedValue));
-      }
-    },
-    [planSummaryAmount, editingInvestmentsGoal],
-  );
-
-  const handleEditingInvestmentsGoalChange = useCallback(
-    (value: number) => {
-      const adjustedValue = Math.min(value, planSummaryAmount);
-      setEditingInvestmentsGoal(adjustedValue);
-
-      // Auto-adjust savings if total exceeds income
-      const totalGoals = editingSavingsGoal + adjustedValue;
-      if (totalGoals > planSummaryAmount) {
-        setEditingSavingsGoal(Math.max(0, planSummaryAmount - adjustedValue));
-      }
-    },
-    [planSummaryAmount, editingSavingsGoal],
-  );
+  const handleEditingInvestmentsGoalChange = useCallback((value: number) => {
+    setEditingInvestmentsGoal(sanitizeGoalValue(value));
+  }, []);
 
   const weeklyPoints = snapshot?.weekly ?? [];
   const weeklyTotals = weeklyPoints.map((point) => point.total);
@@ -475,6 +456,7 @@ export default function InsightsScreen() {
   const planGoalsPositive = (planSummarySavings > 0 || planSummaryInvestments > 0);
   const planGoalsZero = hasBudget && planSummarySavings === 0 && planSummaryInvestments === 0;
   const planSummaryGoals = planSummarySavings + planSummaryInvestments;
+  const planSummaryExceedsIncome = planSummaryAmount > 0 && planSummaryGoals > planSummaryAmount;
   const planSummarySpendable = Math.max(planSummaryAmount - planSummaryGoals, 0);
   const compactPlanSummary = width < 380;
 
@@ -849,6 +831,15 @@ export default function InsightsScreen() {
                     formatValue={(val) => formatCurrency(val)}
                   />
                 </View>
+                {planSummaryExceedsIncome && (
+                  <View style={styles.planWarning}>
+                    <Text style={styles.planWarningTitle}>Goals exceed expected income</Text>
+                    <Text style={styles.planWarningCopy}>
+                      Your goals total {formatCurrency(planSummaryGoals)} which is above expected income{" "}
+                      {formatCurrency(planSummaryAmount)}.
+                    </Text>
+                  </View>
+                )}
 
                 {/* Edit Button */}
                 <Pressable
@@ -924,19 +915,30 @@ export default function InsightsScreen() {
                   <GoalSlider
                     label="Savings goal"
                     value={editingSavingsGoal}
-                    max={planSummaryAmount}
+                    max={SLIDER_MAX}
                     onChange={handleEditingSavingsGoalChange}
+                    currencySymbol={currencySymbol}
                     formatValue={(val) => `${formatCurrency(val)} / month`}
                   />
 
                   <GoalSlider
                     label="Investments goal"
                     value={editingInvestmentsGoal}
-                    max={planSummaryAmount}
+                    max={SLIDER_MAX}
                     onChange={handleEditingInvestmentsGoalChange}
+                    currencySymbol={currencySymbol}
                     formatValue={(val) => `${formatCurrency(val)} / month`}
                   />
                 </View>
+                {editingExceedsIncome && (
+                  <View style={styles.planWarning}>
+                    <Text style={styles.planWarningTitle}>Goals exceed expected income</Text>
+                    <Text style={styles.planWarningCopy}>
+                      Your goals total {formatCurrency(editingGoalsTotal)} which is above expected income{" "}
+                      {formatCurrency(planSummaryAmount)}.
+                    </Text>
+                  </View>
+                )}
 
                 {/* Save and Cancel Buttons */}
                 <View style={styles.planEditActions}>
@@ -1496,23 +1498,31 @@ type GoalSliderProps = {
   value: number;
   max: number;
   onChange: (value: number) => void;
+  currencySymbol: string;
   formatValue: (value: number) => string;
 };
 
-function GoalSlider({ label, value, max, onChange, formatValue }: GoalSliderProps) {
+function GoalSlider({ label, value, max, onChange, currencySymbol, formatValue }: GoalSliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
-  const normalizedMax = Math.max(max, 1);
-  const percent = normalizedMax > 0 ? Math.min(Math.max(value / normalizedMax, 0), 1) : 0;
+  const [inputValue, setInputValue] = useState(formatNumber(value));
+  const maxValue = Math.max(max, LINEAR_MAX, 1);
+  const percent = percentFromValue(value, maxValue);
+
+  useEffect(() => {
+    setInputValue(formatNumber(value));
+  }, [value]);
+
   const updateFromLocation = useCallback(
-    (locationX: number) => {
+    (locationX: number, shouldSnap = false) => {
       if (!trackWidth) {
         return;
       }
       const pct = Math.min(Math.max(locationX / trackWidth, 0), 1);
-      const nextValue = Math.round(pct * normalizedMax);
+      const rawValue = valueFromPercent(pct, maxValue);
+      const nextValue = shouldSnap ? snapGoalValue(rawValue, maxValue) : sanitizeGoalValue(rawValue, maxValue);
       onChange(nextValue);
     },
-    [trackWidth, normalizedMax, onChange],
+    [trackWidth, maxValue, onChange],
   );
 
   const panResponder = useMemo(
@@ -1522,8 +1532,8 @@ function GoalSlider({ label, value, max, onChange, formatValue }: GoalSliderProp
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: (event) => updateFromLocation(event.nativeEvent.locationX),
         onPanResponderMove: (event) => updateFromLocation(event.nativeEvent.locationX),
-        onPanResponderRelease: (event) => updateFromLocation(event.nativeEvent.locationX),
-        onPanResponderTerminate: (event) => updateFromLocation(event.nativeEvent.locationX),
+        onPanResponderRelease: (event) => updateFromLocation(event.nativeEvent.locationX, true),
+        onPanResponderTerminate: (event) => updateFromLocation(event.nativeEvent.locationX, true),
       }),
     [updateFromLocation],
   );
@@ -1533,6 +1543,32 @@ function GoalSlider({ label, value, max, onChange, formatValue }: GoalSliderProp
       <View style={styles.goalSliderHeader}>
         <Text style={styles.goalSliderLabel}>{label}</Text>
         <Text style={styles.goalSliderValue}>{formatValue(value)}</Text>
+      </View>
+      <View style={styles.goalSliderInputRow}>
+        <Text style={styles.goalSliderInputPrefix}>{currencySymbol}</Text>
+        <TextInput
+          value={inputValue}
+          onChangeText={(text) => {
+            const digitsOnly = text.replace(/[^\d]/g, "");
+            if (!digitsOnly) {
+              setInputValue("");
+              onChange(0);
+              return;
+            }
+            const numericValue = clamp(Number(digitsOnly), 0, maxValue);
+            onChange(numericValue);
+            setInputValue(formatNumber(numericValue));
+          }}
+          onBlur={() => {
+            if (!inputValue) {
+              setInputValue(formatNumber(0));
+            }
+          }}
+          keyboardType="number-pad"
+          style={styles.goalSliderInput}
+          placeholder="0"
+          placeholderTextColor="#9ca3af"
+        />
       </View>
       <View
         style={styles.goalSliderTrack}
@@ -2153,6 +2189,27 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#111827",
   },
+  goalSliderInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  goalSliderInputPrefix: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  goalSliderInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    color: "#111827",
+    backgroundColor: "#fff",
+  },
   goalSliderTrack: {
     height: 12,
     borderRadius: 999,
@@ -2195,6 +2252,24 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#111827",
     transform: [{ translateX: -11 }, { translateY: -11 }],
+  },
+  planWarning: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#fcd34d",
+    backgroundColor: "#fef9c3",
+    padding: 12,
+  },
+  planWarningTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#92400e",
+    marginBottom: 4,
+  },
+  planWarningCopy: {
+    fontSize: 12,
+    color: "#92400e",
+    lineHeight: 16,
   },
   // Empty state styles
   emptyPlanState: {
