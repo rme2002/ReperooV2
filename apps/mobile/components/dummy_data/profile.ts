@@ -2,6 +2,8 @@ export type OverviewSnapshot = {
   streakDays: number;
   level: number;
   xp: number;
+  xpMax: number;
+  rooStage: string;
   todayAmount: number;
   todayItems: number;
   hasLoggedToday: boolean;
@@ -22,7 +24,9 @@ export type QuickStat = {
 export const profileOverview: OverviewSnapshot = {
   streakDays: 3,
   level: 1,
-  xp: 10,
+  xp: 120,
+  xpMax: 200,
+  rooStage: "Baby",
   todayAmount: 12.7,
   todayItems: 2,
   hasLoggedToday: true,

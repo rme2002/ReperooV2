@@ -1,13 +1,20 @@
 import { useMemo, useState } from "react";
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
   useWindowDimensions,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
@@ -16,9 +23,16 @@ import { profileOverview } from "@/components/dummy_data/profile";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
 import { useInsightsContext } from "@/components/insights/InsightsProvider";
 import { useBudgetContext } from "@/components/budget/BudgetProvider";
+import { MascotHeroSection } from "@/components/home/MascotHeroSection";
 
 const overview = profileOverview;
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+// Design constants
+const CARD_RADIUS = 24;
+const CARD_PADDING = 18;
+const CARD_GAP = 10;
+const FAB_BOTTOM_OFFSET = 100; // Space for FAB above bottom nav
 
 export default function OverviewScreen() {
   const router = useRouter();
@@ -27,7 +41,8 @@ export default function OverviewScreen() {
   const [showActions, setShowActions] = useState(false);
   const { width } = useWindowDimensions();
   const { formatCurrency } = useCurrencyFormatter();
-  const fabSize = Math.max(52, Math.min(64, width * 0.16));
+  const fabSize = Math.max(48, Math.min(56, width * 0.14));
+  const scrollY = useSharedValue(0);
 
   const { currentSnapshot } = useInsightsContext();
   const monthSnapshot = currentSnapshot;
@@ -70,11 +85,7 @@ export default function OverviewScreen() {
     }
     return Math.floor(diff / DAY_IN_MS) + 1;
   }, [monthCurrentDate]);
-  const avgSpendPerDay = monthSnapshot?.loggedDays
-    ? totalSpent / monthSnapshot.loggedDays
-    : totalSpent;
   const safeDaysLeft = Math.max(daysLeft, 0);
-  const dailyPace = safeDaysLeft > 0 ? remainingBudget / safeDaysLeft : 0;
   const showSuggestedToday = hasBudget && safeDaysLeft > 0;
   const suggestedTodayValue = showSuggestedToday
     ? Math.max(0, Math.round(remainingBudget / safeDaysLeft))
@@ -87,153 +98,181 @@ export default function OverviewScreen() {
       ? Math.min(Math.max(totalSpent / totalBudget, 0), 1)
       : 0;
   const progressLabel = `${Math.round(progressUsedPct * 100)}% of budget used`;
-  let statusBadgeLabel: "On track" | "Attention" | "Risk" | null = null;
-  let badgeTone = styles.badgePositive;
-  let badgeTextTone = styles.badgeTextPositive;
-  if (hasBudget) {
-    if (remainingBudget < 0) {
-      statusBadgeLabel = "Risk";
-      badgeTone = styles.badgeDanger;
-      badgeTextTone = styles.badgeTextDanger;
-    } else if (avgSpendPerDay > dailyPace && safeDaysLeft > 0) {
-      statusBadgeLabel = "Attention";
-      badgeTone = styles.badgeWarn;
-      badgeTextTone = styles.badgeTextWarn;
-    } else {
-      statusBadgeLabel = "On track";
-    }
-  }
   const todayFormatted = formatCurrency(overview.todayAmount, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  const todayLine = `Today: ${todayFormatted} · ${overview.todayItems} items`;
   const handleSetPlanPress = () => {
     router.push("/(tabs)/insights");
   };
 
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  // FAB animation - shrinks slightly on scroll
+  const animatedFabStyle = useAnimatedStyle(() => {
+    const scale = interpolate(
+      scrollY.value,
+      [0, 100],
+      [1, 0.9],
+      Extrapolation.CLAMP
+    );
+    return { transform: [{ scale }] };
+  });
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.headerRow}>
-          <View style={styles.brandRow}>
-            <Text style={styles.mascot}>🦘</Text>
-            <Text style={styles.brand}>Reperoo</Text>
-          </View>
-          <View style={styles.levelPill}>
-            <Text style={styles.levelText}>Level {overview.level}</Text>
-          </View>
-        </View>
-
-        <View style={styles.surface}>
-          <View style={styles.streakRow}>
-            <Text style={styles.streakIcon}>🔥</Text>
-            <View style={styles.streakCopy}>
-              <Text style={styles.streakTitle}>
-                {overview.streakDays}-day streak
-              </Text>
-              <Text style={styles.streakMeta}>
-                +{overview.xp} XP on the board
-              </Text>
+    <LinearGradient
+      colors={["#f6f3ed", "#fff8f0", "#f0ebe3"]}
+      locations={[0, 0.4, 1]}
+      style={styles.gradient}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <Animated.ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+        >
+          <View style={styles.headerRow}>
+            <View style={styles.brandRow}>
+              <Text style={styles.mascot}>🦘</Text>
+              <Text style={styles.brand}>Reperoo</Text>
             </View>
           </View>
 
-          <View style={styles.todayBlock}>
-            <Text style={styles.todayLine}>{todayLine}</Text>
-            {overview.hasLoggedToday ? (
-              <Text style={styles.todaySub}>You've logged today 🎉</Text>
-            ) : (
-              <Text style={styles.todaySub}>
-                Log now to keep the streak alive
-              </Text>
-            )}
-          </View>
+          <MascotHeroSection
+            userName="Tayner"
+            level={overview.level}
+            xp={overview.xp}
+            xpMax={overview.xpMax}
+            rooStage={overview.rooStage}
+            streakDays={overview.streakDays}
+            scrollY={scrollY}
+          />
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.primaryButton,
-              pressed && styles.primaryButtonPressed,
-            ]}
-            onPress={() => setShowAdd(true)}
-          >
-            <Text style={styles.primaryButtonText}>Log today's spending</Text>
-          </Pressable>
-        </View>
-
-        <View style={[styles.surface, styles.overviewCard]}>
-          <View style={styles.spendingWidget}>
-            <View style={styles.spendingTopRow}>
-              <View style={styles.headlineStack}>
-                <Text style={styles.spendingRemaining}>{headlineValue}</Text>
-                <Text style={styles.spendingSpent}>{subLabel}</Text>
-                {budgetHelperLabel ? (
-                  <Text style={styles.budgetHelper}>{budgetHelperLabel}</Text>
-                ) : null}
+          {/* Today's Activity Card */}
+          <View style={[styles.surface, styles.streakCard]}>
+            <View style={styles.streakHeader}>
+              <View style={styles.streakRow}>
+                <Text style={styles.streakIcon}>🔥</Text>
+                <Text style={styles.streakTitle}>You're on fire!</Text>
               </View>
-              <View style={styles.summaryHeaderActions}>
-                {statusBadgeLabel ? (
-                  <View style={[styles.badge, badgeTone]}>
-                    <Text style={[styles.badgeText, badgeTextTone]}>
-                      {statusBadgeLabel}
-                    </Text>
-                  </View>
-                ) : null}
+              <View style={styles.xpBadge}>
+                <Text style={styles.xpBadgeText}>+1 XP</Text>
               </View>
             </View>
-            {hasBudget ? (
-              <>
-                <View style={styles.progressTrack}>
-                  <View
-                    style={[
-                      styles.progressFill,
-                      { width: `${progressUsedPct * 100}%` },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.progressCaption}>{progressLabel}</Text>
-                {showSuggestedToday ? (
-                  <View style={styles.suggestedCard}>
-                    <Text style={styles.metricHelper}>Suggested today</Text>
-                    <Text style={styles.suggestedValue}>
-                      {formatCurrency(suggestedTodayValue)}
-                    </Text>
-                    <Text style={styles.summaryHint}>{suggestedHelper}</Text>
-                  </View>
-                ) : null}
-              </>
-            ) : isLoading ? (
-              <View style={styles.summaryEmpty}>
-                <Text style={styles.summaryEmptyTitle}>
-                  Loading budget plan...
+
+            <View style={styles.todayBlock}>
+              <Text style={styles.xpLine}>
+                +{overview.xp} XP · {todayFormatted} logged today
+              </Text>
+              {overview.hasLoggedToday ? (
+                <Text style={styles.todaySub}>
+                  Logged {overview.todayItems} items today
                 </Text>
+              ) : (
+                <Text style={styles.todaySub}>
+                  Log now to keep the streak alive
+                </Text>
+              )}
+            </View>
+
+            {/* Slimmer CTA row instead of big button */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.slimCta,
+                pressed && styles.slimCtaPressed,
+              ]}
+              onPress={() => setShowAdd(true)}
+            >
+              <Text style={styles.slimCtaText}>Log today's spending</Text>
+              <View style={styles.slimCtaIcon}>
+                <Text style={styles.slimCtaPlus}>+</Text>
               </View>
-            ) : (
-              <View style={styles.summaryEmpty}>
-                <Text style={styles.summaryEmptyTitle}>
-                  Create your monthly plan
-                </Text>
-                <Text style={styles.summaryEmptyCopy}>
-                  Set up your monthly plan in the Insights tab with savings and investment goals.
-                </Text>
-                <View style={styles.summaryEmptyActions}>
-                  <Pressable
-                    style={styles.summaryPrimaryButton}
-                    onPress={handleSetPlanPress}
-                  >
-                    <Text style={styles.summaryPrimaryText}>
-                      Go to Insights
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            )}
+            </Pressable>
           </View>
-        </View>
-      </ScrollView>
+
+          {/* Budget Overview Card */}
+          <View style={[styles.surface, styles.overviewCard]}>
+            <View style={styles.spendingWidget}>
+              <View style={styles.spendingTopRow}>
+                <View style={styles.headlineStack}>
+                  <Text style={styles.spendingRemaining}>{headlineValue}</Text>
+                  <Text style={styles.spendingSpent}>{subLabel}</Text>
+                  {budgetHelperLabel ? (
+                    <Text style={styles.budgetHelper}>{budgetHelperLabel}</Text>
+                  ) : null}
+                </View>
+                <View style={styles.summaryHeaderActions}>
+                  {hasBudget ? (
+                    <View style={styles.trendBadge}>
+                      <Text style={styles.trendBadgeText}>
+                        +{Math.round((1 - progressUsedPct) * 100)}%
+                      </Text>
+                      <Text style={styles.trendBadgeIcon}>↗</Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+              {hasBudget ? (
+                <>
+                  <View style={styles.progressTrack}>
+                    <View
+                      style={[
+                        styles.progressFill,
+                        { width: `${progressUsedPct * 100}%` },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.progressCaption}>{progressLabel}</Text>
+                  {showSuggestedToday ? (
+                    <View style={styles.suggestedCard}>
+                      <Text style={styles.metricHelper}>Suggested today</Text>
+                      <Text style={styles.suggestedValue}>
+                        {formatCurrency(suggestedTodayValue)}
+                      </Text>
+                      <Text style={styles.summaryHint}>{suggestedHelper}</Text>
+                    </View>
+                  ) : null}
+                </>
+              ) : isLoading ? (
+                <View style={styles.summaryEmpty}>
+                  <Text style={styles.summaryEmptyTitle}>
+                    Loading budget plan...
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.summaryEmpty}>
+                  <Text style={styles.summaryEmptyTitle}>
+                    Create your monthly plan
+                  </Text>
+                  <Text style={styles.summaryEmptyCopy}>
+                    Set up your monthly plan in the Insights tab with savings and investment goals.
+                  </Text>
+                  <View style={styles.summaryEmptyActions}>
+                    <Pressable
+                      style={styles.summaryPrimaryButton}
+                      onPress={handleSetPlanPress}
+                    >
+                      <Text style={styles.summaryPrimaryText}>
+                        Go to Insights
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Bottom padding for FAB clearance */}
+          <View style={{ height: FAB_BOTTOM_OFFSET }} />
+        </Animated.ScrollView>
+
+      {/* FAB Backdrop */}
       {showActions ? (
         <Pressable
           style={styles.fabBackdrop}
@@ -242,7 +281,9 @@ export default function OverviewScreen() {
           <View />
         </Pressable>
       ) : null}
-      <View style={[styles.fabStack, { right: 16, bottom: 28 }]}>
+
+      {/* FAB - docked above bottom nav with safe spacing */}
+      <Animated.View style={[styles.fabStack, { right: 20, bottom: 24 }, animatedFabStyle]}>
         {showActions ? (
           <View style={styles.fabMenuColumn}>
             <Pressable
@@ -291,294 +332,277 @@ export default function OverviewScreen() {
             <Text style={styles.fabIcon}>+</Text>
           </Pressable>
         )}
-      </View>
-      <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
-      <AddIncomeModal
-        visible={showIncome}
-        onClose={() => setShowIncome(false)}
-        monthKey={monthSnapshot?.key ?? ""}
-        currentDate={monthSnapshot?.currentDate ?? new Date().toISOString()}
-      />
-    </SafeAreaView>
+        </Animated.View>
+
+        <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
+        <AddIncomeModal
+          visible={showIncome}
+          onClose={() => setShowIncome(false)}
+          monthKey={monthSnapshot?.key ?? ""}
+          currentDate={monthSnapshot?.currentDate ?? new Date().toISOString()}
+        />
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: "#f6f3ed",
   },
   container: {
     flex: 1,
   },
   content: {
     paddingHorizontal: 20,
-    paddingVertical: 24,
-    paddingBottom: 32,
+    paddingTop: 16,
+    paddingBottom: 24,
     flexGrow: 1,
     minHeight: "100%",
-    gap: 18,
+    gap: CARD_GAP,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: 4,
   },
   brandRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
   },
   mascot: {
-    fontSize: 26,
+    fontSize: 24,
   },
   brand: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  levelPill: {
-    backgroundColor: "#111827",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
-  levelText: {
-    color: "#f8fafc",
-    fontWeight: "700",
-    fontSize: 13,
-    letterSpacing: 0.2,
-  },
-  surface: {
-    backgroundColor: "#ffffff",
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#ede7dc",
-    gap: 16,
-    shadowColor: "#0f172a",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 2,
-  },
-  streakRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  streakIcon: {
-    fontSize: 28,
-  },
-  streakCopy: {
-    gap: 2,
-  },
-  streakTitle: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  streakMeta: {
-    marginTop: 4,
-    color: "#6b7280",
-    fontSize: 15,
-  },
-  todayBlock: {
-    gap: 6,
-  },
-  todayLine: {
     fontSize: 20,
     fontWeight: "800",
     color: "#111827",
   },
-  todaySub: {
-    color: "#6b7280",
-    fontSize: 15,
-  },
-  primaryButton: {
-    backgroundColor: "#111827",
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: "center",
+  surface: {
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: CARD_RADIUS,
+    padding: CARD_PADDING,
     borderWidth: 1,
-    borderColor: "#0b1222",
+    borderColor: "rgba(255, 255, 255, 0.7)",
+    gap: 14,
+    shadowColor: "#0f172a",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 16,
+    elevation: 1,
   },
-  primaryButtonPressed: {
-    opacity: 0.92,
-    borderColor: "#1f2937",
+  streakCard: {
+    // Slightly more prominent
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
   },
-  primaryButtonText: {
+  streakHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  streakRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
+  streakIcon: {
+    fontSize: 26,
+  },
+  streakTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#111827",
+  },
+  xpBadge: {
+    backgroundColor: "#FFF3E0",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#FFE0B2",
+  },
+  xpBadgeText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#E65100",
+  },
+  todayBlock: {
+    gap: 4,
+  },
+  xpLine: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#f8fafc",
+    color: "#22A45D",
+  },
+  todaySub: {
+    color: "#6b7280",
+    fontSize: 14,
+  },
+  slimCta: {
+    backgroundColor: "#22A45D",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#1E8F52",
+  },
+  slimCtaPressed: {
+    opacity: 0.92,
+  },
+  slimCtaText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#ffffff",
+  },
+  slimCtaIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  slimCtaPlus: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#ffffff",
+    marginTop: -1,
   },
   overviewCard: {
-    padding: 22,
-    borderRadius: 24,
+    padding: CARD_PADDING,
+    borderRadius: CARD_RADIUS,
     backgroundColor: "#ffffff",
     borderColor: "#ede7dc",
   },
   progressTrack: {
-    height: 10,
+    height: 8,
     borderRadius: 999,
     backgroundColor: "#ede7dc",
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#111827",
-  },
-  badge: {
-    alignSelf: "flex-start",
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  badgePositive: {
-    borderColor: "rgba(22,163,74,0.4)",
-    backgroundColor: "rgba(22,163,74,0.12)",
-  },
-  badgeWarn: {
-    borderColor: "rgba(234,179,8,0.4)",
-    backgroundColor: "rgba(234,179,8,0.16)",
-  },
-  badgeDanger: {
-    borderColor: "rgba(239,68,68,0.4)",
-    backgroundColor: "rgba(239,68,68,0.12)",
-  },
-  badgeTextPositive: {
-    color: "#166534",
-  },
-  badgeTextWarn: {
-    color: "#92400e",
-  },
-  badgeTextDanger: {
-    color: "#b91c1c",
+    backgroundColor: "#22A45D",
   },
   spendingWidget: {
-    gap: 12,
+    gap: 10,
   },
   spendingTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: 16,
+    gap: 12,
   },
   headlineStack: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   spendingRemaining: {
-    fontSize: 34,
+    fontSize: 30,
     fontWeight: "800",
     color: "#111827",
   },
   spendingSpent: {
-    fontSize: 16,
+    fontSize: 15,
     color: "#6b7280",
   },
-  progressCaptionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
   progressCaption: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#6b7280",
   },
   budgetHelper: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#6b7280",
   },
   summaryHeaderActions: {
     alignItems: "flex-end",
-    gap: 8,
+    gap: 6,
   },
-  inlineCta: {
-    borderWidth: 1,
-    borderColor: "#111827",
+  trendBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(34,164,93,0.12)",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "rgba(34,164,93,0.3)",
+    gap: 3,
   },
-  inlineCtaPressed: {
-    opacity: 0.9,
-  },
-  inlineCtaText: {
+  trendBadgeText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#111827",
+    color: "#22A45D",
+  },
+  trendBadgeIcon: {
+    fontSize: 11,
+    color: "#22A45D",
   },
   metricHelper: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#6b7280",
     letterSpacing: 0.2,
   },
   summaryHint: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#6b7280",
-    marginTop: 2,
+    marginTop: 1,
   },
   suggestedCard: {
-    marginTop: 16,
-    padding: 14,
-    borderRadius: 14,
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 12,
     backgroundColor: "#f6f3ed",
     borderWidth: 1,
     borderColor: "#ede7dc",
-    borderTopWidth: 1.4,
-    borderTopColor: "#e5ddcf",
     gap: 2,
   },
   suggestedValue: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "800",
     color: "#111827",
   },
   summaryEmpty: {
-    marginTop: 6,
-    gap: 8,
+    marginTop: 4,
+    gap: 6,
   },
   summaryEmptyTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "800",
     color: "#111827",
   },
   summaryEmptyCopy: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#6b7280",
+    lineHeight: 18,
   },
   summaryEmptyActions: {
     flexDirection: "row",
-    gap: 12,
-    marginTop: 6,
+    gap: 10,
+    marginTop: 4,
   },
   summaryPrimaryButton: {
     flex: 1,
-    borderRadius: 12,
-    backgroundColor: "#111827",
-    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: "#22A45D",
+    paddingVertical: 11,
     alignItems: "center",
   },
   summaryPrimaryText: {
     color: "#f8fafc",
     fontWeight: "700",
-  },
-  summarySecondaryButton: {
-    flex: 1,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#111827",
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  summarySecondaryText: {
-    color: "#111827",
-    fontWeight: "700",
+    fontSize: 14,
   },
   fabBackdrop: {
     position: "absolute",
@@ -591,36 +615,36 @@ const styles = StyleSheet.create({
   fabStack: {
     position: "absolute",
     alignItems: "flex-end",
-    gap: 10,
+    gap: 8,
   },
   fab: {
-    backgroundColor: "#111827",
+    backgroundColor: "#22A45D",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0f172a",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowColor: "#166534",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 5,
     borderWidth: 1,
-    borderColor: "#0b1222",
+    borderColor: "#1E8F52",
   },
   fabMenuColumn: {
     flexDirection: "column",
-    gap: 8,
+    gap: 6,
   },
   fabAction: {
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: "#111827",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    backgroundColor: "#22A45D",
     borderWidth: 1,
-    borderColor: "#111827",
-    shadowColor: "#0f172a",
-    shadowOffset: { width: 0, height: 6 },
+    borderColor: "#1E8F52",
+    shadowColor: "#166534",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowRadius: 8,
+    elevation: 4,
   },
   fabActionSecondary: {
     backgroundColor: "#f8fafc",
@@ -628,7 +652,7 @@ const styles = StyleSheet.create({
   },
   fabActionLabel: {
     color: "#f8fafc",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
   },
   fabActionLabelSecondary: {
@@ -642,7 +666,7 @@ const styles = StyleSheet.create({
   },
   fabIcon: {
     color: "#f8fafc",
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "800",
     marginTop: -2,
   },
