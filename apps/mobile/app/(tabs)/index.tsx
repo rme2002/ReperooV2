@@ -14,7 +14,6 @@ import Animated, {
   Extrapolation,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
@@ -31,7 +30,7 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 // Design constants
 const CARD_RADIUS = 24;
 const CARD_PADDING = 18;
-const CARD_GAP = 10;
+const CARD_GAP = 4;
 const FAB_BOTTOM_OFFSET = 100; // Space for FAB above bottom nav
 
 export default function OverviewScreen() {
@@ -124,11 +123,7 @@ export default function OverviewScreen() {
   });
 
   return (
-    <LinearGradient
-      colors={["#f6f3ed", "#fff8f0", "#f0ebe3"]}
-      locations={[0, 0.4, 1]}
-      style={styles.gradient}
-    >
+    <View style={styles.screenContainer}>
       <SafeAreaView style={styles.safeArea}>
         <Animated.ScrollView
           style={styles.container}
@@ -154,50 +149,57 @@ export default function OverviewScreen() {
             scrollY={scrollY}
           />
 
-          {/* Today's Activity Card */}
-          <View style={[styles.surface, styles.streakCard]}>
-            <View style={styles.streakHeader}>
-              <View style={styles.streakRow}>
-                <Text style={styles.streakIcon}>🔥</Text>
-                <Text style={styles.streakTitle}>You're on fire!</Text>
-              </View>
-              <View style={styles.xpBadge}>
-                <Text style={styles.xpBadgeText}>+1 XP</Text>
-              </View>
+          {/* Parent Widget Container */}
+          <View style={styles.parentWidget}>
+            {/* Level indicator at top */}
+            <View style={styles.parentLevelHeader}>
+              <Text style={styles.parentLevelText}>Level {overview.level}</Text>
             </View>
 
-            <View style={styles.todayBlock}>
-              <Text style={styles.xpLine}>
-                +{overview.xp} XP · {todayFormatted} logged today
-              </Text>
-              {overview.hasLoggedToday ? (
-                <Text style={styles.todaySub}>
-                  Logged {overview.todayItems} items today
+            {/* Today's Activity Card */}
+            <View style={[styles.surface, styles.streakCard]}>
+              <View style={styles.streakHeader}>
+                <View style={styles.streakTitleBlock}>
+                  <Text style={styles.streakTitle}>You're on fire!</Text>
+                  <Text style={styles.streakSubtitle}>{overview.streakDays}-day streak</Text>
+                </View>
+                <View style={styles.xpBadge}>
+                  <Text style={styles.xpBadgeText}>+1 XP</Text>
+                </View>
+              </View>
+
+              <View style={styles.todayBlock}>
+                <Text style={styles.xpLine}>
+                  +{overview.xp} XP · {todayFormatted} logged today
                 </Text>
-              ) : (
-                <Text style={styles.todaySub}>
-                  Log now to keep the streak alive
-                </Text>
-              )}
+                {overview.hasLoggedToday ? (
+                  <Text style={styles.todaySub}>
+                    Logged {overview.todayItems} items today
+                  </Text>
+                ) : (
+                  <Text style={styles.todaySub}>
+                    Log now to keep the streak alive
+                  </Text>
+                )}
+              </View>
+
+              {/* Slimmer CTA row instead of big button */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.slimCta,
+                  pressed && styles.slimCtaPressed,
+                ]}
+                onPress={() => setShowAdd(true)}
+              >
+                <Text style={styles.slimCtaText}>Log today's spending</Text>
+                <View style={styles.slimCtaIcon}>
+                  <Text style={styles.slimCtaPlus}>+</Text>
+                </View>
+              </Pressable>
             </View>
 
-            {/* Slimmer CTA row instead of big button */}
-            <Pressable
-              style={({ pressed }) => [
-                styles.slimCta,
-                pressed && styles.slimCtaPressed,
-              ]}
-              onPress={() => setShowAdd(true)}
-            >
-              <Text style={styles.slimCtaText}>Log today's spending</Text>
-              <View style={styles.slimCtaIcon}>
-                <Text style={styles.slimCtaPlus}>+</Text>
-              </View>
-            </Pressable>
-          </View>
-
-          {/* Budget Overview Card */}
-          <View style={[styles.surface, styles.overviewCard]}>
+            {/* Budget Overview Card */}
+            <View style={[styles.surface, styles.overviewCard]}>
             <View style={styles.spendingWidget}>
               <View style={styles.spendingTopRow}>
                 <View style={styles.headlineStack}>
@@ -266,6 +268,7 @@ export default function OverviewScreen() {
                 </View>
               )}
             </View>
+          </View>
           </View>
 
           {/* Bottom padding for FAB clearance */}
@@ -342,13 +345,14 @@ export default function OverviewScreen() {
           currentDate={monthSnapshot?.currentDate ?? new Date().toISOString()}
         />
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  gradient: {
+  screenContainer: {
     flex: 1,
+    backgroundColor: "#f6f3ed",
   },
   safeArea: {
     flex: 1,
@@ -383,6 +387,26 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#111827",
   },
+  parentWidget: {
+    backgroundColor: "#ede7dc",
+    borderRadius: 28,
+    padding: 14,
+    paddingTop: 12,
+    gap: 12,
+    marginTop: -110,
+    marginHorizontal: -20,
+    zIndex: 10,
+  },
+  parentLevelHeader: {
+    paddingHorizontal: 4,
+    paddingBottom: 4,
+  },
+  parentLevelText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6b7280",
+    letterSpacing: 0.3,
+  },
   surface: {
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: CARD_RADIUS,
@@ -407,19 +431,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
-  streakRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
+  streakTitleBlock: {
     flex: 1,
-  },
-  streakIcon: {
-    fontSize: 26,
   },
   streakTitle: {
     fontSize: 20,
     fontWeight: "800",
     color: "#111827",
+  },
+  streakSubtitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#9ca3af",
+    marginTop: 2,
   },
   xpBadge: {
     backgroundColor: "#FFF3E0",

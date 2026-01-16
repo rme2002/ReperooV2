@@ -1,12 +1,16 @@
+import { useEffect } from "react";
 import { View, Image, Text, StyleSheet, useWindowDimensions } from "react-native";
 import Animated, {
   useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  withDelay,
+  withSequence,
+  withRepeat,
   interpolate,
   Extrapolation,
   SharedValue,
 } from "react-native-reanimated";
-import { RainbowArcs } from "./RainbowArcs";
-import { LevelBadge } from "./LevelBadge";
 
 type MascotHeroSectionProps = {
   userName?: string;
@@ -18,28 +22,96 @@ type MascotHeroSectionProps = {
   scrollY: SharedValue<number>;
 };
 
+// Layout constants
 const HERO_HEIGHT_EXPANDED = 240;
 const HERO_HEIGHT_COLLAPSED = 56;
 const COLLAPSE_START = 0;
 const COLLAPSE_END = 120;
 
+// Sparkle configuration - 8 positions with random durations
+const SPARKLE_POSITIONS = [
+  { x: -85, y: -60, duration: 600 },
+  { x: 90, y: -50, duration: 450 },
+  { x: -80, y: 50, duration: 550 },
+  { x: 95, y: 40, duration: 700 },
+  { x: -50, y: -80, duration: 500 },
+  { x: 55, y: 70, duration: 650 },
+  { x: -95, y: 0, duration: 400 },
+  { x: 100, y: -10, duration: 750 },
+];
+
+type SparkleProps = {
+  offsetX: number;
+  offsetY: number;
+  delay: number;
+  duration: number;
+};
+
+function Sparkle({ offsetX, offsetY, delay, duration }: SparkleProps) {
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.5);
+
+  useEffect(() => {
+    // Simple looping animation: fade in -> fade out -> repeat with random duration
+    opacity.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration }),
+          withTiming(0, { duration })
+        ),
+        -1,
+        false
+      )
+    );
+
+    scale.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration }),
+          withTiming(0.5, { duration })
+        ),
+        -1,
+        false
+      )
+    );
+  }, [delay, duration]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.Image
+      source={require("@/assets/images/sparkles.png")}
+      style={[
+        styles.sparkle,
+        { marginLeft: offsetX, marginTop: offsetY },
+        animatedStyle,
+      ]}
+      resizeMode="contain"
+    />
+  );
+}
+
 export function MascotHeroSection({
-  userName,
-  level,
   xp,
   xpMax,
-  rooStage,
   streakDays,
   scrollY,
 }: MascotHeroSectionProps) {
   const { width } = useWindowDimensions();
+
+  // Sizing
   const containerWidth = Math.min(width - 40, 320);
-  const arcSize = containerWidth * 0.85;
-  const mascotSize = containerWidth * 0.45;
+  const heroBaseSize = containerWidth * 1.1;
   const miniMascotSize = 40;
 
   const xpProgress = xpMax > 0 ? (xp / xpMax) * 100 : 0;
 
+  // Container height animation
   const animatedContainerStyle = useAnimatedStyle(() => {
     const height = interpolate(
       scrollY.value,
@@ -50,22 +122,30 @@ export function MascotHeroSection({
     return { height };
   });
 
+  // Hero base animation - stays visible longest
   const animatedHeroStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       scrollY.value,
-      [COLLAPSE_START, COLLAPSE_END * 0.6],
+      [COLLAPSE_START, COLLAPSE_END * 0.8],
       [1, 0],
       Extrapolation.CLAMP
     );
     const scale = interpolate(
       scrollY.value,
       [COLLAPSE_START, COLLAPSE_END],
-      [1, 0.5],
+      [1, 0.75],
       Extrapolation.CLAMP
     );
-    return { opacity, transform: [{ scale }] };
+    const translateY = interpolate(
+      scrollY.value,
+      [COLLAPSE_START, COLLAPSE_END],
+      [0, -30],
+      Extrapolation.CLAMP
+    );
+    return { opacity, transform: [{ scale }, { translateY }] };
   });
 
+  // Collapsed state animation
   const animatedCollapsedStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       scrollY.value,
@@ -76,62 +156,42 @@ export function MascotHeroSection({
     return { opacity };
   });
 
-  const animatedLevelBadgeStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(
-      scrollY.value,
-      [COLLAPSE_START, COLLAPSE_END],
-      [0, 8],
-      Extrapolation.CLAMP
-    );
-    return { transform: [{ translateY }] };
-  });
 
   return (
     <Animated.View style={[styles.container, animatedContainerStyle]}>
-      {/* Level badge - top right (only persistent level indicator) */}
-      <Animated.View style={[styles.levelBadgeContainer, animatedLevelBadgeStyle]}>
-        <LevelBadge level={level} variant="light" />
-      </Animated.View>
 
-      {/* Expanded state: Full hero with arcs and mascot */}
-      <Animated.View style={[styles.heroContent, { width: containerWidth }, animatedHeroStyle]}>
-        <View style={styles.arcsContainer}>
-          <RainbowArcs size={arcSize} />
-        </View>
-
-        <View
-          style={[
-            styles.mascotContainer,
-            { width: mascotSize, height: mascotSize, marginTop: -(arcSize * 0.32) },
-          ]}
-        >
+      {/* Expanded state: Hero base image */}
+      <View style={[styles.heroContent, { width: containerWidth }]}>
+        <Animated.View style={[styles.heroImageWrapper, animatedHeroStyle]}>
           <Image
-            source={require("@/assets/images/mascotV1.png")}
-            style={styles.mascotImage}
+            source={require("@/assets/images/heroBase1.png")}
+            style={[
+              styles.heroBase,
+              { width: heroBaseSize, height: heroBaseSize },
+            ]}
             resizeMode="contain"
           />
-        </View>
 
-        {/* XP Progress bar */}
-        <View style={styles.xpContainer}>
-          <View style={styles.xpTrack}>
-            <View style={[styles.xpFill, { width: `${xpProgress}%` }]} />
+          {/* Sparkles (continuous animation) */}
+          <View style={styles.sparkleContainer}>
+            {SPARKLE_POSITIONS.map((pos, index) => (
+              <Sparkle
+                key={index}
+                offsetX={pos.x}
+                offsetY={pos.y}
+                delay={index * 150}
+                duration={pos.duration}
+              />
+            ))}
           </View>
-          <Text style={styles.xpText}>{xp} / {xpMax} XP</Text>
-        </View>
-
-        {/* Streak indicator */}
-        <View style={styles.streakIndicator}>
-          <Text style={styles.streakEmoji}>🔥</Text>
-          <Text style={styles.streakNumber}>{streakDays}</Text>
-        </View>
-      </Animated.View>
+        </Animated.View>
+      </View>
 
       {/* Collapsed state: Mini mascot avatar */}
       <Animated.View style={[styles.collapsedRow, animatedCollapsedStyle]}>
         <View style={styles.miniMascotContainer}>
           <Image
-            source={require("@/assets/images/mascotV1.png")}
+            source={require("@/assets/images/heroBase1.png")}
             style={[styles.miniMascot, { width: miniMascotSize, height: miniMascotSize }]}
             resizeMode="contain"
           />
@@ -140,8 +200,7 @@ export function MascotHeroSection({
           <View style={styles.collapsedTopRow}>
             <Text style={styles.collapsedXpText}>{xp}/{xpMax} XP</Text>
             <View style={styles.miniStreakIndicator}>
-              <Text style={styles.miniStreakEmoji}>🔥</Text>
-              <Text style={styles.miniStreakNumber}>{streakDays}</Text>
+              <Text style={styles.miniStreakNumber}>{streakDays}d</Text>
             </View>
           </View>
           <View style={styles.miniXpTrack}>
@@ -156,68 +215,38 @@ export function MascotHeroSection({
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    paddingTop: 10,
-    paddingBottom: 8,
+    paddingTop: 0,
+    paddingBottom: -50,
     position: "relative",
     overflow: "hidden",
-  },
-  levelBadgeContainer: {
-    position: "absolute",
-    top: 10,
-    right: 0,
-    zIndex: 10,
   },
   heroContent: {
     alignItems: "center",
+    justifyContent: "center",
     position: "relative",
   },
-  arcsContainer: {
-    alignItems: "center",
-  },
-  mascotContainer: {
-    zIndex: 5,
+  heroImageWrapper: {
     alignItems: "center",
     justifyContent: "center",
+    marginTop: -110,
   },
-  mascotImage: {
-    width: "100%",
-    height: "100%",
+  heroBase: {
+    zIndex: 1,
   },
-  xpContainer: {
-    marginTop: 10,
+  sparkleContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: "center",
-    gap: 4,
+    justifyContent: "center",
+    zIndex: 4,
   },
-  xpTrack: {
-    width: 140,
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: "#ede7dc",
-    overflow: "hidden",
-  },
-  xpFill: {
-    height: "100%",
-    backgroundColor: "#22A45D",
-    borderRadius: 999,
-  },
-  xpText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#6b7280",
-  },
-  streakIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-    gap: 4,
-  },
-  streakEmoji: {
-    fontSize: 18,
-  },
-  streakNumber: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
+  sparkle: {
+    position: "absolute",
+    width: 48,
+    height: 48,
   },
   collapsedRow: {
     position: "absolute",
@@ -260,9 +289,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
-  },
-  miniStreakEmoji: {
-    fontSize: 12,
   },
   miniStreakNumber: {
     fontSize: 12,
