@@ -18,13 +18,33 @@ import { useRouter } from "expo-router";
 
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
 import { AddIncomeModal } from "@/components/modals/AddIncomeModal";
-import { profileOverview } from "@/components/dummy_data/profile";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
 import { useInsightsContext } from "@/components/insights/InsightsProvider";
 import { useBudgetContext } from "@/components/budget/BudgetProvider";
 import { MascotHeroSection } from "@/components/home/MascotHeroSection";
+import { useExperience } from "@/components/home/ExperienceProvider";
+import { getXPProgressValues, getEvolutionDisplayName } from "@/utils/evolutionHelpers";
+import { EvolutionStage } from "@/lib/gen/model";
 
-const overview = profileOverview;
+// ============================================================================
+// TODO: REMOVE DUMMY DATA - Replace with real transaction data
+// ============================================================================
+// This file still imports dummy data for TODAY'S TRANSACTION SUMMARY only.
+// Gamification data (level, XP, streak, evolution) now comes from ExperienceProvider.
+//
+// Fields still using dummy data:
+//   - todayAmount: Total amount spent today
+//   - todayItems: Number of transactions logged today
+//   - hasLoggedToday: Whether user has logged any transactions today
+//
+// To remove this dependency:
+//   1. Add today's transaction summary to MonthSnapshot or create new endpoint
+//   2. Update streak card to use real transaction data
+//   3. Delete /components/dummy_data/profile.ts
+// ============================================================================
+import { profileOverview } from "@/components/dummy_data/profile";
+
+const overview = profileOverview; // DUMMY DATA - see TODO above
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 // Design constants
@@ -47,6 +67,14 @@ export default function OverviewScreen() {
   const monthSnapshot = currentSnapshot;
 
   const { budgetPlan, isLoading } = useBudgetContext();
+
+  const { experience, isLoading: experienceLoading, error: experienceError } = useExperience();
+
+  // Calculate real gamification values
+  const xpValues = experience ? getXPProgressValues(experience) : { currentXP: 0, maxXP: 100 };
+  const streakDays = experience?.current_streak ?? 0;
+  const level = experience?.current_level ?? 1;
+  const evolutionStage = experience?.evolution_stage ?? EvolutionStage.Baby;
 
   const monthCurrentDate = useMemo(() => {
     if (!monthSnapshot?.currentDate) {
@@ -97,6 +125,8 @@ export default function OverviewScreen() {
       ? Math.min(Math.max(totalSpent / totalBudget, 0), 1)
       : 0;
   const progressLabel = `${Math.round(progressUsedPct * 100)}% of budget used`;
+
+  // TODO: Replace with real transaction data - see top of file for details
   const todayFormatted = formatCurrency(overview.todayAmount, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -140,12 +170,11 @@ export default function OverviewScreen() {
           </View>
 
           <MascotHeroSection
-            userName="Tayner"
-            level={overview.level}
-            xp={overview.xp}
-            xpMax={overview.xpMax}
-            rooStage={overview.rooStage}
-            streakDays={overview.streakDays}
+            evolutionStage={evolutionStage}
+            level={level}
+            currentXP={xpValues.currentXP}
+            maxXP={xpValues.maxXP}
+            streakDays={streakDays}
             scrollY={scrollY}
           />
 
@@ -153,7 +182,9 @@ export default function OverviewScreen() {
           <View style={styles.parentWidget}>
             {/* Level indicator at top */}
             <View style={styles.parentLevelHeader}>
-              <Text style={styles.parentLevelText}>Level {overview.level}</Text>
+              <Text style={styles.parentLevelText}>
+                Level {level} · {getEvolutionDisplayName(evolutionStage)}
+              </Text>
             </View>
 
             {/* Today's Activity Card */}
@@ -161,7 +192,7 @@ export default function OverviewScreen() {
               <View style={styles.streakHeader}>
                 <View style={styles.streakTitleBlock}>
                   <Text style={styles.streakTitle}>You're on fire!</Text>
-                  <Text style={styles.streakSubtitle}>{overview.streakDays}-day streak</Text>
+                  <Text style={styles.streakSubtitle}>{streakDays}-day streak</Text>
                 </View>
                 <View style={styles.xpBadge}>
                   <Text style={styles.xpBadgeText}>+1 XP</Text>
@@ -169,9 +200,11 @@ export default function OverviewScreen() {
               </View>
 
               <View style={styles.todayBlock}>
+                {/* TODO: Replace todayFormatted with real transaction data */}
                 <Text style={styles.xpLine}>
-                  +{overview.xp} XP · {todayFormatted} logged today
+                  +{xpValues.currentXP} XP · {todayFormatted} logged today
                 </Text>
+                {/* TODO: Replace overview.hasLoggedToday and overview.todayItems with real data */}
                 {overview.hasLoggedToday ? (
                   <Text style={styles.todaySub}>
                     Logged {overview.todayItems} items today

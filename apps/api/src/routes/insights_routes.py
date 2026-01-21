@@ -61,12 +61,15 @@ async def get_month_snapshot(
                       404 for missing budget plan, 500 for server errors
     """
     try:
-        return await insights_service.get_month_snapshot(
+        print(f"[get_month_snapshot] Received request: year={year}, month={month}")
+        result = await insights_service.get_month_snapshot(
             user_id=current_user_id,
             year=year,
             month=month,
             session=session,
         )
+        print(f"[get_month_snapshot] Returning snapshot: {result.label} (key={result.key})")
+        return result
     except InsightsValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -115,10 +118,14 @@ async def list_available_months(
         HTTPException: 401 for auth errors, 500 for server errors
     """
     try:
-        return await insights_service.list_available_months(
+        result = await insights_service.list_available_months(
             user_id=current_user_id,
             session=session,
         )
+        print(f"[list_available_months] Returning {len(result)} months:")
+        for m in result:
+            print(f"  - {m.label}: year={m.year}, month={m.month}, key={m.key}")
+        return result
     except Exception as e:
         import traceback
         print(f"Error in list_available_months: {str(e)}")

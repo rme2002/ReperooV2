@@ -14,14 +14,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import spendingCategories from "../../../../shared/config/spending-categories.json";
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
 import { AddIncomeModal } from "@/components/modals/AddIncomeModal";
 import type { LedgerMonth, TransactionEntry } from "@/components/dummy_data/transactions";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
 import { createExpenseTransaction, listTransactions } from "@/lib/gen/transactions/transactions";
+import { listRecurringTemplates } from "@/lib/gen/recurring-templates/recurring-templates";
+import { listExpenseCategories } from "@/lib/gen/expense-categories/expense-categories";
+import { listIncomeCategories } from "@/lib/gen/income-categories/income-categories";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
-import type { ListTransactions200Item } from "@/lib/gen/model";
+import type { ListTransactions200Item, ListRecurringTemplates200Item, ExpenseCategory, IncomeCategory } from "@/lib/gen/model";
 import type { IncomeEvent } from "@/components/budget/types";
 
 type SubCategory = { id: string; label: string };
@@ -39,10 +41,6 @@ type TransactionSection = {
   categoryTotals: Record<string, number>;
   data: TransactionEntry[];
 };
-
-const categoryConfig: { categories: CategoryConfig[] } = spendingCategories;
-const categoryLookup = new Map(categoryConfig.categories.map((cat) => [cat.id, cat]));
-const categoryOrder = categoryConfig.categories.map((cat) => cat.id);
 
 const categoryAccent: Record<string, { bg: string; fill: string }> = {
   essentials: { bg: "#fef3c7", fill: "#f59e0b" },
@@ -64,15 +62,6 @@ const formatRelativeDate = (value: Date, reference: Date) => {
   if (diff === 1) return "Yesterday";
   return normalizedTarget.toLocaleDateString("en-GB", { weekday: "short", month: "short", day: "numeric" });
 };
-
-const getCategoryLabel = (categoryId: string) => categoryLookup.get(categoryId)?.label ?? categoryId;
-const getCategoryIcon = (categoryId: string) => categoryLookup.get(categoryId)?.icon ?? "💸";
-const getSubcategoryLabel = (categoryId: string, subId?: string) =>
-  subId
-    ? categoryLookup
-        .get(categoryId)
-        ?.subcategories?.find((sub) => sub.id === subId)?.label ?? subId
-    : null;
 
 export default function TransactionsScreen() {
   const { height } = useWindowDimensions();
@@ -111,10 +100,14 @@ export default function TransactionsScreen() {
   const [incomeModalVisible, setIncomeModalVisible] = useState(false);
   const [incomeModalMode, setIncomeModalMode] = useState<"add" | "edit" | "view">("add");
   const [editingIncome, setEditingIncome] = useState<IncomeEvent | null>(null);
+  const [showRecurringOnly, setShowRecurringOnly] = useState(false);
   const { formatCurrency } = useCurrencyFormatter();
   const [savingExpense, setSavingExpense] = useState(false);
   const [apiTransactions, setApiTransactions] = useState<TransactionEntry[]>([]);
+  const [recurringTemplates, setRecurringTemplates] = useState<ListRecurringTemplates200Item[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
+  const [incomeCategories, setIncomeCategories] = useState<IncomeCategory[]>([]);
   const formatMoney = (value: number) =>
     formatCurrency(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -122,8 +115,52 @@ export default function TransactionsScreen() {
   const activeReference = new Date(activeMonth?.currentDate ?? Date.now());
   const activeMonthKey = activeMonth?.key ?? months[0].key;
 
+  // Create lookup maps for categories
+  const categoryLookup = useMemo(
+    () => new Map(expenseCategories.map((cat) => [cat.id, cat])),
+    [expenseCategories]
+  );
+
+  const categoryOrder = useMemo(
+    () => expenseCategories.map((cat) => cat.id),
+    [expenseCategories]
+  );
+
+  const incomeCategoryLookup = useMemo(
+    () => new Map(incomeCategories.map((cat) => [cat.id, cat])),
+    [incomeCategories]
+  );
+
+  // Helper functions for categories
+  const getCategoryLabel = (categoryId: string) => categoryLookup.get(categoryId)?.label ?? categoryId;
+
+  const getCategoryIcon = (categoryId: string) => {
+    // Icons not in DB, use fallback
+    const iconMap: Record<string, string> = {
+      essentials: "🥕",
+      lifestyle: "🎉",
+      personal: "👤",
+      savings: "💰",
+      investments: "📈",
+      other: "📦",
+    };
+    return iconMap[categoryId] ?? "💸";
+  };
+
+  const getSubcategoryLabel = (categoryId: string, subId?: string) => {
+    if (!subId) return null;
+    const category = categoryLookup.get(categoryId);
+    return category?.subcategories?.find((sub) => sub.id === subId)?.label ?? subId;
+  };
+
+  const getIncomeCategoryLabel = (categoryId: string) =>
+    incomeCategoryLookup.get(categoryId)?.label ?? categoryId;
+
   // Transform API transactions to local format (both expense and income)
   const transformApiTransaction = (apiTx: ListTransactions200Item): TransactionEntry | null => {
+    // Simple check: transaction is recurring if it has a recurring_template_id
+    const isRecurring = Boolean(apiTx.recurring_template_id);
+
     if (apiTx.type === "expense") {
       return {
         id: apiTx.id?.toString() ?? `api-${Date.now()}`,
@@ -133,7 +170,7 @@ export default function TransactionsScreen() {
         subcategoryId: apiTx.expense_subcategory_id ?? undefined,
         note: apiTx.notes ?? undefined,
         timestamp: apiTx.occurred_at,
-        isRecurringInstance: false,
+        isRecurringInstance: isRecurring,
         recurringDayOfMonth: null,
       };
     } else if (apiTx.type === "income") {
@@ -144,12 +181,66 @@ export default function TransactionsScreen() {
         incomeCategoryId: apiTx.income_category_id,
         note: apiTx.notes ?? undefined,
         timestamp: apiTx.occurred_at,
-        isRecurringInstance: false,
+        isRecurringInstance: isRecurring,
         recurringDayOfMonth: null,
       };
     }
 
     return null;
+  };
+
+  // Fetch expense categories from API
+  const fetchExpenseCategories = async () => {
+    try {
+      const response = await listExpenseCategories();
+      if (response.status === 200) {
+        setExpenseCategories(response.data);
+      } else {
+        console.error("Failed to load expense categories");
+        setExpenseCategories([]);
+      }
+    } catch (error) {
+      console.error("Error fetching expense categories:", error);
+      setExpenseCategories([]);
+    }
+  };
+
+  // Fetch income categories from API
+  const fetchIncomeCategories = async () => {
+    try {
+      const response = await listIncomeCategories();
+      if (response.status === 200) {
+        setIncomeCategories(response.data);
+      } else {
+        console.error("Failed to load income categories");
+        setIncomeCategories([]);
+      }
+    } catch (error) {
+      console.error("Error fetching income categories:", error);
+      setIncomeCategories([]);
+    }
+  };
+
+  // Fetch recurring templates from API
+  const fetchRecurringTemplates = async () => {
+    if (!session?.user?.id) {
+      setRecurringTemplates([]);
+      return;
+    }
+
+    try {
+      const response = await listRecurringTemplates();
+
+      if (response.status === 200) {
+        setRecurringTemplates(response.data);
+      } else {
+        console.error("Failed to load recurring templates");
+        setRecurringTemplates([]);
+      }
+    } catch (error) {
+      console.error("Error fetching recurring templates:", error);
+      setRecurringTemplates([]);
+    }
   };
 
   // Fetch transactions from API
@@ -194,6 +285,12 @@ export default function TransactionsScreen() {
   // Use API transactions
   const monthTransactions = apiTransactions;
 
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchExpenseCategories();
+    fetchIncomeCategories();
+  }, []);
+
   // Fetch transactions when component mounts or month changes
   useEffect(() => {
     fetchTransactions();
@@ -203,6 +300,11 @@ export default function TransactionsScreen() {
     const base = monthTransactions.slice();
     const query = searchQuery.trim().toLowerCase();
     const filtered = base.filter((tx) => {
+      // Apply recurring filter first
+      if (showRecurringOnly && !tx.isRecurringInstance) {
+        return false;
+      }
+
       // For expense transactions, filter by category
       if (tx.kind === "expense") {
         if (activeCategory && tx.categoryId !== activeCategory) {
@@ -222,14 +324,14 @@ export default function TransactionsScreen() {
         if (!query) {
           return true;
         }
-        const searchTarget = `income ${tx.incomeCategoryId.toLowerCase()} ${(tx.note ?? "").toLowerCase()}`;
+        const searchTarget = `income ${getIncomeCategoryLabel(tx.incomeCategoryId).toLowerCase()} ${(tx.note ?? "").toLowerCase()}`;
         return searchTarget.includes(query);
       }
       return true;
     });
     filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     return filtered;
-  }, [monthTransactions, activeCategory, searchQuery]);
+  }, [monthTransactions, activeCategory, searchQuery, showRecurringOnly]);
 
   const sections: TransactionSection[] = useMemo(() => {
     const map = new Map<string, TransactionSection>();
@@ -377,6 +479,7 @@ export default function TransactionsScreen() {
   const clearFilters = () => {
     setActiveCategory(null);
     setSearchQuery("");
+    setShowRecurringOnly(false);
   };
 
   const renderTransactionRow = ({ item }: { item: TransactionEntry; section: TransactionSection }) => {
@@ -386,7 +489,6 @@ export default function TransactionsScreen() {
       // Render income transaction
       const displayAmount = formatMoney(item.amount);
       const subtitleParts: string[] = [];
-      if (item.incomeCategoryId) subtitleParts.push(item.incomeCategoryId);
       if (item.note) subtitleParts.push(item.note);
       const subtitle = subtitleParts.join(" · ");
 
@@ -398,7 +500,9 @@ export default function TransactionsScreen() {
                 <Text style={styles.txIconText}>💰</Text>
               </View>
               <View style={styles.txInfo}>
-                <Text style={[styles.txTitle, styles.txIncomeTitle]}>Income</Text>
+                <Text style={[styles.txTitle, styles.txIncomeTitle]}>
+                  {getIncomeCategoryLabel(item.incomeCategoryId)}
+                </Text>
                 {subtitle ? <Text style={styles.txSubtitle}>{subtitle}</Text> : null}
                 {showRecurringBadge ? <Text style={styles.recurringBadge}>Recurring</Text> : null}
               </View>
@@ -509,10 +613,30 @@ export default function TransactionsScreen() {
           ) : null}
         </View>
 
+        <View style={styles.recurringFilterRow}>
+          <Pressable
+            onPress={() => setShowRecurringOnly((prev) => !prev)}
+            style={[
+              styles.recurringFilterChip,
+              showRecurringOnly && styles.recurringFilterChipActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.recurringFilterText,
+                showRecurringOnly && styles.recurringFilterTextActive,
+              ]}
+            >
+              Recurring only
+            </Text>
+          </Pressable>
+        </View>
+
         <ScrollChips
           activeCategory={activeCategory}
           onSelect={setActiveCategory}
           bottomSpacing={chipBottomSpacing}
+          categories={expenseCategories}
         />
 
         <View style={styles.listWrapper}>
@@ -642,12 +766,14 @@ function ScrollChips({
   activeCategory,
   onSelect,
   bottomSpacing = 16,
+  categories,
 }: {
   activeCategory: string | null;
   onSelect: (value: string | null) => void;
   bottomSpacing?: number;
+  categories: ExpenseCategory[];
 }) {
-  const chips = [{ id: null, label: "All" }, ...categoryConfig.categories.map((cat) => ({ id: cat.id, label: cat.label }))];
+  const chips = [{ id: null, label: "All" }, ...categories.map((cat) => ({ id: cat.id, label: cat.label }))];
   return (
     <View style={{ marginBottom: bottomSpacing }}>
       <ScrollView
@@ -908,6 +1034,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#111827",
     marginTop: -2,
+  },
+  recurringFilterRow: {
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  recurringFilterChip: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#d4d4d8",
+    backgroundColor: "#fff",
+  },
+  recurringFilterChipActive: {
+    backgroundColor: "#0f172a",
+    borderColor: "#0f172a",
+  },
+  recurringFilterText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+  recurringFilterTextActive: {
+    color: "#f8fafc",
   },
   chipRow: {
     flexDirection: "row",

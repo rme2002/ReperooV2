@@ -5,7 +5,7 @@ import { Circle, Svg } from "react-native-svg";
 
 import spendingCategories from "../../../../shared/config/spending-categories.json";
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
-import { insightMonths } from "@/components/dummy_data/insights";
+import { useInsightsContext } from "@/components/insights/InsightsProvider";
 
 type SpendingCategoriesConfig = {
   categories: {
@@ -25,8 +25,6 @@ const getSubcategoryLabel = (categoryId: string, subcategoryId: string) =>
     ?.subcategories?.find((sub) => sub.id === subcategoryId)?.label ?? subcategoryId;
 
 const fallbackSubcategoryColors = ["#dbeafe", "#e0e7ff", "#ede9fe", "#fce7f3", "#fef3c7", "#dcfce7", "#ccfbf1"];
-
-const months = insightMonths;
 
 const formatCurrency = (value: number) => `€${value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
@@ -72,13 +70,40 @@ const computeAxisTicks = (maxValue: number) => {
 };
 
 export default function InsightsScreen() {
+  const { availableMonths, currentSnapshot, isLoading, error, fetchSnapshot, prefetchSnapshot } = useInsightsContext();
   const [monthIndex, setMonthIndex] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [activeWeekIndex, setActiveWeekIndex] = useState<number | null>(null);
   const [isWeeklyLoading, setIsWeeklyLoading] = useState(true);
-  const snapshot = months[monthIndex];
+
+  // Fetch snapshot when monthIndex changes
+  useEffect(() => {
+    if (availableMonths.length > 0 && availableMonths[monthIndex]) {
+      const month = availableMonths[monthIndex];
+      console.log(`[InsightsScreen] Fetching snapshot for ${month.label} (year: ${month.year}, month: ${month.month})`);
+      fetchSnapshot(month.year, month.month);
+    }
+  }, [monthIndex, availableMonths, fetchSnapshot]);
+
+  // Prefetch adjacent months for smoother navigation
+  useEffect(() => {
+    if (availableMonths.length > 1) {
+      // Prefetch next month if available
+      if (monthIndex > 0) {
+        const prevMonth = availableMonths[monthIndex - 1];
+        prefetchSnapshot(prevMonth.year, prevMonth.month);
+      }
+      // Prefetch previous month if available
+      if (monthIndex < availableMonths.length - 1) {
+        const nextMonth = availableMonths[monthIndex + 1];
+        prefetchSnapshot(nextMonth.year, nextMonth.month);
+      }
+    }
+  }, [monthIndex, availableMonths, prefetchSnapshot]);
+
+  const snapshot = currentSnapshot;
   const { width } = useWindowDimensions();
   const fabSize = Math.max(52, Math.min(64, width * 0.16));
   const scale = Math.min(Math.max(width / 375, 0.85), 1.25);
@@ -90,6 +115,65 @@ export default function InsightsScreen() {
   const weeklyAxisWidth = Math.min(84, Math.max(56, width * 0.16));
   const weeklyTooltipWidth = Math.min(160, Math.max(110, width * 0.32));
 
+  const goPrev = () => {
+    if (monthIndex < availableMonths.length - 1) {
+      const newIndex = monthIndex + 1;
+      setMonthIndex(newIndex);
+      // fetchSnapshot will be called automatically by the useEffect when monthIndex changes
+    }
+  };
+  const goNext = () => {
+    if (monthIndex > 0) {
+      const newIndex = monthIndex - 1;
+      setMonthIndex(newIndex);
+      // fetchSnapshot will be called automatically by the useEffect when monthIndex changes
+    }
+  };
+
+  useEffect(() => {
+    setActiveCategoryId(null);
+    setActiveWeekIndex(null);
+    setIsWeeklyLoading(true);
+    const timer = setTimeout(() => setIsWeeklyLoading(false), 360);
+    return () => clearTimeout(timer);
+  }, [monthIndex]);
+
+  const handleCategoryPress = (categoryId: string) => {
+    setActiveCategoryId((prev) => (prev === categoryId ? null : categoryId));
+  };
+
+  // Handle loading and error states
+  if (isLoading || !snapshot) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.container, styles.centerContent]}>
+          <Text style={styles.loadingText}>{isLoading ? "Loading insights..." : "No data available"}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error === "NO_BUDGET_PLAN") {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.container, styles.centerContent]}>
+          <Text style={styles.errorText}>Create a budget plan to view insights</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.container, styles.centerContent]}>
+          <Text style={styles.errorText}>Failed to load insights</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Snapshot-dependent calculations (only reached after null checks)
   const remaining = snapshot.budget - snapshot.totalSpent;
   const remainingPct = snapshot.budget ? Math.max(0, remaining / snapshot.budget) : 0;
   const spentPct = snapshot.budget ? Math.min(1, snapshot.totalSpent / snapshot.budget) : 0;
@@ -112,25 +196,6 @@ export default function InsightsScreen() {
   const displayWeeklyPoints = weeklyPoints;
   const weeklyAxisTicks = hasWeeklySpending ? computeAxisTicks(weeklyPeak) : [];
   const weeklyScaleMax = (weeklyAxisTicks[0] ?? weeklyMax) || 1;
-
-  const goPrev = () => {
-    setMonthIndex((prev) => Math.min(prev + 1, months.length - 1));
-  };
-  const goNext = () => {
-    setMonthIndex((prev) => Math.max(prev - 1, 0));
-  };
-
-  useEffect(() => {
-    setActiveCategoryId(null);
-    setActiveWeekIndex(null);
-    setIsWeeklyLoading(true);
-    const timer = setTimeout(() => setIsWeeklyLoading(false), 360);
-    return () => clearTimeout(timer);
-  }, [monthIndex]);
-
-  const handleCategoryPress = (categoryId: string) => {
-    setActiveCategoryId((prev) => (prev === categoryId ? null : categoryId));
-  };
 
   const daysLeft = Math.max(snapshot.totalDays - snapshot.loggedDays, 0);
   const perDay = daysLeft > 0 ? remaining / daysLeft : remaining;
@@ -169,11 +234,11 @@ export default function InsightsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Pressable onPress={goPrev} style={styles.navButton} disabled={monthIndex >= months.length - 1}>
+          <Pressable onPress={goPrev} style={styles.navButton} disabled={monthIndex >= availableMonths.length - 1}>
             <Text
               style={[
                 styles.navIcon,
-                monthIndex >= months.length - 1 && styles.navIconDisabled,
+                monthIndex >= availableMonths.length - 1 && styles.navIconDisabled,
               ]}
             >
               ‹
@@ -697,6 +762,20 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#6b7280",
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#b91c1c",
+    textAlign: "center",
   },
   content: {
     paddingHorizontal: 20,

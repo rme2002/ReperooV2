@@ -14,4 +14,6 @@ export interface TransactionBase {
   amount: TransactionAmount;
   /** @nullable */
   notes?: string | null;
+  /** ID of recurring template if this transaction was created from one */
+  recurring_template_id?: Uid;
 }

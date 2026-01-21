@@ -11,13 +11,14 @@ import Animated, {
   Extrapolation,
   SharedValue,
 } from "react-native-reanimated";
+import { EvolutionStage } from "@/lib/gen/model";
+import { getEvolutionImage, getEvolutionDisplayName } from "@/utils/evolutionHelpers";
 
 type MascotHeroSectionProps = {
-  userName?: string;
+  evolutionStage: EvolutionStage;
   level: number;
-  xp: number;
-  xpMax: number;
-  rooStage: string;
+  currentXP: number;
+  maxXP: number;
   streakDays: number;
   scrollY: SharedValue<number>;
 };
@@ -97,8 +98,10 @@ function Sparkle({ offsetX, offsetY, delay, duration }: SparkleProps) {
 }
 
 export function MascotHeroSection({
-  xp,
-  xpMax,
+  evolutionStage,
+  level,
+  currentXP,
+  maxXP,
   streakDays,
   scrollY,
 }: MascotHeroSectionProps) {
@@ -109,7 +112,7 @@ export function MascotHeroSection({
   const heroBaseSize = containerWidth * 1.1;
   const miniMascotSize = 40;
 
-  const xpProgress = xpMax > 0 ? (xp / xpMax) * 100 : 0;
+  const xpProgress = maxXP > 0 ? (currentXP / maxXP) * 100 : 0;
 
   // Container height animation
   const animatedContainerStyle = useAnimatedStyle(() => {
@@ -164,7 +167,7 @@ export function MascotHeroSection({
       <View style={[styles.heroContent, { width: containerWidth }]}>
         <Animated.View style={[styles.heroImageWrapper, animatedHeroStyle]}>
           <Image
-            source={require("@/assets/images/heroBase1.png")}
+            source={getEvolutionImage(evolutionStage)}
             style={[
               styles.heroBase,
               { width: heroBaseSize, height: heroBaseSize },
@@ -184,6 +187,13 @@ export function MascotHeroSection({
               />
             ))}
           </View>
+
+          {/* Stage name display */}
+          <Animated.View style={[styles.stageNameContainer, animatedHeroStyle]}>
+            <Text style={styles.stageNameText}>
+              Level {level} · {getEvolutionDisplayName(evolutionStage)}
+            </Text>
+          </Animated.View>
         </Animated.View>
       </View>
 
@@ -191,14 +201,14 @@ export function MascotHeroSection({
       <Animated.View style={[styles.collapsedRow, animatedCollapsedStyle]}>
         <View style={styles.miniMascotContainer}>
           <Image
-            source={require("@/assets/images/heroBase1.png")}
+            source={getEvolutionImage(evolutionStage)}
             style={[styles.miniMascot, { width: miniMascotSize, height: miniMascotSize }]}
             resizeMode="contain"
           />
         </View>
         <View style={styles.collapsedInfo}>
           <View style={styles.collapsedTopRow}>
-            <Text style={styles.collapsedXpText}>{xp}/{xpMax} XP</Text>
+            <Text style={styles.collapsedXpText}>{currentXP}/{maxXP} XP</Text>
             <View style={styles.miniStreakIndicator}>
               <Text style={styles.miniStreakNumber}>{streakDays}d</Text>
             </View>
@@ -247,6 +257,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 48,
     height: 48,
+  },
+  stageNameContainer: {
+    marginTop: 8,
+    alignItems: "center",
+  },
+  stageNameText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6b7280",
   },
   collapsedRow: {
     position: "absolute",

@@ -13,3 +13,7 @@ class ProfileRepository:
 
         profile = ProfileDB(id=UUID(id))
         return session.merge(profile)
+
+    def get_profile_by_id(self, session: Session, user_id: UUID) -> ProfileDB | None:
+        """Get profile by user ID."""
+        return session.query(ProfileDB).filter(ProfileDB.id == user_id).first()

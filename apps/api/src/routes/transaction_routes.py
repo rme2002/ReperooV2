@@ -17,6 +17,8 @@ from src.models.model import (
 )
 from src.repositories.recurring_template_repository import RecurringTemplateRepository
 from src.repositories.transaction_repository import TransactionRepository
+from src.repositories.profile_repository import ProfileRepository
+from src.repositories.xp_event_repository import XPEventRepository
 from src.services.errors import (
     CategoryNotFoundError,
     TransactionCreationError,
@@ -27,6 +29,7 @@ from src.services.errors import (
 )
 from src.services.recurring_materialization_service import RecurringMaterializationService
 from src.services.transaction_service import TransactionService
+from src.services.experience_service import ExperienceService
 
 router = APIRouter()
 
@@ -45,11 +48,21 @@ def get_materialization_service() -> RecurringMaterializationService:
     return RecurringMaterializationService(template_repository)
 
 
+def get_experience_service(
+    session: Session = Depends(get_session),
+) -> ExperienceService:
+    """Dependency factory for ExperienceService."""
+    profile_repository = ProfileRepository()
+    xp_event_repository = XPEventRepository()
+    return ExperienceService(profile_repository, xp_event_repository)
+
+
 @router.post("/create-expense", status_code=status.HTTP_201_CREATED)
 async def create_expense_transaction(
     payload: CreateExpenseTransactionPayload,
     current_user_id: UUID = Depends(get_current_user_id),
     transaction_service: TransactionService = Depends(get_transaction_service),
+    experience_service: ExperienceService = Depends(get_experience_service),
     session: Session = Depends(get_session),
 ) -> TransactionExpense:
     """
@@ -57,11 +70,13 @@ async def create_expense_transaction(
 
     Creates a new expense transaction in the transactions table.
     User ID is extracted from the JWT token for security.
+    Also awards +3 XP for logging a transaction (up to 5 per day).
 
     Args:
         payload: Expense transaction creation payload
         current_user_id: Authenticated user ID from JWT token
         transaction_service: Transaction service instance
+        experience_service: Experience service instance
         session: Database session
 
     Returns:
@@ -77,11 +92,21 @@ async def create_expense_transaction(
     logger.info(f"[DEBUG] Amount type: {type(payload.amount)}, Amount value: {payload.amount}")
 
     try:
-        return await transaction_service.create_expense_transaction(
+        # Create transaction
+        transaction = await transaction_service.create_expense_transaction(
             payload=payload,
             authenticated_user_id=current_user_id,
             session=session,
         )
+
+        # Award XP (respects daily cap)
+        try:
+            await experience_service.award_transaction_xp(current_user_id, session)
+        except Exception as xp_error:
+            # Log error but don't fail transaction creation
+            logger.error(f"Failed to award transaction XP: {xp_error}")
+
+        return transaction
     except CategoryNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -104,6 +129,7 @@ async def create_income_transaction(
     payload: CreateIncomeTransactionPayload,
     current_user_id: UUID = Depends(get_current_user_id),
     transaction_service: TransactionService = Depends(get_transaction_service),
+    experience_service: ExperienceService = Depends(get_experience_service),
     session: Session = Depends(get_session),
 ) -> TransactionIncome:
     """
@@ -111,11 +137,13 @@ async def create_income_transaction(
 
     Creates a new income transaction in the transactions table.
     User ID is extracted from the JWT token for security.
+    Also awards +3 XP for logging a transaction (up to 5 per day).
 
     Args:
         payload: Income transaction creation payload
         current_user_id: Authenticated user ID from JWT token
         transaction_service: Transaction service instance
+        experience_service: Experience service instance
         session: Database session
 
     Returns:
@@ -125,11 +153,22 @@ async def create_income_transaction(
         HTTPException: 400 for validation errors, 401 for auth errors, 500 for server errors
     """
     try:
-        return await transaction_service.create_income_transaction(
+        # Create transaction
+        transaction = await transaction_service.create_income_transaction(
             payload=payload,
             authenticated_user_id=current_user_id,
             session=session,
         )
+
+        # Award XP (respects daily cap)
+        try:
+            await experience_service.award_transaction_xp(current_user_id, session)
+        except Exception as xp_error:
+            # Log error but don't fail transaction creation
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to award transaction XP: {xp_error}")
+
+        return transaction
     except CategoryNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -198,6 +237,7 @@ async def list_transactions(
                         occurred_at=txn.occurred_at,
                         amount=float(txn.amount),
                         notes=txn.notes,
+                        recurring_template_id=str(txn.recurring_template_id) if txn.recurring_template_id else None,
                         type="expense",
                         transaction_tag=txn.transaction_tag,
                         expense_category_id=txn.expense_category_id,
@@ -213,6 +253,7 @@ async def list_transactions(
                         occurred_at=txn.occurred_at,
                         amount=float(txn.amount),
                         notes=txn.notes,
+                        recurring_template_id=str(txn.recurring_template_id) if txn.recurring_template_id else None,
                         type="income",
                         income_category_id=txn.income_category_id,
                         created_at=txn.created_at,

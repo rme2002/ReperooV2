@@ -12,6 +12,9 @@ tags:
   - name: Transactions
   - name: Budget Plans
   - name: Insights
+  - name: Expense Categories
+  - name: Income Categories
+  - name: Experience
 
 paths:
   /api/v1/health:
@@ -498,6 +501,149 @@ paths:
           description: Internal server error
           $ref: '#/components/responses/ErrorResponse500'
 
+  # Expense Categories
+  /api/v1/expense-categories/list:
+    get:
+      tags:
+        - Expense Categories
+      summary: List expense categories
+      description: Get all expense categories with subcategories
+      operationId: listExpenseCategories
+      responses:
+        '200':
+          description: List of expense categories with subcategories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExpenseCategory'
+        '500':
+          $ref: '#/components/responses/ErrorResponse500'
+
+  # Income Categories
+  /api/v1/income-categories/list:
+    get:
+      tags:
+        - Income Categories
+      summary: List income categories
+      description: Get all income categories
+      operationId: listIncomeCategories
+      responses:
+        '200':
+          description: List of income categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IncomeCategory'
+        '500':
+          $ref: '#/components/responses/ErrorResponse500'
+
+  # Experience
+  /api/v1/experience/status:
+    get:
+      tags:
+        - Experience
+      summary: Get current experience status
+      description: Get current level, XP, streak, and gamification stats
+      operationId: getExperienceStatus
+      responses:
+        '200':
+          description: Current experience status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceResponse'
+        '401':
+          description: Unauthorized
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Internal server error
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/experience/check-in:
+    post:
+      tags:
+        - Experience
+      summary: Daily check-in
+      description: Award daily login XP, update streak, and check for inactivity penalties
+      operationId: checkIn
+      responses:
+        '200':
+          description: Check-in result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckInResponse'
+        '401':
+          description: Unauthorized
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Internal server error
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/experience/history:
+    get:
+      tags:
+        - Experience
+      summary: Get XP transaction history
+      description: Get paginated history of XP events
+      operationId: getExperienceHistory
+      parameters:
+        - name: limit
+          in: query
+          description: Number of events to return
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          description: Number of events to skip
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: XP event history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceHistoryResponse'
+        '401':
+          description: Unauthorized
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Internal server error
+          $ref: '#/components/responses/ErrorResponse500'
+
+  /api/v1/experience/streak-milestones:
+    get:
+      tags:
+        - Experience
+      summary: Get streak milestones and progress
+      description: Get available streak milestones with achievement status
+      operationId: getStreakMilestones
+      responses:
+        '200':
+          description: Streak milestones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreakMilestonesResponse'
+        '401':
+          description: Unauthorized
+          $ref: '#/components/responses/ErrorResponse401'
+        '500':
+          description: Internal server error
+          $ref: '#/components/responses/ErrorResponse500'
+
 components:
   schemas:
     UID:
@@ -570,6 +716,10 @@ components:
           type: string
           nullable: true
           example: "makeup"
+        recurring_template_id:
+          $ref: "#/components/schemas/UID"
+          nullable: true
+          description: "ID of recurring template if this transaction was created from one"
       required:
         - user_id
         - occurred_at
@@ -1220,6 +1370,317 @@ components:
           minimum: 1
           maximum: 12
           example: 12
+
+    # Category Schemas
+    ExpenseCategory:
+      type: object
+      required:
+        - id
+        - label
+        - color
+        - sort_order
+        - subcategories
+      properties:
+        id:
+          type: string
+          example: "essentials"
+        label:
+          type: string
+          example: "Essentials"
+        color:
+          type: string
+          example: "#f59e0b"
+        sort_order:
+          type: integer
+          example: 1
+        subcategories:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpenseSubcategory'
+
+    ExpenseSubcategory:
+      type: object
+      required:
+        - id
+        - category_id
+        - label
+        - sub_color
+        - sort_order
+      properties:
+        id:
+          type: string
+          example: "groceries"
+        category_id:
+          type: string
+          example: "essentials"
+        label:
+          type: string
+          example: "Groceries"
+        sub_color:
+          type: string
+          example: "#fbbf24"
+        sort_order:
+          type: integer
+          example: 1
+
+    IncomeCategory:
+      type: object
+      required:
+        - id
+        - label
+        - color
+        - sort_order
+      properties:
+        id:
+          type: string
+          example: "salary"
+        label:
+          type: string
+          example: "Salary"
+        color:
+          type: string
+          example: "#2563EB"
+        sort_order:
+          type: integer
+          example: 1
+
+    # Experience / Gamification Schemas
+    EvolutionStage:
+      type: string
+      enum:
+        - Baby
+        - Young
+        - Adult
+        - Prime
+        - Legendary
+      example: "Baby"
+
+    XPEventType:
+      type: string
+      enum:
+        - daily_login
+        - transaction
+        - streak_milestone
+        - inactivity_penalty
+        - financial_goal
+      example: "daily_login"
+
+    ExperienceResponse:
+      type: object
+      required:
+        - user_id
+        - current_level
+        - current_xp
+        - xp_for_next_level
+        - total_xp_for_current_level
+        - evolution_stage
+        - current_streak
+        - longest_streak
+        - transactions_today_count
+        - transactions_daily_limit
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        current_level:
+          type: integer
+          example: 15
+          description: Current player level
+        current_xp:
+          type: integer
+          example: 1200
+          description: Total accumulated XP
+        xp_for_next_level:
+          type: integer
+          example: 150
+          description: XP needed to reach next level
+        total_xp_for_current_level:
+          type: integer
+          example: 1050
+          description: Total XP needed to reach current level (cumulative)
+        evolution_stage:
+          $ref: '#/components/schemas/EvolutionStage'
+        current_streak:
+          type: integer
+          example: 14
+          description: Current consecutive days streak
+        longest_streak:
+          type: integer
+          example: 30
+          description: Longest streak ever achieved
+        last_login_date:
+          type: string
+          format: date
+          nullable: true
+          example: "2025-01-20"
+          description: Last check-in date (server-side)
+        transactions_today_count:
+          type: integer
+          example: 3
+          description: Number of transactions logged today (for XP cap)
+        transactions_daily_limit:
+          type: integer
+          example: 5
+          description: Maximum transactions that count toward XP per day
+
+    CheckInResponse:
+      type: object
+      required:
+        - xp_awarded
+        - new_total_xp
+        - new_level
+        - level_up
+        - streak_incremented
+        - new_streak
+        - streak_broken
+        - message
+      properties:
+        xp_awarded:
+          type: integer
+          example: 15
+          description: XP awarded from this check-in
+        new_total_xp:
+          type: integer
+          example: 1215
+          description: Total XP after check-in
+        new_level:
+          type: integer
+          example: 15
+          description: Level after check-in
+        level_up:
+          type: boolean
+          example: false
+          description: Whether user leveled up
+        previous_level:
+          type: integer
+          nullable: true
+          example: 14
+          description: Previous level (only if level_up is true)
+        streak_incremented:
+          type: boolean
+          example: true
+          description: Whether streak was incremented
+        new_streak:
+          type: integer
+          example: 15
+          description: Current streak after check-in
+        streak_broken:
+          type: boolean
+          example: false
+          description: Whether streak was reset due to inactivity
+        inactivity_penalties:
+          type: array
+          items:
+            $ref: '#/components/schemas/XPEvent'
+          description: List of penalty events applied (if any)
+        milestone_reached:
+          type: object
+          nullable: true
+          description: Streak milestone achieved (if any)
+          properties:
+            days:
+              type: integer
+              example: 7
+            xp_reward:
+              type: integer
+              example: 50
+        message:
+          type: string
+          example: "Welcome back! +15 XP"
+
+    XPEvent:
+      type: object
+      required:
+        - id
+        - xp_amount
+        - event_type
+        - description
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        xp_amount:
+          type: integer
+          example: 15
+          description: XP amount (can be positive or negative)
+        event_type:
+          $ref: '#/components/schemas/XPEventType'
+        description:
+          type: string
+          example: "Daily check-in"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-20T10:00:00Z"
+
+    ExperienceHistoryResponse:
+      type: object
+      required:
+        - events
+        - total_count
+        - has_more
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/XPEvent'
+        total_count:
+          type: integer
+          example: 145
+          description: Total number of XP events
+        has_more:
+          type: boolean
+          example: true
+          description: Whether there are more events to fetch
+
+    StreakMilestone:
+      type: object
+      required:
+        - days
+        - xp_reward
+        - achieved
+      properties:
+        days:
+          type: integer
+          example: 7
+          description: Number of days for this milestone
+        xp_reward:
+          type: integer
+          example: 50
+          description: XP reward for reaching this milestone
+        achieved:
+          type: boolean
+          example: true
+          description: Whether user has achieved this milestone
+        achieved_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-01-15T10:00:00Z"
+          description: When milestone was achieved
+        days_remaining:
+          type: integer
+          nullable: true
+          example: 3
+          description: Days remaining to reach this milestone (if not achieved)
+
+    StreakMilestonesResponse:
+      type: object
+      required:
+        - current_streak
+        - milestones
+      properties:
+        current_streak:
+          type: integer
+          example: 14
+          description: Current streak days
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/StreakMilestone'
 
   responses:
     SuccessResponse200:

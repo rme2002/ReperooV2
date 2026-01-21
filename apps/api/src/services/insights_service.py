@@ -138,10 +138,14 @@ class InsightsService:
         )
 
         # Build and return MonthSnapshot
+        # Use the middle of the requested month for currentDate (not the current system time)
+        # This ensures the frontend calculates date ranges for the correct month
+        current_date_for_month = datetime(year, month, 15, 12, 0, 0, tzinfo=timezone.utc)
+
         return MonthSnapshot(
             key=self._format_month_key(year, month),
             label=self._format_month_label(year, month),
-            currentDate=datetime.now(timezone.utc).isoformat(),
+            currentDate=current_date_for_month.isoformat(),
             loggedDays=logged_days,
             totalDays=total_days,
             totalSpent=float(total_spent),

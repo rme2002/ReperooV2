@@ -46,9 +46,11 @@ export function InsightsProvider({ children }: { children: React.ReactNode }) {
 
   const fetchSnapshot = useCallback(async (year: number, month: number) => {
     const cacheKey = `${year}-${month}`;
+    console.log(`[InsightsProvider] fetchSnapshot called with year: ${year}, month: ${month}, cacheKey: ${cacheKey}`);
 
     // Check cache first
     if (snapshotCache.has(cacheKey)) {
+      console.log(`[InsightsProvider] Using cached snapshot for ${cacheKey}`);
       setCurrentSnapshot(snapshotCache.get(cacheKey)!);
       setError(null);
       return;
@@ -57,10 +59,13 @@ export function InsightsProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
+      console.log(`[InsightsProvider] Calling API getMonthSnapshot({ year: ${year}, month: ${month} })`);
 
       const response = await getMonthSnapshot({ year, month });
+      console.log(`[InsightsProvider] API response status: ${response.status}`);
 
       if (response.status === 200 && response.data) {
+        console.log(`[InsightsProvider] Setting currentSnapshot for ${response.data.label} (${response.data.key})`);
         setCurrentSnapshot(response.data);
         // Cache the snapshot
         snapshotCache.set(cacheKey, response.data);

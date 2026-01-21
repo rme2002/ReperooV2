@@ -7,6 +7,7 @@ from .expense_subcategory import ExpenseSubcategory
 from .income_category import IncomeCategory
 from .recurring_template import RecurringTemplate
 from .transaction import Transaction
+from .xp_event import XPEvent
 
 __all__ = [
     "Base",
@@ -17,4 +18,5 @@ __all__ = [
     "IncomeCategory",
     "RecurringTemplate",
     "Transaction",
+    "XPEvent",
 ]

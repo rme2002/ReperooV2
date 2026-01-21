@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from uuid import UUID
+from datetime import date
 
-from sqlalchemy import Column, ForeignKey, Table
+from sqlalchemy import Column, ForeignKey, Table, Integer, Date
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
@@ -48,3 +49,13 @@ class Profile(TimestampMixin, Base):
         ForeignKey("auth.users.id", ondelete="CASCADE"),
         primary_key=True,
     )
+
+    # Gamification fields
+    current_level: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    current_xp: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    current_streak: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    longest_streak: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_login_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    total_xp_earned: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    transactions_today_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_transaction_date: Mapped[date | None] = mapped_column(Date, nullable=True)
