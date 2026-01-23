@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from decimal import Decimal
+from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from sqlalchemy import and_, select
@@ -107,6 +108,62 @@ class TransactionRepository:
             .order_by(Transaction.occurred_at.desc())
         )
         return list(session.execute(stmt).scalars().all())
+
+    def get_today_summary(
+        self, session: Session, user_id: UUID
+    ) -> dict[str, Any]:
+        """
+        Get aggregated summary of today's transactions.
+
+        Returns dict with:
+        - expense_total: Decimal
+        - expense_count: int
+        - income_total: Decimal
+        - income_count: int
+        """
+        from datetime import timezone
+
+        from sqlalchemy import case, func
+
+        # Get today's date boundaries (UTC)
+        now = datetime.now(timezone.utc)
+        start_of_day = datetime(
+            now.year, now.month, now.day, 0, 0, 0, tzinfo=timezone.utc
+        )
+        end_of_day = datetime(
+            now.year, now.month, now.day, 23, 59, 59, 999999, tzinfo=timezone.utc
+        )
+
+        # Aggregate query with conditional sums
+        stmt = select(
+            func.sum(
+                case((Transaction.type == "expense", Transaction.amount), else_=0)
+            ).label("expense_total"),
+            func.count(
+                case((Transaction.type == "expense", 1), else_=None)
+            ).label("expense_count"),
+            func.sum(
+                case((Transaction.type == "income", Transaction.amount), else_=0)
+            ).label("income_total"),
+            func.count(
+                case((Transaction.type == "income", 1), else_=None)
+            ).label("income_count"),
+        ).where(
+            and_(
+                Transaction.user_id == user_id,
+                Transaction.occurred_at >= start_of_day,
+                Transaction.occurred_at <= end_of_day,
+            )
+        )
+
+        result = session.execute(stmt).one()
+
+        return {
+            "expense_total": result.expense_total or Decimal("0"),
+            "expense_count": result.expense_count or 0,
+            "income_total": result.income_total or Decimal("0"),
+            "income_count": result.income_count or 0,
+        }
 
     def get_transaction_by_id(
         self,

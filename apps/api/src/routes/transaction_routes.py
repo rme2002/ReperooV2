@@ -11,6 +11,7 @@ from src.core.database import get_session
 from src.models.model import (
     CreateExpenseTransactionPayload,
     CreateIncomeTransactionPayload,
+    TodayTransactionSummary,
     TransactionExpense,
     TransactionIncome,
     UpdateTransactionPayload,
@@ -270,6 +271,33 @@ async def list_transactions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve transactions: {str(e)}",
+        )
+
+
+@router.get("/today-summary", status_code=status.HTTP_200_OK)
+async def get_today_summary(
+    current_user_id: UUID = Depends(get_current_user_id),
+    session: Session = Depends(get_session),
+    transaction_service: TransactionService = Depends(get_transaction_service),
+) -> TodayTransactionSummary:
+    """
+    Get summary of today's transactions.
+
+    Returns aggregated totals and counts for today's expenses and income.
+    Includes materialized recurring transactions.
+
+    Returns:
+        TodayTransactionSummary with expense_total, income_total, counts, and has_logged_today flag
+    """
+    try:
+        summary = transaction_service.get_today_summary(session, current_user_id)
+        return TodayTransactionSummary(**summary)
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error getting today summary: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve today's transaction summary",
         )
 
 

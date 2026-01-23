@@ -12,8 +12,10 @@ import type {
   ErrorResponse401Response,
   ErrorResponse404Response,
   ErrorResponse500Response,
+  GenericError,
   ListTransactions200Item,
   ListTransactionsParams,
+  TodayTransactionSummary,
   TransactionExpense,
   TransactionIncome,
   Uid,
@@ -177,6 +179,54 @@ export const getListTransactionsUrl = (params: ListTransactionsParams,) => {
 export const listTransactions = async (params: ListTransactionsParams, options?: RequestInit): Promise<listTransactionsResponse> => {
   
   return customFetch<listTransactionsResponse>(getListTransactionsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+/**
+ * Returns aggregated totals and counts for today's expenses and income
+ * @summary Get summary of today's transactions
+ */
+export type getTodayTransactionSummaryResponse200 = {
+  data: TodayTransactionSummary
+  status: 200
+}
+
+export type getTodayTransactionSummaryResponse401 = {
+  data: GenericError
+  status: 401
+}
+
+export type getTodayTransactionSummaryResponse500 = {
+  data: GenericError
+  status: 500
+}
+    
+export type getTodayTransactionSummaryResponseSuccess = (getTodayTransactionSummaryResponse200) & {
+  headers: Headers;
+};
+export type getTodayTransactionSummaryResponseError = (getTodayTransactionSummaryResponse401 | getTodayTransactionSummaryResponse500) & {
+  headers: Headers;
+};
+
+export type getTodayTransactionSummaryResponse = (getTodayTransactionSummaryResponseSuccess | getTodayTransactionSummaryResponseError)
+
+export const getGetTodayTransactionSummaryUrl = () => {
+
+
+  
+
+  return `http://example.com/api/v1/transactions/today-summary`
+}
+
+export const getTodayTransactionSummary = async ( options?: RequestInit): Promise<getTodayTransactionSummaryResponse> => {
+  
+  return customFetch<getTodayTransactionSummaryResponse>(getGetTodayTransactionSummaryUrl(),
   {      
     ...options,
     method: 'GET'

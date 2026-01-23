@@ -59,6 +59,7 @@ export * from './streakMilestone';
 export * from './streakMilestonesResponse';
 export * from './subCategoryBreakdown';
 export * from './successResponse200Response';
+export * from './todayTransactionSummary';
 export * from './transaction';
 export * from './transactionAmount';
 export * from './transactionBase';

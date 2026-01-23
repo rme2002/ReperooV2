@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
@@ -348,3 +349,36 @@ class TransactionService:
         except Exception as e:
             session.rollback()
             raise TransactionDeleteError("Failed to delete transaction") from e
+
+    def get_today_summary(self, session: Session, user_id: UUID) -> dict[str, Any]:
+        """Get today's transaction summary with materialized recurring transactions."""
+        from datetime import datetime, timezone
+
+        # Get today's date boundaries
+        now = datetime.now(timezone.utc)
+        start_of_day = datetime(
+            now.year, now.month, now.day, 0, 0, 0, tzinfo=timezone.utc
+        )
+        end_of_day = datetime(
+            now.year, now.month, now.day, 23, 59, 59, 999999, tzinfo=timezone.utc
+        )
+
+        # Materialize recurring transactions for today (similar to list endpoint)
+        from src.services.materialization_service import MaterializationService
+
+        materialization_service = MaterializationService()
+        materialization_service.materialize_for_date_range(
+            session, user_id, start_of_day, end_of_day
+        )
+        session.commit()  # Commit materialized transactions
+
+        # Get aggregated summary
+        summary = self.transaction_repository.get_today_summary(session, user_id)
+
+        # Add metadata
+        summary["date"] = now.date().isoformat()
+        summary["has_logged_today"] = (
+            summary["expense_count"] + summary["income_count"]
+        ) > 0
+
+        return summary

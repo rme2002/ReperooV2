@@ -3,25 +3,30 @@ import { createContext, useContext, useEffect, useState } from "react";
 import {
   checkIn,
   getExperienceStatus,
+  getStreakMilestones,
 } from "@/lib/gen/experience/experience";
 import type {
   CheckInResponse,
   ExperienceResponse,
+  StreakMilestonesResponse,
 } from "@/lib/gen/model";
 
 type ExperienceContextValue = {
   experience: ExperienceResponse | null;
+  milestones: StreakMilestonesResponse | null;
   isLoading: boolean;
   error: string | null;
   lastCheckInResponse: CheckInResponse | null;
   performCheckIn: () => Promise<void>;
   refreshExperience: () => Promise<void>;
+  refreshMilestones: () => Promise<void>;
 };
 
 const ExperienceContext = createContext<ExperienceContextValue | null>(null);
 
 export function ExperienceProvider({ children }: { children: React.ReactNode }) {
   const [experience, setExperience] = useState<ExperienceResponse | null>(null);
+  const [milestones, setMilestones] = useState<StreakMilestonesResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastCheckInResponse, setLastCheckInResponse] = useState<CheckInResponse | null>(null);
@@ -102,11 +107,31 @@ export function ExperienceProvider({ children }: { children: React.ReactNode }) 
     }
   };
 
-  // Initialize on mount: perform check-in and fetch experience
+  const fetchMilestones = async () => {
+    try {
+      const response = await getStreakMilestones();
+
+      if (response.status === 200 && response.data) {
+        setMilestones(response.data);
+      } else if (response.status === 401) {
+        setError("UNAUTHORIZED");
+      }
+    } catch (err) {
+      console.error("Error fetching milestones:", err);
+      // Don't override main error state for milestone fetch failures
+    }
+  };
+
+  const refreshMilestones = async () => {
+    await fetchMilestones();
+  };
+
+  // Initialize on mount: perform check-in, fetch experience, and fetch milestones
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
       await performCheckIn();
+      await fetchMilestones();
       setIsLoading(false);
     };
 
@@ -115,11 +140,13 @@ export function ExperienceProvider({ children }: { children: React.ReactNode }) 
 
   const value: ExperienceContextValue = {
     experience,
+    milestones,
     isLoading,
     error,
     lastCheckInResponse,
     performCheckIn,
     refreshExperience,
+    refreshMilestones,
   };
 
   return (

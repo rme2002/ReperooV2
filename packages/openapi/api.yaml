@@ -175,6 +175,33 @@ paths:
           description: Error 500
           $ref: '#/components/responses/ErrorResponse500'
 
+  /api/v1/transactions/today-summary:
+    get:
+      tags:
+        - Transactions
+      summary: Get summary of today's transactions
+      description: Returns aggregated totals and counts for today's expenses and income
+      operationId: getTodayTransactionSummary
+      responses:
+        '200':
+          description: Successfully retrieved today's summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodayTransactionSummary'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+
   /api/v1/transactions/update/{id}:
     patch:
       tags:
@@ -696,6 +723,39 @@ components:
         - expense
         - income
       example: expense
+
+    TodayTransactionSummary:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date of the summary (ISO 8601 format)
+        expense_total:
+          type: number
+          format: double
+          description: Total amount of expenses today
+        expense_count:
+          type: integer
+          description: Number of expense transactions today
+        income_total:
+          type: number
+          format: double
+          description: Total amount of income today
+        income_count:
+          type: integer
+          description: Number of income transactions today
+        has_logged_today:
+          type: boolean
+          description: Whether user has logged any transactions today
+      required:
+        - date
+        - expense_total
+        - expense_count
+        - income_total
+        - income_count
+        - has_logged_today
+
     TransactionAmount:
       type: number
       format: double
