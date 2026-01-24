@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { alpha, palette } from "@/constants/theme";
 
 export default function ModalScreen() {
   return (
@@ -18,26 +19,26 @@ export default function ModalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#030712",
+    backgroundColor: palette.slate950,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
   },
   card: {
-    backgroundColor: "rgba(15,23,42,0.95)",
+    backgroundColor: alpha.ink95,
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.35)",
+    borderColor: alpha.slate35,
   },
   title: {
-    color: "#f8fafc",
+    color: palette.slate190,
     fontSize: 22,
     fontWeight: "700",
     marginBottom: 12,
   },
   body: {
-    color: "rgba(226,232,240,0.8)",
+    color: alpha.slate80,
     fontSize: 15,
     lineHeight: 22,
   },

@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { AuthScreenShell } from "@/components/auth/AuthScreenShell";
+import { colors } from "@/constants/theme";
 import { signUpByEmailAndPassword } from "@/lib/gen/authentication/authentication";
 
 export default function RegisterScreen() {
@@ -81,7 +82,7 @@ export default function RegisterScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           placeholder="you@domain.com"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={colors.textTertiary}
           style={styles.input}
         />
       </View>
@@ -93,7 +94,7 @@ export default function RegisterScreen() {
           onChangeText={setPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={colors.textTertiary}
           style={styles.input}
         />
       </View>
@@ -105,7 +106,7 @@ export default function RegisterScreen() {
           onChangeText={setConfirmPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={colors.textTertiary}
           style={styles.input}
         />
       </View>
@@ -128,7 +129,7 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   label: {
-    color: "#6b7280",
+    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.3,
@@ -138,10 +139,10 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 14,
     paddingHorizontal: 16,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#ede7dc",
-    color: "#111827",
+    borderColor: colors.border,
+    color: colors.text,
     fontSize: 16,
   },
   fieldGroup: {
@@ -149,19 +150,19 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     marginTop: 24,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     borderRadius: 18,
     height: 56,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#0b1222",
+    borderColor: colors.primaryDark,
   },
   primaryButtonPressed: {
     opacity: 0.85,
   },
   primaryButtonText: {
-    color: "#f8fafc",
+    color: colors.textLight,
     fontSize: 17,
     fontWeight: "700",
     letterSpacing: 0.3,
@@ -170,12 +171,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   secondaryText: {
-    color: "#6b7280",
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 8,
   },
   secondaryTextAccent: {
-    color: "#111827",
+    color: colors.text,
     fontWeight: "600",
   },
 });

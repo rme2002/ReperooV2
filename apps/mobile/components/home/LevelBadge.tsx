@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
+import { colors } from "@/constants/theme";
 
 type LevelBadgeProps = {
   level: number;
@@ -24,17 +25,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
-    shadowColor: "#0f172a",
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
   },
   badgeDark: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.text,
   },
   badgeLight: {
-    backgroundColor: "#22A45D",
+    backgroundColor: colors.primary,
   },
   text: {
     fontWeight: "700",
@@ -42,9 +43,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   textDark: {
-    color: "#f8fafc",
+    color: colors.textLight,
   },
   textLight: {
-    color: "#ffffff",
+    color: colors.textLight,
   },
 });

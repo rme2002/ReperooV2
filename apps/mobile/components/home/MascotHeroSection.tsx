@@ -13,6 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { EvolutionStage } from "@/lib/gen/model";
 import { getEvolutionImage, getEvolutionDisplayName } from "@/utils/evolutionHelpers";
+import { colors } from "@/constants/theme";
 
 type MascotHeroSectionProps = {
   evolutionStage: EvolutionStage;
@@ -265,7 +266,7 @@ const styles = StyleSheet.create({
   stageNameText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   collapsedRow: {
     position: "absolute",
@@ -278,10 +279,10 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
   miniMascotContainer: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 4,
-    shadowColor: "#0f172a",
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
   collapsedXpText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.text,
   },
   miniStreakIndicator: {
     flexDirection: "row",
@@ -312,18 +313,18 @@ const styles = StyleSheet.create({
   miniStreakNumber: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   miniXpTrack: {
     height: 4,
     borderRadius: 999,
-    backgroundColor: "#ede7dc",
+    backgroundColor: colors.border,
     overflow: "hidden",
     maxWidth: 100,
   },
   miniXpFill: {
     height: "100%",
-    backgroundColor: "#22A45D",
+    backgroundColor: colors.primary,
     borderRadius: 999,
   },
 });

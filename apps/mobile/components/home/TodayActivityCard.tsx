@@ -2,6 +2,7 @@ import { View, Text, StyleSheet } from "react-native";
 import type { TodayTransactionSummary } from "@/lib/gen/model";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
 import { GlassCard } from "@/components/shared/GlassCard";
+import { colors } from "@/constants/theme";
 
 type TodayActivityCardProps = {
   todaySummary: TodayTransactionSummary | null;
@@ -69,17 +70,17 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   statLabel: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   divider: {
     width: 1,
     height: 40,
-    backgroundColor: "#e5e7eb",
+    backgroundColor: colors.border,
   },
   loggedIndicator: {
     flexDirection: "row",
@@ -87,17 +88,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingVertical: 10,
-    backgroundColor: "rgba(34, 164, 93, 0.08)",
+    backgroundColor: `${colors.primary}14`,
     borderRadius: 12,
   },
   checkmark: {
     fontSize: 14,
-    color: "#22A45D",
+    color: colors.primary,
     fontWeight: "700",
   },
   loggedText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#22A45D",
+    color: colors.primary,
   },
 });

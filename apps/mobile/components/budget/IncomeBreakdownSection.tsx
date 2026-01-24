@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import type { TransactionIncome } from "../../lib/gen/model/transactionIncome";
 import type { RecurringTemplateIncome } from "../../lib/gen/model/recurringTemplateIncome";
+import { colors, palette } from "@/constants/theme";
 
 interface IncomeBreakdownSectionProps {
   transactions: TransactionIncome[];
@@ -89,11 +90,11 @@ export function IncomeBreakdownSection({
     incomeSectionTitle: {
       fontSize: 14 * scale,
       fontWeight: "700" as const,
-      color: "#111827",
+      color: palette.gray900,
     },
     incomeSectionSubtitle: {
       fontSize: 11 * scale,
-      color: "#6b7280",
+      color: palette.gray500,
     },
     incomeRow: {
       flexDirection: "row" as const,
@@ -102,7 +103,7 @@ export function IncomeBreakdownSection({
       paddingHorizontal: 4 * scale,
       gap: 10 * scale,
       borderBottomWidth: 1,
-      borderBottomColor: "#f3f4f6",
+      borderBottomColor: palette.slate200,
     },
     incomeIcon: {
       width: 36 * scale,
@@ -110,13 +111,13 @@ export function IncomeBreakdownSection({
       borderRadius: 18 * scale,
       alignItems: "center" as const,
       justifyContent: "center" as const,
-      backgroundColor: "#ecfccb",
+      backgroundColor: palette.lime100,
       borderWidth: 1,
-      borderColor: "#a3e635",
+      borderColor: palette.lime400,
     },
     incomeIconOneTime: {
-      backgroundColor: "#f0fdf4",
-      borderColor: "#bbf7d0",
+      backgroundColor: palette.green350,
+      borderColor: palette.green400,
     },
     incomeIconText: {
       fontSize: 18 * scale,
@@ -128,16 +129,16 @@ export function IncomeBreakdownSection({
       width: 16 * scale,
       height: 16 * scale,
       borderRadius: 8 * scale,
-      backgroundColor: "#e0e7ff",
+      backgroundColor: palette.blue180,
       borderWidth: 2,
-      borderColor: "#fff",
+      borderColor: palette.white,
       alignItems: "center" as const,
       justifyContent: "center" as const,
     },
     incomeRecurringBadgeText: {
       fontSize: 9 * scale,
       fontWeight: "700" as const,
-      color: "#0f172a",
+      color: palette.slate900,
     },
     incomeDetails: {
       flex: 1,
@@ -146,16 +147,16 @@ export function IncomeBreakdownSection({
     incomeCategory: {
       fontSize: 14 * scale,
       fontWeight: "700" as const,
-      color: "#15803d",
+      color: palette.green700,
     },
     incomeMeta: {
       fontSize: 12 * scale,
-      color: "#6b7280",
+      color: palette.gray500,
     },
     incomeAmount: {
       fontSize: 15 * scale,
       fontWeight: "800" as const,
-      color: "#15803d",
+      color: palette.green700,
     },
     incomeTotalRow: {
       flexDirection: "row" as const,
@@ -165,25 +166,25 @@ export function IncomeBreakdownSection({
       paddingHorizontal: 4 * scale,
       marginTop: 4 * scale,
       borderTopWidth: 2,
-      borderTopColor: "#15803d",
-      backgroundColor: "#f0fdf4",
+      borderTopColor: palette.green700,
+      backgroundColor: palette.green350,
     },
     incomeTotalLabel: {
       fontSize: 14 * scale,
       fontWeight: "700" as const,
-      color: "#15803d",
+      color: palette.green700,
     },
     incomeTotalAmount: {
       fontSize: 16 * scale,
       fontWeight: "800" as const,
-      color: "#15803d",
+      color: palette.green700,
     },
     incomeEmptyState: {
       paddingVertical: 24 * scale,
       paddingHorizontal: 16 * scale,
       alignItems: "center" as const,
       gap: 8 * scale,
-      backgroundColor: "#f9fafb",
+      backgroundColor: palette.slate180,
       borderRadius: 12 * scale,
     },
     incomeEmptyIcon: {
@@ -193,11 +194,11 @@ export function IncomeBreakdownSection({
     incomeEmptyTitle: {
       fontSize: 14 * scale,
       fontWeight: "600" as const,
-      color: "#374151",
+      color: palette.gray700,
     },
     incomeEmptyText: {
       fontSize: 12 * scale,
-      color: "#6b7280",
+      color: palette.gray500,
       textAlign: "center" as const,
     },
     incomeLoadingContainer: {
@@ -213,7 +214,7 @@ export function IncomeBreakdownSection({
       width: 44 * scale,
       height: 44 * scale,
       borderRadius: 22 * scale,
-      backgroundColor: "#f3ede1",
+      backgroundColor: palette.sand180,
     },
     incomeSkeletonBody: {
       flex: 1,
@@ -221,20 +222,20 @@ export function IncomeBreakdownSection({
     },
     incomeSkeletonLine: {
       height: 12 * scale,
-      backgroundColor: "#f3ede1",
+      backgroundColor: palette.sand180,
       borderRadius: 6 * scale,
       flex: 0.6,
     },
     incomeSkeletonLineSm: {
       height: 10 * scale,
-      backgroundColor: "#f3ede1",
+      backgroundColor: palette.sand180,
       borderRadius: 5 * scale,
       flex: 0.4,
     },
     incomeSkeletonAmount: {
       width: 70 * scale,
       height: 14 * scale,
-      backgroundColor: "#f3ede1",
+      backgroundColor: palette.sand180,
       borderRadius: 6 * scale,
     },
     incomeErrorState: {
@@ -242,7 +243,7 @@ export function IncomeBreakdownSection({
       paddingHorizontal: 16 * scale,
       alignItems: "center" as const,
       gap: 8 * scale,
-      backgroundColor: "#fef2f2",
+      backgroundColor: palette.red120,
       borderRadius: 12 * scale,
     },
     incomeErrorIcon: {
@@ -251,24 +252,24 @@ export function IncomeBreakdownSection({
     incomeErrorTitle: {
       fontSize: 14 * scale,
       fontWeight: "600" as const,
-      color: "#991b1b",
+      color: palette.red800,
     },
     incomeErrorText: {
       fontSize: 12 * scale,
-      color: "#7f1d1d",
+      color: palette.red900,
       textAlign: "center" as const,
     },
     incomeRetryButton: {
       marginTop: 8 * scale,
       paddingHorizontal: 16 * scale,
       paddingVertical: 8 * scale,
-      backgroundColor: "#111827",
+      backgroundColor: colors.primary,
       borderRadius: 999,
     },
     incomeRetryButtonText: {
       fontSize: 13 * scale,
       fontWeight: "600" as const,
-      color: "#fff",
+      color: colors.textLight,
     },
   };
   // Loading state
@@ -408,11 +409,11 @@ const styles = StyleSheet.create({
   incomeSectionTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: palette.gray900,
   },
   incomeSectionSubtitle: {
     fontSize: 11,
-    color: "#6b7280",
+    color: palette.gray500,
   },
   incomeList: {
     gap: 0,
@@ -424,7 +425,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: palette.slate200,
   },
   incomeIconContainer: {
     position: "relative",
@@ -435,13 +436,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ecfccb",
+    backgroundColor: palette.lime100,
     borderWidth: 1,
-    borderColor: "#a3e635",
+    borderColor: palette.lime400,
   },
   incomeIconOneTime: {
-    backgroundColor: "#f0fdf4",
-    borderColor: "#bbf7d0",
+    backgroundColor: palette.green350,
+    borderColor: palette.green400,
   },
   incomeIconText: {
     fontSize: 18,
@@ -453,16 +454,16 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: "#e0e7ff",
+    backgroundColor: palette.blue180,
     borderWidth: 2,
-    borderColor: "#fff",
+    borderColor: palette.white,
     alignItems: "center",
     justifyContent: "center",
   },
   incomeRecurringBadgeText: {
     fontSize: 9,
     fontWeight: "700",
-    color: "#0f172a",
+    color: palette.slate900,
   },
   incomeDetails: {
     flex: 1,
@@ -471,16 +472,16 @@ const styles = StyleSheet.create({
   incomeCategory: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#15803d",
+    color: palette.green700,
   },
   incomeMeta: {
     fontSize: 12,
-    color: "#6b7280",
+    color: palette.gray500,
   },
   incomeAmount: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#15803d",
+    color: palette.green700,
   },
   // Total row
   incomeTotalRow: {
@@ -491,18 +492,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     marginTop: 4,
     borderTopWidth: 2,
-    borderTopColor: "#15803d",
-    backgroundColor: "#f0fdf4",
+    borderTopColor: palette.green700,
+    backgroundColor: palette.green350,
   },
   incomeTotalLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#15803d",
+    color: palette.green700,
   },
   incomeTotalAmount: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#15803d",
+    color: palette.green700,
   },
   // Empty state
   incomeEmptyState: {
@@ -510,7 +511,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#f9fafb",
+    backgroundColor: palette.slate180,
     borderRadius: 12,
   },
   incomeEmptyIcon: {
@@ -520,11 +521,11 @@ const styles = StyleSheet.create({
   incomeEmptyTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
+    color: palette.gray700,
   },
   incomeEmptyText: {
     fontSize: 12,
-    color: "#6b7280",
+    color: palette.gray500,
     textAlign: "center",
   },
   // Loading state
@@ -541,7 +542,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#f3ede1",
+    backgroundColor: palette.sand180,
   },
   incomeSkeletonBody: {
     flex: 1,
@@ -549,20 +550,20 @@ const styles = StyleSheet.create({
   },
   incomeSkeletonLine: {
     height: 12,
-    backgroundColor: "#f3ede1",
+    backgroundColor: palette.sand180,
     borderRadius: 6,
     width: "60%",
   },
   incomeSkeletonLineSm: {
     height: 10,
-    backgroundColor: "#f3ede1",
+    backgroundColor: palette.sand180,
     borderRadius: 5,
     width: "40%",
   },
   incomeSkeletonAmount: {
     width: 70,
     height: 14,
-    backgroundColor: "#f3ede1",
+    backgroundColor: palette.sand180,
     borderRadius: 6,
   },
   // Error state
@@ -571,7 +572,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#fef2f2",
+    backgroundColor: palette.red120,
     borderRadius: 12,
   },
   incomeErrorIcon: {
@@ -580,23 +581,23 @@ const styles = StyleSheet.create({
   incomeErrorTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#991b1b",
+    color: palette.red800,
   },
   incomeErrorText: {
     fontSize: 12,
-    color: "#7f1d1d",
+    color: palette.red900,
     textAlign: "center",
   },
   incomeRetryButton: {
     marginTop: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     borderRadius: 999,
   },
   incomeRetryButtonText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#fff",
+    color: colors.textLight,
   },
 });

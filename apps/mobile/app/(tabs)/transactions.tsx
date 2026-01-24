@@ -13,6 +13,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, palette } from "@/constants/theme";
 
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
 import { AddIncomeModal } from "@/components/modals/AddIncomeModal";
@@ -43,12 +44,12 @@ type TransactionSection = {
 };
 
 const categoryAccent: Record<string, { bg: string; fill: string }> = {
-  essentials: { bg: "#fef3c7", fill: "#f59e0b" },
-  lifestyle: { bg: "#ffe4e6", fill: "#f472b6" },
-  personal: { bg: "#dbeafe", fill: "#3b82f6" },
-  savings: { bg: "#fef9c3", fill: "#fbbf24" },
-  investments: { bg: "#ccfbf1", fill: "#14b8a6" },
-  other: { bg: "#ede9fe", fill: "#a855f7" },
+  essentials: { bg: palette.amber200, fill: palette.amber600 },
+  lifestyle: { bg: palette.rose100, fill: palette.pink300 },
+  personal: { bg: palette.blue200, fill: palette.blue600 },
+  savings: { bg: palette.amber170, fill: palette.amber500 },
+  investments: { bg: palette.green210, fill: palette.green500 },
+  other: { bg: palette.purple100, fill: palette.purple500 },
 };
 
 const formatRelativeDate = (value: Date, reference: Date) => {
@@ -516,7 +517,7 @@ export default function TransactionsScreen() {
     }
 
     // Render expense transaction
-    const categoryMeta = categoryAccent[item.categoryId] ?? { bg: "#e2e8f0", fill: "#0f172a" };
+    const categoryMeta = categoryAccent[item.categoryId] ?? { bg: colors.borderLight, fill: colors.text };
     const subcategoryLabel = getSubcategoryLabel(item.categoryId, item.subcategoryId);
     const categoryLabel = getCategoryLabel(item.categoryId);
     const subtitleParts: string[] = [];
@@ -602,7 +603,7 @@ export default function TransactionsScreen() {
           <TextInput
             style={styles.searchInput}
             placeholder="Search note or category"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.textTertiary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -694,7 +695,7 @@ export default function TransactionsScreen() {
                           if (!amount) {
                             return null;
                           }
-                          const color = categoryAccent[categoryId]?.fill ?? "#0f172a";
+                          const color = categoryAccent[categoryId]?.fill ?? colors.primaryDark;
                           return (
                             <View
                               key={`${section.dateKey}-${categoryId}`}
@@ -891,7 +892,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     gap: 14,
-    backgroundColor: "#f6f3ed",
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: "row",
@@ -906,19 +907,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   addButton: {
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
   },
   addButtonText: {
     fontSize: 22,
-    color: "#ffffff",
+    color: colors.textLight,
   },
   addMenuWrapper: {
     position: "relative",
@@ -936,14 +937,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 44,
     right: 0,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
     padding: 8,
     gap: 6,
     minWidth: 156,
-    shadowColor: "#0f172a",
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -952,14 +953,14 @@ const styles = StyleSheet.create({
   },
   addMenuOption: {
     borderRadius: 10,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
   addMenuOptionSecondary: {
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: colors.border,
   },
   addMenuOptionPressed: {
     opacity: 0.85,
@@ -967,11 +968,11 @@ const styles = StyleSheet.create({
   addMenuOptionLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#f8fafc",
+    color: colors.textLight,
     textAlign: "center",
   },
   addMenuOptionLabelSecondary: {
-    color: "#111827",
+    color: colors.text,
   },
   monthSelector: {
     flexDirection: "row",
@@ -984,40 +985,40 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#d6d3cd",
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
   },
   monthArrowDisabled: {
     opacity: 0.4,
   },
   monthArrowText: {
     fontSize: 18,
-    color: "#111827",
+    color: colors.text,
   },
   monthLabel: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   entryCount: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
     textAlign: "center",
   },
   searchField: {
     position: "relative",
   },
   searchInput: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
     paddingVertical: 12,
     paddingHorizontal: 14,
     fontSize: 15,
-    color: "#111827",
+    color: colors.text,
   },
   clearSearch: {
     position: "absolute",
@@ -1026,13 +1027,13 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#e5e7eb",
+    backgroundColor: colors.borderLight,
     alignItems: "center",
     justifyContent: "center",
   },
   clearSearchText: {
     fontSize: 16,
-    color: "#111827",
+    color: colors.text,
     marginTop: -2,
   },
   recurringFilterRow: {
@@ -1045,20 +1046,20 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d4d4d8",
-    backgroundColor: "#fff",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   recurringFilterChipActive: {
-    backgroundColor: "#0f172a",
-    borderColor: "#0f172a",
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   recurringFilterText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
   },
   recurringFilterTextActive: {
-    color: "#f8fafc",
+    color: colors.textLight,
   },
   chipRow: {
     flexDirection: "row",
@@ -1073,34 +1074,34 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d4d4d8",
-    backgroundColor: "#fff",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   chipActive: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   chipText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.text,
   },
   chipTextActive: {
-    color: "#fff",
+    color: colors.textLight,
   },
   listWrapper: {
     flex: 1,
   },
   listCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     paddingVertical: 6,
     paddingHorizontal: 10,
     gap: 14,
     marginBottom: 12,
-    shadowColor: "#0f172a",
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.04,
     shadowRadius: 12,
@@ -1121,7 +1122,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: "#f3ede1",
+    backgroundColor: colors.borderLight,
   },
   skeletonBody: {
     flex: 1,
@@ -1130,25 +1131,25 @@ const styles = StyleSheet.create({
   skeletonLineWide: {
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#f3ede1",
+    backgroundColor: colors.borderLight,
   },
   skeletonLine: {
     height: 10,
     width: "60%",
     borderRadius: 5,
-    backgroundColor: "#f3ede1",
+    backgroundColor: colors.borderLight,
   },
   skeletonValue: {
     width: 60,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#f3ede1",
+    backgroundColor: colors.borderLight,
   },
   emptyState: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     padding: 24,
     alignItems: "center",
     gap: 12,
@@ -1156,11 +1157,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   emptyCopy: {
     fontSize: 14,
-    color: "#6b7280",
+    color: colors.textSecondary,
     textAlign: "center",
   },
   primaryButton: {
@@ -1168,10 +1169,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 999,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
   },
   primaryButtonText: {
-    color: "#fff",
+    color: colors.textLight,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -1181,10 +1182,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d4d4d8",
+    borderColor: colors.border,
   },
   secondaryButtonText: {
-    color: "#111827",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -1206,18 +1207,18 @@ const styles = StyleSheet.create({
   sectionHeaderTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   sectionHeaderValue: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   sectionBarTrack: {
     flexDirection: "row",
     height: 8,
     borderRadius: 999,
-    backgroundColor: "#f3ede1",
+    backgroundColor: colors.borderLight,
     overflow: "hidden",
   },
   sectionBarSegment: {
@@ -1225,7 +1226,7 @@ const styles = StyleSheet.create({
   },
   itemSeparator: {
     height: 1,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: colors.borderLight,
     marginLeft: 58,
   },
   txRow: {
@@ -1251,9 +1252,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   txIncomeIcon: {
-    backgroundColor: "#ecfccb",
+    backgroundColor: "rgba(31, 138, 91, 0.12)",
     borderWidth: 1,
-    borderColor: "#a3e635",
+    borderColor: colors.primary,
   },
   txIconText: {
     fontSize: 20,
@@ -1265,14 +1266,14 @@ const styles = StyleSheet.create({
   txTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   txIncomeTitle: {
-    color: "#15803d",
+    color: colors.primaryDark,
   },
   txSubtitle: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   recurringBadge: {
     marginTop: 2,
@@ -1282,8 +1283,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     fontSize: 11,
     fontWeight: "700",
-    color: "#0f172a",
-    backgroundColor: "#e0e7ff",
+    color: colors.text,
+    backgroundColor: colors.borderLight,
   },
   txRight: {
     alignItems: "flex-end",
@@ -1292,17 +1293,17 @@ const styles = StyleSheet.create({
   txAmount: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   txIncomeAmount: {
-    color: "#15803d",
+    color: colors.primaryDark,
   },
   swipeContainer: {
     position: "relative",
     overflow: "hidden",
     borderRadius: 14,
     marginVertical: 2,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
   },
   swipeStaticRow: {
     position: "absolute",
@@ -1321,18 +1322,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   swipeStaticEdit: {
-    backgroundColor: "#0d9488",
+    backgroundColor: colors.primary,
   },
   swipeStaticDelete: {
-    backgroundColor: "#b91c1c",
+    backgroundColor: colors.error,
   },
   swipeStaticText: {
-    color: "#fff",
+    color: colors.textLight,
     fontWeight: "700",
     fontSize: 13,
   },
   swipeContent: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 14,
   },
 });

@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
 import { supabase } from "@/lib/supabase";
+import { alpha, colors } from "@/constants/theme";
 import {
   CURRENCY_OPTIONS,
   type CurrencyCode,
@@ -178,7 +179,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color="#111827" />
+          <ActivityIndicator size="small" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -226,7 +227,7 @@ export default function ProfileScreen() {
                 value={name}
                 onChangeText={setName}
                 placeholder="Add your name"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.textTertiary}
                 maxLength={50}
                 style={styles.input}
               />
@@ -310,7 +311,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f7f4ef",
+    backgroundColor: colors.background,
   },
   content: {
     paddingHorizontal: 20,
@@ -324,11 +325,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   subtitle: {
     fontSize: 14,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   section: {
     gap: 12,
@@ -336,15 +337,15 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 12,
     letterSpacing: 1,
-    color: "#9ca3af",
+    color: colors.textTertiary,
     fontWeight: "700",
   },
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     gap: 16,
   },
   fieldGroup: {
@@ -353,34 +354,34 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#6b7280",
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
-    color: "#111827",
-    backgroundColor: "#fdfdfc",
+    color: colors.text,
+    backgroundColor: colors.surface,
   },
   inputReadonly: {
-    backgroundColor: "#f3f4f6",
-    color: "#6b7280",
+    backgroundColor: colors.borderLight,
+    color: colors.textTertiary,
   },
   errorText: {
     fontSize: 13,
-    color: "#b91c1c",
+    color: colors.error,
   },
   saveButton: {
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: "center",
-    backgroundColor: "#e2f5e9",
+    backgroundColor: colors.primary,
     borderWidth: 1,
-    borderColor: "#c1e3cf",
+    borderColor: colors.primaryDark,
   },
   saveButtonPressed: {
     opacity: 0.9,
@@ -388,7 +389,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0f5132",
+    color: colors.textLight,
   },
   listRow: {
     flexDirection: "row",
@@ -401,16 +402,16 @@ const styles = StyleSheet.create({
   rowLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.text,
   },
   rowValue: {
     fontSize: 15,
-    color: "#6b7280",
+    color: colors.textSecondary,
     marginTop: 4,
   },
   chevron: {
     fontSize: 22,
-    color: "#9ca3af",
+    color: colors.textTertiary,
   },
   supportButton: {
     gap: 2,
@@ -421,24 +422,24 @@ const styles = StyleSheet.create({
   supportButtonText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#0f172a",
+    color: colors.text,
   },
   supportSubtext: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   divider: {
     height: 1,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: colors.borderLight,
   },
   dangerCard: {
-    borderColor: "rgba(239,68,68,0.4)",
-    backgroundColor: "rgba(254,226,226,0.6)",
+    borderColor: colors.error,
+    backgroundColor: "rgba(239, 68, 68, 0.12)",
   },
   logoutButton: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(239,68,68,0.6)",
+    borderColor: colors.error,
     paddingVertical: 12,
     alignItems: "center",
   },
@@ -446,7 +447,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   logoutLabel: {
-    color: "#b91c1c",
+    color: colors.error,
     fontSize: 16,
     fontWeight: "700",
   },
@@ -456,17 +457,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   signedOutCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     padding: 20,
     gap: 12,
   },
   primaryCta: {
     marginTop: 4,
     borderRadius: 14,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     alignItems: "center",
   },
@@ -474,13 +475,13 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   primaryCtaLabel: {
-    color: "#f8fafc",
+    color: colors.textLight,
     fontSize: 15,
     fontWeight: "700",
   },
   pickerOverlay: {
     flex: 1,
-    backgroundColor: "rgba(15,23,42,0.35)",
+    backgroundColor: alpha.ink35,
     justifyContent: "flex-end",
     padding: 20,
   },
@@ -489,7 +490,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   pickerSheet: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     padding: 18,
     borderRadius: 20,
     gap: 8,
@@ -497,7 +498,7 @@ const styles = StyleSheet.create({
   pickerTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
     marginBottom: 4,
   },
   pickerRow: {
@@ -507,23 +508,23 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   pickerRowActive: {
-    backgroundColor: "#f2fdf7",
+    backgroundColor: "rgba(31, 138, 91, 0.12)",
     borderRadius: 14,
     paddingHorizontal: 12,
   },
   pickerRowLabel: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.text,
   },
   pickerRowCode: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
     marginTop: 2,
   },
   pickerRowSymbol: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
 });

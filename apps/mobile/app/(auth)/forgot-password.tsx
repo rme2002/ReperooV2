@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { AuthScreenShell } from "@/components/auth/AuthScreenShell";
+import { colors } from "@/constants/theme";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function ForgotPasswordScreen() {
@@ -80,7 +81,7 @@ export default function ForgotPasswordScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           placeholder="you@domain.com"
-          placeholderTextColor="rgba(255,255,255,0.5)"
+          placeholderTextColor={colors.textTertiary}
           style={styles.input}
         />
       </View>
@@ -103,7 +104,7 @@ export default function ForgotPasswordScreen() {
 
 const styles = StyleSheet.create({
   label: {
-    color: "rgba(255,255,255,0.8)",
+    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.4,
@@ -113,15 +114,15 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 14,
     paddingHorizontal: 16,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    color: "#ffffff",
+    borderColor: colors.border,
+    color: colors.text,
     fontSize: 16,
   },
   primaryButton: {
     marginTop: 24,
-    backgroundColor: "#f97316",
+    backgroundColor: colors.primary,
     borderRadius: 18,
     height: 56,
     alignItems: "center",
@@ -131,7 +132,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   primaryButtonText: {
-    color: "#041019",
+    color: colors.textLight,
     fontSize: 17,
     fontWeight: "700",
     letterSpacing: 0.3,
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   secondaryText: {
-    color: "rgba(255,255,255,0.7)",
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 8,
   },

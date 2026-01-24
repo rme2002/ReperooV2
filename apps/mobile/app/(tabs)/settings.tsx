@@ -1,6 +1,7 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { colors } from "@/constants/theme";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
 import { AuthBottomSheet } from "@/components/auth/AuthBottomSheet";
 
@@ -136,18 +137,18 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#050814",
+    backgroundColor: colors.background,
     paddingHorizontal: 24,
     paddingTop: 32,
   },
   heading: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#f8fafc",
+    color: colors.text,
   },
   subheading: {
     fontSize: 15,
-    color: "rgba(248,250,252,0.7)",
+    color: colors.textSecondary,
     marginTop: 8,
     marginBottom: 24,
   },
@@ -158,18 +159,18 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.35)",
-    backgroundColor: "rgba(15,23,42,0.8)",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     flexDirection: "row",
     alignItems: "center",
   },
   cardPressed: {
     opacity: 0.8,
-    borderColor: "rgba(148,163,184,0.6)",
+    borderColor: colors.border,
   },
   cardDanger: {
-    borderColor: "rgba(248,113,113,0.45)",
-    backgroundColor: "rgba(30,8,8,0.7)",
+    borderColor: colors.error,
+    backgroundColor: "rgba(239, 68, 68, 0.12)",
   },
   cardContent: {
     flex: 1,
@@ -177,26 +178,26 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#e2e8f0",
+    color: colors.text,
   },
   cardTitleDanger: {
-    color: "#fca5a5",
+    color: colors.error,
   },
   cardDescription: {
-    color: "rgba(226,232,240,0.75)",
+    color: colors.textSecondary,
     fontSize: 13,
     marginTop: 4,
     lineHeight: 18,
   },
   cardDescriptionAccent: {
-    color: "#93c5fd",
+    color: colors.primary,
   },
   cardDescriptionDanger: {
-    color: "rgba(248,113,113,0.7)",
+    color: colors.error,
   },
   chevron: {
     fontSize: 28,
-    color: "#94a3b8",
+    color: colors.textTertiary,
     marginLeft: 12,
   },
 });

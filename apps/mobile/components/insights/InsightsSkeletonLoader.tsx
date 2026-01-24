@@ -1,5 +1,6 @@
 import { View, StyleSheet, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { palette } from "@/constants/theme";
 
 export function InsightsSkeletonLoader() {
   const { width } = useWindowDimensions();
@@ -65,7 +66,7 @@ export function InsightsSkeletonLoader() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fafafa",
+    backgroundColor: palette.slate170,
   },
   content: {
     flex: 1,
@@ -75,23 +76,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: palette.white,
     borderRadius: 12,
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
   },
   skeletonBox: {
-    backgroundColor: "#e5e7eb",
+    backgroundColor: palette.slate220,
     borderRadius: 6,
   },
   skeletonCircle: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#e5e7eb",
+    backgroundColor: palette.slate220,
   },
   row: {
     flexDirection: "row",

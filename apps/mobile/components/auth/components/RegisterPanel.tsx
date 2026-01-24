@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Alert, Pressable, Text, TextInput, View } from "react-native";
 
 import { signUpByEmailAndPassword } from "@/lib/gen/authentication/authentication";
+import { alpha } from "@/constants/theme";
 
 import { authFormStyles as styles } from "./AuthFormStyles";
 
@@ -74,7 +75,7 @@ export function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
         keyboardType="email-address"
         autoCapitalize="none"
         placeholder="you@domain.com"
-        placeholderTextColor="rgba(15,23,42,0.4)"
+        placeholderTextColor={alpha.ink35}
         style={styles.input}
       />
 
@@ -85,7 +86,7 @@ export function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
           onChangeText={setPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="rgba(15,23,42,0.4)"
+          placeholderTextColor={alpha.ink35}
           style={styles.input}
         />
       </View>
@@ -97,7 +98,7 @@ export function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
           onChangeText={setConfirmPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="rgba(15,23,42,0.4)"
+          placeholderTextColor={alpha.ink35}
           style={[styles.input, passwordsMismatch && styles.inputError]}
         />
       </View>

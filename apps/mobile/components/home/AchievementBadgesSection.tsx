@@ -5,6 +5,7 @@ import {
   getBadgeTier,
   getBadgeName,
 } from "./AchievementBadge";
+import { colors } from "@/constants/theme";
 
 type AchievementBadgesSectionProps = {
   milestones: StreakMilestone[];
@@ -81,10 +82,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   countBadge: {
-    backgroundColor: "rgba(34, 164, 93, 0.12)",
+    backgroundColor: `${colors.primary}1F`,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
   countText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#22A45D",
+    color: colors.primary,
   },
   listContent: {
     paddingHorizontal: 4,

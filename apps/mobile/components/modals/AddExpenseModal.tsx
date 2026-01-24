@@ -18,6 +18,7 @@ import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter"
 import { createExpenseTransaction } from "@/lib/gen/transactions/transactions";
 import { createRecurringExpenseTemplate } from "@/lib/gen/recurring-templates/recurring-templates";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
+import { alpha, colors, palette } from "@/constants/theme";
 
 type TransactionFormValues = {
   amount: number;
@@ -589,7 +590,7 @@ export function AddExpenseModal({
                   selectTextOnFocus={!isViewMode}
                   keyboardType="decimal-pad"
                   placeholder="0.00"
-                  placeholderTextColor="#cdd1d7"
+                  placeholderTextColor={palette.slate280}
                   maxLength={10}
                 />
               </View>
@@ -633,7 +634,7 @@ export function AddExpenseModal({
                 editable={!isViewMode}
                 selectTextOnFocus={!isViewMode}
                 placeholder="Add a short note"
-                placeholderTextColor="#cdd1d7"
+                placeholderTextColor={palette.slate280}
                 maxLength={120}
               />
             </View>
@@ -697,8 +698,8 @@ export function AddExpenseModal({
                       setRecurringDayDirty(false);
                     }
                   }}
-                  trackColor={{ false: "#d1d5db", true: "#0f172a" }}
-                  thumbColor="#fff"
+                  trackColor={{ false: palette.slate260, true: palette.slate900 }}
+                  thumbColor={palette.white}
                 />
               </View>
 
@@ -942,7 +943,7 @@ export function AddExpenseModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: alpha.black35,
     justifyContent: "flex-end",
   },
   backdrop: {
@@ -950,14 +951,14 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   sheet: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 16,
     paddingBottom: 12,
     paddingHorizontal: 16,
     gap: 12,
-    shadowColor: "#0f172a",
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: -8 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -972,28 +973,28 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   close: {
     fontSize: 22,
-    color: "#111827",
+    color: colors.text,
   },
   body: {
     gap: 12,
     paddingBottom: 8,
   },
   surface: {
-    backgroundColor: "#f6f3ed",
+    backgroundColor: colors.background,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     padding: 12,
     gap: 8,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -1003,11 +1004,11 @@ const styles = StyleSheet.create({
   clearAction: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#475569",
+    color: palette.slate600,
   },
   helperText: {
     fontSize: 13,
-    color: "#6b7280",
+    color: palette.gray500,
   },
   categoryRow: {
     gap: 10,
@@ -1024,7 +1025,7 @@ const styles = StyleSheet.create({
   },
   subcategoryHint: {
     fontSize: 12,
-    color: "#6b7280",
+    color: palette.gray500,
   },
   categoryChip: {
     flexDirection: "row",
@@ -1033,13 +1034,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: "#ffffff",
+    backgroundColor: palette.white,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: palette.sand200,
   },
   categoryChipSelected: {
-    backgroundColor: "#111827",
-    borderColor: "#0b1222",
+    backgroundColor: palette.gray900,
+    borderColor: palette.slate910,
   },
   categoryChipDimmed: {
     opacity: 0.6,
@@ -1050,10 +1051,10 @@ const styles = StyleSheet.create({
   categoryLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: palette.gray900,
   },
   categoryLabelSelected: {
-    color: "#f8fafc",
+    color: palette.slate190,
   },
   subcategoryList: {
     flexDirection: "row",
@@ -1070,13 +1071,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: "#ffffff",
+    backgroundColor: palette.white,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: palette.sand200,
   },
   subcategoryChipSelected: {
-    backgroundColor: "#111827",
-    borderColor: "#0b1222",
+    backgroundColor: palette.gray900,
+    borderColor: palette.slate910,
   },
   subcategoryIcon: {
     fontSize: 16,
@@ -1084,49 +1085,49 @@ const styles = StyleSheet.create({
   subcategoryLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: palette.gray900,
   },
   subcategoryLabelSelected: {
-    color: "#f8fafc",
+    color: palette.slate190,
   },
   moreChip: {
-    backgroundColor: "#f8fafc",
-    borderColor: "#cbd5e1",
+    backgroundColor: palette.slate190,
+    borderColor: palette.slate300,
   },
   moreChipLabel: {
-    color: "#475569",
+    color: palette.slate600,
   },
   summaryChip: {
     marginTop: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: palette.slate210,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: palette.slate230,
   },
   summaryChipText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#0f172a",
+    color: palette.slate900,
   },
   summaryChipClear: {
     marginLeft: 10,
   },
   summaryChipClearText: {
     fontSize: 16,
-    color: "#475569",
+    color: palette.slate600,
   },
   amountField: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: palette.white,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: palette.sand200,
     paddingHorizontal: 12,
     paddingVertical: 12,
     gap: 8,
@@ -1134,23 +1135,23 @@ const styles = StyleSheet.create({
   currency: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#6b7280",
+    color: palette.gray500,
   },
   amountInput: {
     flex: 1,
     fontSize: 24,
     fontWeight: "800",
-    color: "#111827",
+    color: palette.gray900,
   },
   noteInput: {
-    backgroundColor: "#ffffff",
+    backgroundColor: palette.white,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: palette.sand200,
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 15,
-    color: "#111827",
+    color: palette.gray900,
   },
   dateRow: {
     flexDirection: "row",
@@ -1160,21 +1161,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
   },
   dateChipSelected: {
-    backgroundColor: "#111827",
-    borderColor: "#0b1222",
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   dateText: {
     fontSize: 14,
-    color: "#111827",
+    color: colors.text,
     fontWeight: "600",
   },
   dateTextSelected: {
-    color: "#f8fafc",
+    color: colors.textLight,
   },
   calendarChip: {
     flexDirection: "row",
@@ -1191,7 +1192,7 @@ const styles = StyleSheet.create({
   },
   recurringCopy: {
     fontSize: 13,
-    color: "#6b7280",
+    color: palette.gray500,
   },
   recurringDayBlock: {
     gap: 8,
@@ -1199,7 +1200,7 @@ const styles = StyleSheet.create({
   recurringSubtitle: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#111827",
+    color: palette.gray900,
   },
   recurringDayControls: {
     flexDirection: "row",
@@ -1211,7 +1212,7 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#111827",
+    borderColor: colors.primaryDark,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1221,16 +1222,16 @@ const styles = StyleSheet.create({
   dayButtonText: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.primaryDark,
   },
   dayValue: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0f172a",
+    color: palette.slate900,
   },
   recurringHelper: {
     fontSize: 12,
-    color: "#6b7280",
+    color: palette.gray500,
   },
   calendarOverlay: {
     position: "absolute",
@@ -1238,7 +1239,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: alpha.black35,
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
@@ -1246,12 +1247,12 @@ const styles = StyleSheet.create({
   calendarModal: {
     width: "100%",
     maxWidth: 360,
-    backgroundColor: "#ffffff",
+    backgroundColor: palette.white,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#ede7dc",
-    shadowColor: "#0f172a",
+    borderColor: palette.sand200,
+    shadowColor: palette.slate900,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.1,
     shadowRadius: 18,
@@ -1266,27 +1267,27 @@ const styles = StyleSheet.create({
   calendarTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: palette.gray900,
   },
   calendarNav: {
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
   },
   calendarNavDisabled: {
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.borderLight,
   },
   calendarNavText: {
     fontSize: 16,
-    color: "#111827",
+    color: colors.text,
   },
   calendarNavTextDisabled: {
-    color: "#9ca3af",
+    color: colors.textTertiary,
   },
   calendarGrid: {
     flexDirection: "row",
@@ -1298,7 +1299,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingVertical: 6,
     fontSize: 12,
-    color: "#6b7280",
+    color: palette.gray500,
     fontWeight: "700",
   },
   calendarCell: {
@@ -1309,7 +1310,7 @@ const styles = StyleSheet.create({
     display: "flex",
   },
   calendarCellSelected: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     borderRadius: 12,
   },
   calendarCellDisabled: {
@@ -1317,34 +1318,34 @@ const styles = StyleSheet.create({
   },
   calendarDateText: {
     fontSize: 15,
-    color: "#111827",
+    color: palette.gray900,
     fontWeight: "700",
   },
   calendarDateTextSelected: {
-    color: "#f8fafc",
+    color: colors.textLight,
   },
   calendarDateTextDisabled: {
-    color: "#9ca3af",
+    color: palette.gray400,
   },
   saveButton: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#0b1222",
+    borderColor: colors.primaryDark,
   },
   saveButtonPressed: {
     opacity: 0.92,
   },
   saveButtonDisabled: {
-    backgroundColor: "#cbd5e1",
-    borderColor: "#cbd5e1",
+    backgroundColor: colors.borderLight,
+    borderColor: colors.borderLight,
   },
   saveText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#f8fafc",
+    color: colors.textLight,
   },
   tagRow: {
     flexDirection: "row",
@@ -1358,13 +1359,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
   },
   tagChipSelected: {
-    backgroundColor: "#111827",
-    borderColor: "#0b1222",
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   tagChipDimmed: {
     opacity: 0.6,
@@ -1375,14 +1376,14 @@ const styles = StyleSheet.create({
   tagLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   tagLabelSelected: {
-    color: "#f8fafc",
+    color: colors.textLight,
   },
   tagSubtext: {
     fontSize: 11,
-    color: "#6b7280",
+    color: palette.gray500,
     marginTop: 2,
   },
   frequencyContainer: {
@@ -1397,21 +1398,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     alignItems: "center",
   },
   frequencyButtonActive: {
-    backgroundColor: "#111827",
-    borderColor: "#0b1222",
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   frequencyButtonText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   frequencyButtonTextActive: {
-    color: "#f8fafc",
+    color: colors.textLight,
   },
 });

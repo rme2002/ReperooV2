@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
 import { profileOverview, profileQuickStats } from "@/components/dummy_data/profile";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
+import { alpha, colors, palette } from "@/constants/theme";
 
 const overview = profileOverview;
 const quickStats = profileQuickStats;
@@ -177,7 +178,7 @@ export default function OverviewScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f6f3ed",
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -206,28 +207,28 @@ const styles = StyleSheet.create({
   brand: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   levelPill: {
-    backgroundColor: "#111827",
+    backgroundColor: palette.gray900,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
   },
   levelText: {
-    color: "#f8fafc",
+    color: palette.slate190,
     fontWeight: "700",
     fontSize: 13,
     letterSpacing: 0.2,
   },
   surface: {
-    backgroundColor: "#ffffff",
+    backgroundColor: palette.white,
     borderRadius: 18,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: palette.sand200,
     gap: 16,
-    shadowColor: "#0f172a",
+    shadowColor: palette.slate900,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.04,
     shadowRadius: 12,
@@ -247,11 +248,11 @@ const styles = StyleSheet.create({
   streakTitle: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#111827",
+    color: palette.gray900,
   },
   streakMeta: {
     marginTop: 4,
-    color: "#6b7280",
+    color: palette.gray500,
     fontSize: 15,
   },
   todayBlock: {
@@ -260,38 +261,38 @@ const styles = StyleSheet.create({
   todayLine: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#111827",
+    color: palette.gray900,
   },
   todaySub: {
-    color: "#6b7280",
+    color: palette.gray500,
     fontSize: 15,
   },
   primaryButton: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#0b1222",
+    borderColor: colors.primaryDark,
   },
   primaryButtonPressed: {
     opacity: 0.92,
-    borderColor: "#1f2937",
+    borderColor: colors.primaryDark,
   },
   primaryButtonText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#f8fafc",
+    color: colors.textLight,
   },
   progressTrack: {
     height: 10,
     borderRadius: 999,
-    backgroundColor: "#ede7dc",
+    backgroundColor: palette.sand200,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#111827",
+    backgroundColor: palette.gray900,
   },
   badge: {
     alignSelf: "flex-start",
@@ -305,25 +306,25 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   badgePositive: {
-    borderColor: "rgba(22,163,74,0.4)",
-    backgroundColor: "rgba(22,163,74,0.12)",
+    borderColor: alpha.green40,
+    backgroundColor: alpha.green12,
   },
   badgeWarn: {
-    borderColor: "rgba(234,179,8,0.4)",
-    backgroundColor: "rgba(234,179,8,0.16)",
+    borderColor: alpha.amber40,
+    backgroundColor: alpha.amber16,
   },
   badgeDanger: {
-    borderColor: "rgba(239,68,68,0.4)",
-    backgroundColor: "rgba(239,68,68,0.12)",
+    borderColor: alpha.red40,
+    backgroundColor: alpha.red12,
   },
   badgeTextPositive: {
-    color: "#166534",
+    color: palette.green800,
   },
   badgeTextWarn: {
-    color: "#92400e",
+    color: palette.amber800,
   },
   badgeTextDanger: {
-    color: "#b91c1c",
+    color: palette.red700,
   },
   spendingWidget: {
     gap: 12,
@@ -336,11 +337,11 @@ const styles = StyleSheet.create({
   spendingRemaining: {
     fontSize: 34,
     fontWeight: "800",
-    color: "#111827",
+    color: palette.gray900,
   },
   spendingSpent: {
     fontSize: 16,
-    color: "#6b7280",
+    color: palette.gray500,
   },
   progressCaptionRow: {
     flexDirection: "row",
@@ -348,12 +349,12 @@ const styles = StyleSheet.create({
   },
   progressCaption: {
     fontSize: 13,
-    color: "#6b7280",
+    color: palette.gray500,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: palette.gray900,
   },
   quickGrid: {
     flexDirection: "row",
@@ -369,24 +370,24 @@ const styles = StyleSheet.create({
     minWidth: "30%",
     padding: 12,
     borderRadius: 12,
-    backgroundColor: "#f6f3ed",
+    backgroundColor: palette.sand130,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: palette.sand200,
     gap: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: "#6b7280",
+    color: palette.gray500,
     letterSpacing: 0.2,
   },
   statValue: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#111827",
+    color: palette.gray900,
   },
   statHint: {
     fontSize: 13,
-    color: "#6b7280",
+    color: palette.gray500,
   },
   inlineStatCard: {
     flex: 1,
@@ -399,7 +400,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(15,23,42,0.2)",
+    backgroundColor: alpha.ink20,
   },
   fabStack: {
     position: "absolute",
@@ -407,16 +408,16 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   fab: {
-    backgroundColor: "#111827",
+    backgroundColor: palette.gray900,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0f172a",
+    shadowColor: palette.slate900,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 6,
     borderWidth: 1,
-    borderColor: "#0b1222",
+    borderColor: palette.slate910,
   },
   fabMenuColumn: {
     flexDirection: "column",
@@ -426,26 +427,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: "#111827",
+    backgroundColor: palette.gray900,
     borderWidth: 1,
-    borderColor: "#111827",
-    shadowColor: "#0f172a",
+    borderColor: palette.gray900,
+    shadowColor: palette.slate900,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 10,
     elevation: 5,
   },
   fabActionSecondary: {
-    backgroundColor: "#f8fafc",
-    borderColor: "#e2e8f0",
+    backgroundColor: palette.slate190,
+    borderColor: palette.slate230,
   },
   fabActionLabel: {
-    color: "#f8fafc",
+    color: palette.slate190,
     fontSize: 14,
     fontWeight: "700",
   },
   fabActionLabelSecondary: {
-    color: "#0f172a",
+    color: palette.slate900,
   },
   fabActionPressed: {
     opacity: 0.85,
@@ -454,7 +455,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   fabIcon: {
-    color: "#f8fafc",
+    color: palette.slate190,
     fontSize: 26,
     fontWeight: "800",
     marginTop: -2,

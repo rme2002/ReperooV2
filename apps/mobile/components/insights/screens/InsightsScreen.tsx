@@ -6,6 +6,7 @@ import { Circle, Svg } from "react-native-svg";
 import spendingCategories from "../../../../shared/config/spending-categories.json";
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
 import { useInsightsContext } from "@/components/insights/InsightsProvider";
+import { colors, palette } from "@/constants/theme";
 
 type SpendingCategoriesConfig = {
   categories: {
@@ -24,7 +25,15 @@ const getSubcategoryLabel = (categoryId: string, subcategoryId: string) =>
     .get(categoryId)
     ?.subcategories?.find((sub) => sub.id === subcategoryId)?.label ?? subcategoryId;
 
-const fallbackSubcategoryColors = ["#dbeafe", "#e0e7ff", "#ede9fe", "#fce7f3", "#fef3c7", "#dcfce7", "#ccfbf1"];
+const fallbackSubcategoryColors = [
+  palette.green200,
+  palette.green180,
+  palette.green160,
+  palette.green140,
+  palette.green120,
+  palette.green100,
+  palette.green80,
+];
 
 const formatCurrency = (value: number) => `€${value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
@@ -315,7 +324,7 @@ export default function InsightsScreen() {
                   cx={chartSize / 2}
                   cy={chartSize / 2}
                   r={pieRadius}
-                  stroke="#f3ede1"
+                  stroke={colors.border}
                   strokeWidth={pieStroke}
                   fill="none"
                 />
@@ -524,7 +533,7 @@ export default function InsightsScreen() {
                               cx={subChartSize / 2}
                               cy={subChartSize / 2}
                               r={subPieRadius}
-                              stroke="#f3ede1"
+                              stroke={colors.border}
                               strokeWidth={subPieStroke}
                               fill="none"
                             />
@@ -758,7 +767,7 @@ export default function InsightsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f6f3ed",
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -770,11 +779,11 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   errorText: {
     fontSize: 16,
-    color: "#b91c1c",
+    color: colors.primary,
     textAlign: "center",
   },
   content: {
@@ -793,38 +802,38 @@ const styles = StyleSheet.create({
   monthLabel: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   subText: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   navButton: {
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
   },
   navIcon: {
     fontSize: 18,
-    color: "#111827",
+    color: colors.text,
   },
   navIconDisabled: {
-    color: "#cbd5e1",
+    color: colors.borderLight,
   },
   surface: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     gap: 12,
     marginBottom: 6,
-    shadowColor: "#0f172a",
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.04,
     shadowRadius: 12,
@@ -845,24 +854,24 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   metricLabel: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   remainingValue: {
     fontSize: 34,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   metricHelper: {
     fontSize: 14,
-    color: "#374151",
+    color: colors.textSecondary,
   },
   metricHelperBold: {
     fontSize: 15,
-    color: "#374151",
+    color: colors.textSecondary,
     fontWeight: "600",
   },
   insightWidget: {
@@ -895,7 +904,7 @@ const styles = StyleSheet.create({
   },
   metricDelta: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   badge: {
     borderRadius: 999,
@@ -907,28 +916,28 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.primaryDark,
   },
   badgePositive: {
-    backgroundColor: "rgba(22,163,74,0.12)",
-    borderColor: "rgba(22,163,74,0.4)",
+    backgroundColor: `${colors.primary}1F`,
+    borderColor: `${colors.primary}66`,
   },
   badgeWarn: {
-    backgroundColor: "rgba(234,179,8,0.16)",
-    borderColor: "rgba(234,179,8,0.4)",
+    backgroundColor: `${colors.primary}29`,
+    borderColor: `${colors.primary}66`,
   },
   badgeDanger: {
-    backgroundColor: "rgba(239,68,68,0.12)",
-    borderColor: "rgba(239,68,68,0.4)",
+    backgroundColor: `${colors.primary}1F`,
+    borderColor: `${colors.primary}66`,
   },
   badgeTextPositive: {
-    color: "#166534",
+    color: colors.primaryDark,
   },
   badgeTextWarn: {
-    color: "#92400e",
+    color: colors.primaryDark,
   },
   badgeTextDanger: {
-    color: "#b91c1c",
+    color: colors.primaryDark,
   },
   progressStack: {
     gap: 8,
@@ -937,12 +946,12 @@ const styles = StyleSheet.create({
   progressTrack: {
     height: 10,
     borderRadius: 999,
-    backgroundColor: "#ede7dc",
+    backgroundColor: colors.border,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
   },
   donutRow: {
     flexDirection: "column",
@@ -957,21 +966,21 @@ const styles = StyleSheet.create({
     overflow: "visible",
   },
   donutCenter: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     gap: 4,
   },
   donutValue: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   donutLabel: {
     fontSize: 12,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   legendColumns: {
     flexDirection: "row",
@@ -1004,12 +1013,12 @@ const styles = StyleSheet.create({
   legendLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   legendPercent: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   svg: {
     position: "absolute",
@@ -1051,35 +1060,35 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   savingsLegendSaved: {
-    backgroundColor: "#20b2c5",
+    backgroundColor: colors.primary,
   },
   savingsLegendInvested: {
-    backgroundColor: "#334155",
+    backgroundColor: colors.primaryDark,
   },
   progressLabel: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   progressSub: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   progressValue: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   savingsAmount: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   progressMuted: {
-    backgroundColor: "#f3ede1",
+    backgroundColor: colors.border,
   },
   progressInvested: {
-    backgroundColor: "#334155",
+    backgroundColor: colors.primaryDark,
   },
   savingsTrack: {
     height: 12,
@@ -1090,7 +1099,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   savingsFillPrimary: {
-    backgroundColor: "#20b2c5",
+    backgroundColor: colors.primary,
   },
   savingsSummaryRow: {
     flexDirection: "row",
@@ -1100,20 +1109,20 @@ const styles = StyleSheet.create({
   },
   cardDivider: {
     height: 1,
-    backgroundColor: "#ede7dc",
+    backgroundColor: colors.border,
     marginTop: 12,
   },
   tableHeader: {
     flexDirection: "row",
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: "#ede7dc",
+    borderBottomColor: colors.border,
   },
   tableRow: {
     flexDirection: "row",
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3ede1",
+    borderBottomColor: colors.borderLight,
   },
   tableRowPressable: {
     alignItems: "center",
@@ -1122,11 +1131,11 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   tableRowActive: {
-    backgroundColor: "#f6f3ed",
+    backgroundColor: colors.background,
   },
   tableCell: {
     fontSize: 13,
-    color: "#111827",
+    color: colors.text,
   },
   tableCategory: {
     flex: 1.6,
@@ -1142,15 +1151,15 @@ const styles = StyleSheet.create({
   },
   tableText: {
     fontSize: 13,
-    color: "#111827",
+    color: colors.text,
     fontWeight: "600",
   },
   subCategoryPanel: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     marginBottom: 12,
     marginTop: -2,
     gap: 12,
@@ -1158,7 +1167,7 @@ const styles = StyleSheet.create({
   subCategoryTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   subCategoryContent: {
     flexDirection: "row",
@@ -1180,21 +1189,21 @@ const styles = StyleSheet.create({
   },
   subCategoryCenter: {
     position: "absolute",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     gap: 2,
   },
   subCategoryValue: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   subCategoryLabel: {
     fontSize: 11,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   subCategoryLegend: {
     flex: 1,
@@ -1214,16 +1223,16 @@ const styles = StyleSheet.create({
   legendLabelSmall: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   legendPercentSmall: {
     fontSize: 12,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   weeklyTotalLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   weeklyChartBlock: {
     marginTop: 8,
@@ -1241,7 +1250,7 @@ const styles = StyleSheet.create({
   },
   weeklyAxisLabel: {
     fontSize: 12,
-    color: "#94a3b8",
+    color: colors.textTertiary,
     textAlign: "right",
   },
   weeklyPlotArea: {
@@ -1257,11 +1266,11 @@ const styles = StyleSheet.create({
   weeklyGridLine: {
     width: "100%",
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e2e8f0",
+    borderBottomColor: colors.borderLight,
   },
   weeklyGridLineZero: {
     borderBottomWidth: 1.5,
-    borderBottomColor: "#d0dae5",
+    borderBottomColor: colors.border,
   },
   weeklyBarsRow: {
     flex: 1,
@@ -1290,37 +1299,37 @@ const styles = StyleSheet.create({
   },
   weeklyBar: {
     width: "65%",
-    backgroundColor: "#9ec5ff",
+    backgroundColor: `${colors.primary}4D`,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
-    shadowColor: "#9ec5ff",
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.18,
     shadowRadius: 10,
     elevation: 4,
   },
   weeklyBarActive: {
-    backgroundColor: "#2563eb",
-    shadowColor: "#2563eb",
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
   },
   weeklyXAxisLabel: {
     fontSize: 12,
-    color: "#475569",
+    color: colors.textSecondary,
   },
   weeklyTooltip: {
     position: "absolute",
     bottom: -8,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: colors.borderLight,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0f172a",
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -1330,7 +1339,7 @@ const styles = StyleSheet.create({
   },
   weeklyTooltipValue: {
     fontSize: 15,
-    color: "#0f172a",
+    color: colors.text,
     fontWeight: "800",
   },
   weeklySkeletonRow: {
@@ -1343,7 +1352,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: "70%",
     borderRadius: 14,
-    backgroundColor: "#f3ede1",
+    backgroundColor: colors.borderLight,
   },
   weeklyEmptyState: {
     minHeight: 160,
@@ -1353,12 +1362,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderStyle: "dashed",
-    borderColor: "#e2e8f0",
-    backgroundColor: "#fbfbf7",
+    borderColor: colors.borderLight,
+    backgroundColor: colors.background,
   },
   weeklyEmptyText: {
     fontSize: 14,
-    color: "#6b7280",
+    color: colors.textSecondary,
     textAlign: "center",
   },
   transactions: {
@@ -1370,20 +1379,20 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3ede1",
+    borderBottomColor: colors.borderLight,
   },
   txAmount: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   txCategory: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   txDate: {
     fontSize: 13,
-    color: "#475569",
+    color: colors.textSecondary,
   },
   fabBackdrop: {
     position: "absolute",
@@ -1391,7 +1400,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(15,23,42,0.2)",
+    backgroundColor: `${colors.primary}33`,
   },
   fabStack: {
     position: "absolute",
@@ -1399,12 +1408,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   fab: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#0b1222",
-    shadowColor: "#0f172a",
+    borderColor: colors.primaryDark,
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -1418,26 +1427,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     borderWidth: 1,
-    borderColor: "#111827",
-    shadowColor: "#0f172a",
+    borderColor: colors.primaryDark,
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 10,
     elevation: 5,
   },
   fabActionSecondary: {
-    backgroundColor: "#f8fafc",
-    borderColor: "#e2e8f0",
+    backgroundColor: colors.surface,
+    borderColor: colors.borderLight,
   },
   fabActionLabel: {
-    color: "#f8fafc",
+    color: colors.textLight,
     fontSize: 14,
     fontWeight: "700",
   },
   fabActionLabelSecondary: {
-    color: "#0f172a",
+    color: colors.text,
   },
   fabActionPressed: {
     opacity: 0.85,
@@ -1446,7 +1455,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   fabIcon: {
-    color: "#f8fafc",
+    color: colors.textLight,
     fontSize: 26,
     fontWeight: "800",
     marginTop: -2,

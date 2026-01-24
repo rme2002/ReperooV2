@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors } from "@/constants/theme";
 
 type AuthScreenShellProps = {
   title: string;
@@ -64,7 +65,7 @@ export function AuthScreenShell({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f6f3ed",
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -75,15 +76,15 @@ const styles = StyleSheet.create({
   badge: {
     alignSelf: "flex-start",
     borderWidth: 1,
-    borderColor: "#0b1222",
-    backgroundColor: "#111827",
+    borderColor: colors.text,
+    backgroundColor: colors.text,
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 999,
     marginBottom: 24,
   },
   badgeText: {
-    color: "#f8fafc",
+    color: colors.textLight,
     fontSize: 14,
     fontWeight: "600",
     letterSpacing: 0.5,
@@ -91,11 +92,11 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   subheading: {
     fontSize: 15,
-    color: "#6b7280",
+    color: colors.textSecondary,
     marginTop: 8,
     maxWidth: 320,
   },
@@ -105,9 +106,9 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   highlightPill: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -115,17 +116,17 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   highlightText: {
-    color: "#4b5563",
+    color: colors.textSecondary,
     fontSize: 13,
     letterSpacing: 0.3,
   },
   formCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#ede7dc",
-    shadowColor: "#0f172a",
+    borderColor: colors.border,
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.08,
     shadowRadius: 18,

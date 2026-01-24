@@ -1,14 +1,16 @@
 import { View, StyleSheet } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
+import { colors, palette } from "@/constants/theme";
 
 type RainbowArcsProps = {
   size: number;
 };
 
+// Theme-aligned arc gradients
 const RAINBOW_GRADIENTS = [
-  { id: "arc1", colors: ["#81C784", "#66BB6A"] }, // Outer - soft green
-  { id: "arc2", colors: ["#FFD54F", "#FFCA28"] }, // Middle - golden yellow
-  { id: "arc3", colors: ["#FFB088", "#FF8A65"] }, // Inner - warm coral/orange
+  { id: "arc1", colors: [colors.primary, colors.primaryDark] }, // Outer - Pine greens
+  { id: "arc2", colors: [colors.gold, palette.goldMuted] }, // Middle - Gold tones
+  { id: "arc3", colors: [colors.peach, palette.peachMuted] }, // Inner - Peach tones
 ];
 
 export function RainbowArcs({ size }: RainbowArcsProps) {

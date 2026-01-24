@@ -9,6 +9,7 @@ import Animated, {
 import type { StreakMilestone } from "@/lib/gen/model";
 import { GlassCard } from "@/components/shared/GlassCard";
 import { getBadgeName } from "./AchievementBadge";
+import { colors } from "@/constants/theme";
 
 type MilestoneProgressCardProps = {
   currentStreak: number;
@@ -101,27 +102,27 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#9ca3af",
+    color: colors.textTertiary,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   milestoneName: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   xpReward: {
-    backgroundColor: "rgba(255, 215, 0, 0.15)",
+    backgroundColor: `${colors.gold}26`,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(218, 165, 32, 0.3)",
+    borderColor: `${colors.gold}4D`,
   },
   xpText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#B8860B",
+    color: colors.gold,
   },
   progressContainer: {
     gap: 8,
@@ -129,12 +130,12 @@ const styles = StyleSheet.create({
   progressTrack: {
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#ede7dc",
+    backgroundColor: colors.border,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#22A45D",
+    backgroundColor: colors.primary,
     borderRadius: 5,
   },
   progressLabels: {
@@ -145,12 +146,12 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   daysRemaining: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   completedContainer: {
     flexDirection: "row",
@@ -167,11 +168,11 @@ const styles = StyleSheet.create({
   completedTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   completedSubtitle: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
 });

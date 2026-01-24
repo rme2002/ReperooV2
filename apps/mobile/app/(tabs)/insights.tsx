@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Circle, Svg } from "react-native-svg";
+import { alpha, colors, palette } from "@/constants/theme";
 
 import spendingCategories from "../../../../shared/config/spending-categories.json";
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
@@ -44,7 +45,15 @@ const getSubcategoryLabel = (categoryId: string, subcategoryId: string) =>
     .get(categoryId)
     ?.subcategories?.find((sub) => sub.id === subcategoryId)?.label ?? subcategoryId;
 
-const fallbackSubcategoryColors = ["#dbeafe", "#e0e7ff", "#ede9fe", "#fce7f3", "#fef3c7", "#dcfce7", "#ccfbf1"];
+const fallbackSubcategoryColors = [
+  palette.blue200,
+  palette.blue180,
+  palette.purple100,
+  palette.pink200,
+  palette.amber200,
+  palette.green300,
+  palette.green210,
+];
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const SLIDER_MAX = 10000;
 const SLIDER_STEP = 10;
@@ -224,7 +233,7 @@ export default function InsightsScreen() {
     }
   }, [budgetPlan]);
   const { width } = useWindowDimensions();
-  const fabSize = Math.max(52, Math.min(64, width * 0.16));
+  const fabSize = 56;
   const scale = Math.min(Math.max(width / 375, 0.85), 1.25);
   const cardPadding = 16 * scale;
   const cardGap = 12 * scale;
@@ -981,7 +990,7 @@ export default function InsightsScreen() {
                   cx={chartSize / 2}
                   cy={chartSize / 2}
                   r={pieRadius}
-                  stroke="#f3ede1"
+                  stroke={colors.borderLight}
                   strokeWidth={pieStroke}
                   fill="none"
                 />
@@ -1273,7 +1282,7 @@ export default function InsightsScreen() {
                               cx={subChartSize / 2}
                               cy={subChartSize / 2}
                               r={subPieRadius}
-                              stroke="#f3ede1"
+                              stroke={colors.borderLight}
                               strokeWidth={subPieStroke}
                               fill="none"
                             />
@@ -1567,7 +1576,7 @@ function GoalSlider({ label, value, max, onChange, currencySymbol, formatValue }
           keyboardType="number-pad"
           style={styles.goalSliderInput}
           placeholder="0"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={colors.textTertiary}
         />
       </View>
       <View
@@ -1639,7 +1648,7 @@ function GoalDisplayBar({ label, value, max, formatValue, actual, showProgress }
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f6f3ed",
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -1660,38 +1669,38 @@ const styles = StyleSheet.create({
   monthLabel: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   subText: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   navButton: {
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
   },
   navIcon: {
     fontSize: 18,
-    color: "#111827",
+    color: colors.text,
   },
   navIconDisabled: {
-    color: "#cbd5e1",
+    color: colors.textTertiary,
   },
   surface: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     gap: 12,
     marginBottom: 6,
-    shadowColor: "rgba(15,23,42,0.08)",
+    shadowColor: alpha.ink08,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 1,
     shadowRadius: 24,
@@ -1703,8 +1712,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   summaryCard: {
-    backgroundColor: "#ffffff",
-    borderColor: "#ede7dc",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     paddingVertical: 22,
     paddingHorizontal: 24,
     gap: 18,
@@ -1719,24 +1728,24 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   metricLabel: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   remainingValue: {
     fontSize: 34,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   metricHelper: {
     fontSize: 14,
-    color: "#4b5563",
+    color: colors.textSecondary,
   },
   metricHelperBold: {
     fontSize: 15,
-    color: "#1f2937",
+    color: colors.text,
     fontWeight: "600",
   },
   insightWidget: {
@@ -1744,7 +1753,7 @@ const styles = StyleSheet.create({
   },
   planHelper: {
     fontSize: 12,
-    color: "#64748b",
+    color: colors.textSecondary,
     fontWeight: "600",
     textTransform: "capitalize",
   },
@@ -1762,13 +1771,13 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#1f2937",
+    color: colors.textSecondary,
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   headlineSubtitle: {
     fontWeight: "700",
-    color: "#1f2937",
+    color: colors.text,
     textTransform: "capitalize",
     marginTop: 2,
   },
@@ -1782,21 +1791,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
-    backgroundColor: "#ffffff",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   summaryChipText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
   },
   summaryChipGhost: {
-    borderColor: "#c7dbff",
-    backgroundColor: "#edf4ff",
+    borderColor: colors.primary,
+    backgroundColor: "rgba(31, 138, 91, 0.12)",
     alignSelf: "flex-start",
   },
   summaryChipGhostText: {
-    color: "#0f3c91",
+    color: colors.primaryDark,
   },
   summaryRow: {
     flexDirection: "row",
@@ -1810,23 +1819,23 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   summaryMeta: {
     fontSize: 12,
-    color: "#9ca3af",
+    color: colors.textTertiary,
   },
   summaryMetaLabel: {
     fontWeight: "600",
-    color: "#9ca3af",
+    color: colors.textTertiary,
   },
   summaryHint: {
     fontSize: 12,
-    color: "#4b5563",
+    color: colors.textSecondary,
   },
   summaryDivider: {
     height: 1,
-    backgroundColor: "#efe6d7",
+    backgroundColor: colors.borderLight,
     marginTop: 14,
     marginBottom: 4,
   },
@@ -1837,8 +1846,8 @@ const styles = StyleSheet.create({
   },
   summaryEmpty: {
     borderWidth: 1,
-    borderColor: "#fef3c7",
-    backgroundColor: "#fffbeb",
+    borderColor: colors.warning,
+    backgroundColor: "rgba(245, 158, 11, 0.12)",
     borderRadius: 16,
     padding: 16,
     gap: 8,
@@ -1847,11 +1856,11 @@ const styles = StyleSheet.create({
   summaryEmptyTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#854d0e",
+    color: colors.warning,
   },
   summaryEmptyCopy: {
     fontSize: 13,
-    color: "#854d0e",
+    color: colors.warning,
   },
   summaryEmptyActions: {
     flexDirection: "row",
@@ -1863,26 +1872,26 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 140,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 10,
     alignItems: "center",
   },
   summarySecondaryText: {
     fontWeight: "600",
-    color: "#374151",
+    color: colors.textSecondary,
   },
   summaryPrimaryButton: {
     flex: 1,
     minWidth: 140,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 10,
     alignItems: "center",
   },
   summaryPrimaryText: {
     fontWeight: "600",
-    color: "#fff",
+    color: colors.textLight,
   },
   badge: {
     borderRadius: 999,
@@ -1897,7 +1906,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   planCard: {
     paddingHorizontal: 22,
@@ -1913,15 +1922,15 @@ const styles = StyleSheet.create({
   planFormTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   planFormSubtitle: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   planFieldLabel: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.textSecondary,
     fontWeight: "600",
   },
   planSummaryMetric: {
@@ -1931,37 +1940,37 @@ const styles = StyleSheet.create({
   },
   planMetricLabel: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
     fontWeight: "600",
   },
   planMetricValue: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   planSummaryInput: {
     borderWidth: 1,
-    borderColor: "#d6d3ce",
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 20,
     fontWeight: "700",
-    color: "#111827",
-    backgroundColor: "#fff",
+    color: colors.text,
+    backgroundColor: colors.surface,
   },
   planInput: {
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
-    color: "#111827",
+    color: colors.text,
   },
   planInputDisabled: {
-    backgroundColor: "#f9fafb",
-    color: "#9ca3af",
+    backgroundColor: colors.borderLight,
+    color: colors.textTertiary,
   },
   planFieldRow: {
     flexDirection: "row",
@@ -1974,23 +1983,23 @@ const styles = StyleSheet.create({
   },
   planToggle: {
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "center",
   },
   planToggleActive: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   planToggleLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.textSecondary,
   },
   planToggleLabelActive: {
-    color: "#fff",
+    color: colors.textLight,
   },
   planSection: {
     gap: 12,
@@ -2003,20 +2012,20 @@ const styles = StyleSheet.create({
   planSectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   planAddButton: {
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
   },
   planAddButtonText: {
-    color: "#fff",
+    color: colors.textLight,
     fontWeight: "700",
   },
   planSaveButton: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
@@ -2025,18 +2034,18 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   planSaveButtonText: {
-    color: "#fff",
+    color: colors.textLight,
     fontWeight: "700",
     fontSize: 15,
   },
   planEditButton: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
   },
   planEditButtonText: {
-    color: "#fff",
+    color: colors.textLight,
     fontWeight: "700",
     fontSize: 15,
   },
@@ -2050,13 +2059,13 @@ const styles = StyleSheet.create({
   },
   planSummaryCard: {
     borderWidth: 1,
-    borderColor: "#f2e8da",
+    borderColor: colors.border,
     borderRadius: 22,
-    backgroundColor: "#fffdfa",
+    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 14,
     gap: 10,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOpacity: 0.03,
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 20,
@@ -2073,17 +2082,17 @@ const styles = StyleSheet.create({
   },
   planSummaryDivider: {
     height: 1,
-    backgroundColor: "#f2e4d1",
+    backgroundColor: colors.borderLight,
   },
   planSummaryLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#1f2933",
+    color: colors.textSecondary,
   },
   planSummaryValue: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0b1525",
+    color: colors.text,
     textAlign: "right",
     lineHeight: 24,
   },
@@ -2092,12 +2101,12 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   planSummaryValueAccent: {
-    color: "#111b2f",
+    color: colors.text,
   },
   planSummaryMeta: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#6b7280",
+    color: colors.textSecondary,
     marginTop: 2,
     textAlign: "left",
   },
@@ -2112,8 +2121,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#fff",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   planIncomeLeft: {
     flexDirection: "row",
@@ -2124,25 +2133,25 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 999,
-    backgroundColor: "#d1d5db",
+    backgroundColor: colors.border,
   },
   planIncomeLabel: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   planIncomeMeta: {
     fontSize: 12,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   planIncomeAmount: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   planEmptyIncome: {
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     borderStyle: "dashed",
     borderRadius: 18,
     padding: 16,
@@ -2152,11 +2161,11 @@ const styles = StyleSheet.create({
   planEmptyTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   planEmptyCopy: {
     fontSize: 12,
-    color: "#6b7280",
+    color: colors.textSecondary,
     textAlign: "center",
   },
   planAddButtonGhost: {
@@ -2165,11 +2174,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
   },
   planAddButtonGhostText: {
     fontWeight: "600",
-    color: "#111827",
+    color: colors.text,
   },
   goalSlider: {
     gap: 8,
@@ -2182,12 +2191,12 @@ const styles = StyleSheet.create({
   goalSliderLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.text,
   },
   goalSliderValue: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   goalSliderInputRow: {
     flexDirection: "row",
@@ -2197,29 +2206,29 @@ const styles = StyleSheet.create({
   goalSliderInputPrefix: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: colors.text,
   },
   goalSliderInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 16,
-    color: "#111827",
-    backgroundColor: "#fff",
+    color: colors.text,
+    backgroundColor: colors.surface,
   },
   goalSliderTrack: {
     height: 12,
     borderRadius: 999,
-    backgroundColor: "#ede7dc",
+    backgroundColor: colors.borderLight,
     position: "relative",
     overflow: "hidden",
   },
   goalSliderFill: {
     height: "100%",
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
   },
   goalSliderFillReadonly: {
     opacity: 0.6,
@@ -2232,14 +2241,14 @@ const styles = StyleSheet.create({
   goalProgressPercent: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#20b2c5",
+    color: colors.primary,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    backgroundColor: "rgba(32, 178, 197, 0.1)",
+    backgroundColor: "rgba(31, 138, 91, 0.12)",
     borderRadius: 6,
   },
   goalSliderFillProgress: {
-    backgroundColor: "#20b2c5",
+    backgroundColor: colors.primary,
     opacity: 1,
   },
   goalSliderThumb: {
@@ -2248,27 +2257,27 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 999,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: "#111827",
+    borderColor: colors.primaryDark,
     transform: [{ translateX: -11 }, { translateY: -11 }],
   },
   planWarning: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#fcd34d",
-    backgroundColor: "#fef9c3",
+    borderColor: colors.warning,
+    backgroundColor: "rgba(245, 158, 11, 0.12)",
     padding: 12,
   },
   planWarningTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#92400e",
+    color: colors.warning,
     marginBottom: 4,
   },
   planWarningCopy: {
     fontSize: 12,
-    color: "#92400e",
+    color: colors.warning,
     lineHeight: 16,
   },
   // Empty state styles
@@ -2279,18 +2288,18 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 14,
-    color: "#666",
+    color: colors.textSecondary,
     textAlign: "center",
     marginBottom: 20,
   },
   createPlanButton: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 12,
   },
   createPlanButtonText: {
-    color: "#FFF",
+    color: colors.textLight,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -2307,40 +2316,40 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   planCancelButton: {
-    backgroundColor: "#F2F2F7",
+    backgroundColor: colors.borderLight,
   },
   planCancelButtonText: {
-    color: "#000",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
   badgePositive: {
-    backgroundColor: "#e6f4ea",
-    borderColor: "#bbf7d0",
+    backgroundColor: "rgba(31, 138, 91, 0.12)",
+    borderColor: colors.success,
   },
   badgeWarn: {
-    backgroundColor: "#fef7cd",
-    borderColor: "#fde68a",
+    backgroundColor: "rgba(245, 158, 11, 0.12)",
+    borderColor: colors.warning,
   },
   badgeDanger: {
-    backgroundColor: "#fee2e2",
-    borderColor: "#fecaca",
+    backgroundColor: "rgba(239, 68, 68, 0.12)",
+    borderColor: colors.error,
   },
   badgeNeutral: {
-    backgroundColor: "#f1f5f9",
-    borderColor: "#e2e8f0",
+    backgroundColor: colors.borderLight,
+    borderColor: colors.border,
   },
   badgeTextPositive: {
-    color: "#166534",
+    color: colors.success,
   },
   badgeTextWarn: {
-    color: "#92400e",
+    color: colors.warning,
   },
   badgeTextDanger: {
-    color: "#b91c1c",
+    color: colors.error,
   },
   badgeTextNeutral: {
-    color: "#475569",
+    color: colors.textSecondary,
   },
   progressStack: {
     gap: 8,
@@ -2349,12 +2358,12 @@ const styles = StyleSheet.create({
   progressTrack: {
     height: 10,
     borderRadius: 999,
-    backgroundColor: "#ede5d8",
+    backgroundColor: colors.borderLight,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#0f172a",
+    backgroundColor: colors.primary,
   },
   donutRow: {
     flexDirection: "column",
@@ -2369,21 +2378,21 @@ const styles = StyleSheet.create({
     overflow: "visible",
   },
   donutCenter: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     gap: 4,
   },
   donutValue: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   donutLabel: {
     fontSize: 12,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   legendColumns: {
     flexDirection: "row",
@@ -2416,12 +2425,12 @@ const styles = StyleSheet.create({
   legendLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   legendPercent: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   svg: {
     position: "absolute",
@@ -2455,35 +2464,35 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   savingsLegendSaved: {
-    backgroundColor: "#20b2c5",
+    backgroundColor: colors.primary,
   },
   savingsLegendInvested: {
-    backgroundColor: "#334155",
+    backgroundColor: colors.primaryDark,
   },
   progressLabel: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   progressSub: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   progressValue: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   savingsAmount: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   progressMuted: {
-    backgroundColor: "#f3ede1",
+    backgroundColor: colors.borderLight,
   },
   progressInvested: {
-    backgroundColor: "#334155",
+    backgroundColor: colors.primaryDark,
   },
   savingsTrack: {
     height: 12,
@@ -2494,7 +2503,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   savingsFillPrimary: {
-    backgroundColor: "#20b2c5",
+    backgroundColor: colors.primary,
   },
   savingsSummaryRow: {
     flexDirection: "row",
@@ -2509,41 +2518,41 @@ const styles = StyleSheet.create({
   savingsEmptyTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   savingsEmptyCopy: {
     fontSize: 14,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   savingsCtaButton: {
     marginTop: 4,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 999,
     alignSelf: "flex-start",
   },
   savingsCtaButtonText: {
-    color: "#ffffff",
+    color: colors.textLight,
     fontWeight: "700",
     fontSize: 14,
   },
   cardDivider: {
     height: 1,
-    backgroundColor: "#ede7dc",
+    backgroundColor: colors.border,
     marginTop: 12,
   },
   tableHeader: {
     flexDirection: "row",
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: "#ede7dc",
+    borderBottomColor: colors.border,
   },
   tableRow: {
     flexDirection: "row",
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3ede1",
+    borderBottomColor: colors.borderLight,
   },
   tableRowPressable: {
     alignItems: "center",
@@ -2552,11 +2561,11 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   tableRowActive: {
-    backgroundColor: "#f6f3ed",
+    backgroundColor: colors.borderLight,
   },
   tableCell: {
     fontSize: 13,
-    color: "#111827",
+    color: colors.text,
   },
   tableCategory: {
     flex: 1.6,
@@ -2572,15 +2581,15 @@ const styles = StyleSheet.create({
   },
   tableText: {
     fontSize: 13,
-    color: "#111827",
+    color: colors.text,
     fontWeight: "600",
   },
   subCategoryPanel: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     marginBottom: 12,
     marginTop: -2,
     gap: 12,
@@ -2588,7 +2597,7 @@ const styles = StyleSheet.create({
   subCategoryTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   subCategoryContent: {
     flexDirection: "row",
@@ -2610,21 +2619,21 @@ const styles = StyleSheet.create({
   },
   subCategoryCenter: {
     position: "absolute",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#ede7dc",
+    borderColor: colors.border,
     gap: 2,
   },
   subCategoryValue: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   subCategoryLabel: {
     fontSize: 11,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   subCategoryLegend: {
     flex: 1,
@@ -2644,16 +2653,16 @@ const styles = StyleSheet.create({
   legendLabelSmall: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   legendPercentSmall: {
     fontSize: 12,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   weeklyTotalLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   weeklyChartBlock: {
     marginTop: 8,
@@ -2671,7 +2680,7 @@ const styles = StyleSheet.create({
   },
   weeklyAxisLabel: {
     fontSize: 12,
-    color: "#94a3b8",
+    color: colors.textSecondary,
     textAlign: "right",
   },
   weeklyPlotArea: {
@@ -2687,11 +2696,11 @@ const styles = StyleSheet.create({
   weeklyGridLine: {
     width: "100%",
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e2e8f0",
+    borderBottomColor: colors.border,
   },
   weeklyGridLineZero: {
     borderBottomWidth: 1.5,
-    borderBottomColor: "#d0dae5",
+    borderBottomColor: colors.border,
   },
   weeklyBarsRow: {
     flex: 1,
@@ -2720,37 +2729,37 @@ const styles = StyleSheet.create({
   },
   weeklyBar: {
     width: "65%",
-    backgroundColor: "#9ec5ff",
+    backgroundColor: colors.primary,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
-    shadowColor: "#9ec5ff",
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.18,
     shadowRadius: 10,
     elevation: 4,
   },
   weeklyBarActive: {
-    backgroundColor: "#2563eb",
-    shadowColor: "#2563eb",
+    backgroundColor: colors.primaryDark,
+    shadowColor: colors.primaryDark,
   },
   weeklyXAxisLabel: {
     fontSize: 12,
-    color: "#475569",
+    color: colors.textSecondary,
   },
   weeklyTooltip: {
     position: "absolute",
     bottom: -8,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0f172a",
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -2760,7 +2769,7 @@ const styles = StyleSheet.create({
   },
   weeklyTooltipValue: {
     fontSize: 15,
-    color: "#0f172a",
+    color: colors.text,
     fontWeight: "800",
   },
   weeklySkeletonRow: {
@@ -2773,7 +2782,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: "70%",
     borderRadius: 14,
-    backgroundColor: "#f3ede1",
+    backgroundColor: colors.borderLight,
   },
   weeklyEmptyState: {
     minHeight: 160,
@@ -2783,12 +2792,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderStyle: "dashed",
-    borderColor: "#e2e8f0",
-    backgroundColor: "#fbfbf7",
+    borderColor: colors.border,
+    backgroundColor: colors.borderLight,
   },
   weeklyEmptyText: {
     fontSize: 14,
-    color: "#6b7280",
+    color: colors.textSecondary,
     textAlign: "center",
   },
   transactions: {
@@ -2800,20 +2809,20 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3ede1",
+    borderBottomColor: colors.borderLight,
   },
   txAmount: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   txCategory: {
     fontSize: 13,
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   txDate: {
     fontSize: 13,
-    color: "#475569",
+    color: colors.textSecondary,
   },
   fabBackdrop: {
     position: "absolute",
@@ -2821,7 +2830,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(15,23,42,0.2)",
+    backgroundColor: alpha.ink20,
   },
   fabStack: {
     position: "absolute",
@@ -2829,12 +2838,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   fab: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#0b1222",
-    shadowColor: "#0f172a",
+    borderColor: colors.primaryDark,
+    shadowColor: colors.primaryDark,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -2848,26 +2857,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     borderWidth: 1,
-    borderColor: "#111827",
-    shadowColor: "#0f172a",
+    borderColor: colors.primaryDark,
+    shadowColor: colors.primaryDark,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 10,
     elevation: 5,
   },
   fabActionSecondary: {
-    backgroundColor: "#f8fafc",
-    borderColor: "#e2e8f0",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   fabActionLabel: {
-    color: "#f8fafc",
+    color: colors.textLight,
     fontSize: 14,
     fontWeight: "700",
   },
   fabActionLabelSecondary: {
-    color: "#0f172a",
+    color: colors.text,
   },
   fabActionPressed: {
     opacity: 0.85,
@@ -2876,13 +2885,13 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   fabIcon: {
-    color: "#f8fafc",
+    color: colors.textLight,
     fontSize: 26,
     fontWeight: "800",
     marginTop: -2,
   },
   errorText: {
-    color: "#dc2626",
+    color: colors.error,
     fontSize: 13,
     marginTop: 8,
     textAlign: "center",
@@ -2896,25 +2905,25 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
     marginBottom: 8,
     textAlign: "center",
   },
   emptyCopy: {
     fontSize: 15,
-    color: "#6b7280",
+    color: colors.textSecondary,
     textAlign: "center",
     marginBottom: 24,
     lineHeight: 22,
   },
   primaryButton: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 12,
   },
   primaryButtonText: {
-    color: "#ffffff",
+    color: colors.textLight,
     fontSize: 16,
     fontWeight: "600",
   },

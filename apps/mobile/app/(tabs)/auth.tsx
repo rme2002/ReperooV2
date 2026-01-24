@@ -11,6 +11,7 @@ import {
 } from "react-native";
 
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
+import { colors } from "@/constants/theme";
 import { signUpByEmailAndPassword } from "@/lib/gen/authentication/authentication";
 import { supabase } from "@/lib/supabase";
 
@@ -151,7 +152,7 @@ export default function AuthTabScreen() {
               autoCapitalize="none"
               keyboardType="email-address"
               placeholder="you@example.com"
-              placeholderTextColor="rgba(255,255,255,0.5)"
+              placeholderTextColor={colors.textTertiary}
               style={styles.input}
             />
           </View>
@@ -163,7 +164,7 @@ export default function AuthTabScreen() {
               onChangeText={setLoginPassword}
               secureTextEntry
               placeholder="••••••••"
-              placeholderTextColor="rgba(255,255,255,0.5)"
+              placeholderTextColor={colors.textTertiary}
               style={styles.input}
             />
           </View>
@@ -192,7 +193,7 @@ export default function AuthTabScreen() {
               autoCapitalize="none"
               keyboardType="email-address"
               placeholder="you@example.com"
-              placeholderTextColor="rgba(255,255,255,0.5)"
+              placeholderTextColor={colors.textTertiary}
               style={styles.input}
             />
           </View>
@@ -204,7 +205,7 @@ export default function AuthTabScreen() {
               onChangeText={setSignupPassword}
               secureTextEntry
               placeholder="••••••••"
-              placeholderTextColor="rgba(255,255,255,0.5)"
+              placeholderTextColor={colors.textTertiary}
               style={styles.input}
             />
           </View>
@@ -216,7 +217,7 @@ export default function AuthTabScreen() {
               onChangeText={setSignupConfirm}
               secureTextEntry
               placeholder="••••••••"
-              placeholderTextColor="rgba(255,255,255,0.5)"
+              placeholderTextColor={colors.textTertiary}
               style={styles.input}
             />
           </View>
@@ -252,7 +253,7 @@ export default function AuthTabScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#030712",
+    backgroundColor: colors.background,
   },
   content: {
     paddingHorizontal: 24,
@@ -265,29 +266,29 @@ const styles = StyleSheet.create({
   badge: {
     alignSelf: "flex-start",
     borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.35)",
+    borderColor: colors.border,
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 999,
-    color: "#e2e8f0",
+    color: colors.textSecondary,
     fontWeight: "700",
     letterSpacing: 0.5,
   },
   heading: {
     fontSize: 26,
     fontWeight: "800",
-    color: "#f8fafc",
+    color: colors.text,
     lineHeight: 32,
   },
   subtitle: {
     fontSize: 14,
-    color: "rgba(248,250,252,0.75)",
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   segmented: {
     flexDirection: "row",
     borderRadius: 14,
-    backgroundColor: "rgba(148,163,184,0.16)",
+    backgroundColor: colors.borderLight,
     padding: 4,
     gap: 4,
   },
@@ -298,26 +299,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   segmentButtonActive: {
-    backgroundColor: "rgba(59,130,246,0.2)",
+    backgroundColor: "rgba(31, 138, 91, 0.12)",
   },
   segmentText: {
-    color: "#94a3b8",
+    color: colors.textTertiary,
     fontSize: 14,
     fontWeight: "700",
   },
   segmentTextActive: {
-    color: "#f8fafc",
+    color: colors.text,
   },
   card: {
-    backgroundColor: "rgba(15,23,42,0.9)",
+    backgroundColor: colors.surface,
     borderRadius: 22,
     padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.3)",
+    borderColor: colors.border,
     gap: 16,
   },
   cardTitle: {
-    color: "#f8fafc",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "700",
   },
@@ -325,7 +326,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    color: "rgba(248,250,252,0.8)",
+    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.3,
@@ -334,15 +335,15 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 14,
     paddingHorizontal: 16,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    color: "#ffffff",
+    borderColor: colors.border,
+    color: colors.text,
     fontSize: 16,
   },
   primaryButton: {
     marginTop: 8,
-    backgroundColor: "#2563eb",
+    backgroundColor: colors.primary,
     borderRadius: 16,
     height: 54,
     alignItems: "center",
@@ -352,13 +353,13 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   primaryButtonText: {
-    color: "#ffffff",
+    color: colors.textLight,
     fontSize: 16,
     fontWeight: "700",
   },
   secondaryButton: {
     marginTop: 8,
-    backgroundColor: "#22c55e",
+    backgroundColor: colors.primaryDark,
     borderRadius: 16,
     height: 54,
     alignItems: "center",
@@ -368,7 +369,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   secondaryButtonText: {
-    color: "#04160c",
+    color: colors.textLight,
     fontSize: 16,
     fontWeight: "700",
   },
@@ -377,17 +378,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: "rgba(34,197,94,0.35)",
-    backgroundColor: "rgba(34,197,94,0.1)",
+    borderColor: colors.success,
+    backgroundColor: "rgba(31, 138, 91, 0.12)",
     gap: 6,
   },
   sessionTitle: {
-    color: "#bbf7d0",
+    color: colors.success,
     fontSize: 14,
     fontWeight: "700",
   },
   sessionDescription: {
-    color: "#bbf7d0",
+    color: colors.success,
     fontSize: 13,
     lineHeight: 18,
   },

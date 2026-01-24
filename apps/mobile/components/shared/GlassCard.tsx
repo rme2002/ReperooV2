@@ -5,6 +5,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { alpha, colors } from "@/constants/theme";
 
 type GlassCardProps = {
   children: ReactNode;
@@ -59,12 +60,12 @@ export function GlassCard({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "rgba(255, 255, 255, 0.85)",
+    backgroundColor: alpha.offWhite85,
     borderRadius: 24,
     padding: 18,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.7)",
-    shadowColor: "#0f172a",
+    borderColor: colors.borderLight,
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 16,

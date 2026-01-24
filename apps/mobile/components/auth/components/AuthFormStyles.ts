@@ -1,11 +1,12 @@
 import { StyleSheet } from "react-native";
+import { alpha, colors, palette } from "@/constants/theme";
 
 export const authFormStyles = StyleSheet.create({
   form: {
     gap: 14,
   },
   label: {
-    color: "#0f172a",
+    color: palette.slate900,
     fontSize: 12,
     fontWeight: "500",
     letterSpacing: 0.2,
@@ -18,18 +19,18 @@ export const authFormStyles = StyleSheet.create({
     height: 48,
     borderRadius: 12,
     paddingHorizontal: 14,
-    backgroundColor: "#ffffff",
+    backgroundColor: palette.white,
     borderWidth: 1,
-    borderColor: "rgba(15,23,42,0.08)",
-    color: "#0f172a",
+    borderColor: alpha.ink08,
+    color: palette.slate900,
     fontSize: 15,
   },
   inputError: {
-    borderColor: "rgba(248,113,113,0.9)",
+    borderColor: alpha.red90,
   },
   primaryButton: {
     marginTop: 6,
-    backgroundColor: "#0f172a",
+    backgroundColor: colors.primary,
     borderRadius: 12,
     height: 48,
     alignItems: "center",
@@ -39,7 +40,7 @@ export const authFormStyles = StyleSheet.create({
     opacity: 0.9,
   },
   primaryButtonText: {
-    color: "#ffffff",
+    color: colors.textLight,
     fontSize: 14,
     fontWeight: "600",
   },

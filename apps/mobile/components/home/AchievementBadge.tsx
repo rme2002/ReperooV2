@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import Svg, { Path, Circle, Defs, LinearGradient, Stop } from "react-native-svg";
+import { alpha, colors, palette } from "@/constants/theme";
 
 type BadgeTier = "bronze" | "silver" | "gold" | "platinum" | "diamond";
 
@@ -22,11 +23,31 @@ type AchievementBadgeProps = {
 
 // Badge tier colors
 const TIER_COLORS: Record<BadgeTier, { primary: string; secondary: string; glow: string }> = {
-  bronze: { primary: "#CD7F32", secondary: "#A0522D", glow: "rgba(205, 127, 50, 0.3)" },
-  silver: { primary: "#C0C0C0", secondary: "#808080", glow: "rgba(192, 192, 192, 0.3)" },
-  gold: { primary: "#FFD700", secondary: "#DAA520", glow: "rgba(255, 215, 0, 0.4)" },
-  platinum: { primary: "#E5E4E2", secondary: "#A8A8A8", glow: "rgba(229, 228, 226, 0.4)" },
-  diamond: { primary: "#B9F2FF", secondary: "#00CED1", glow: "rgba(185, 242, 255, 0.5)" },
+  bronze: {
+    primary: palette.metalBronze,
+    secondary: palette.metalBronzeDark,
+    glow: alpha.bronze30,
+  },
+  silver: {
+    primary: palette.metalSilver,
+    secondary: palette.metalSilverDark,
+    glow: alpha.silver30,
+  },
+  gold: {
+    primary: palette.metalGold,
+    secondary: palette.metalGoldDark,
+    glow: alpha.gold40,
+  },
+  platinum: {
+    primary: palette.metalPlatinum,
+    secondary: palette.metalPlatinumDark,
+    glow: alpha.platinum40,
+  },
+  diamond: {
+    primary: palette.metalDiamond,
+    secondary: palette.cyan500,
+    glow: alpha.diamond50,
+  },
 };
 
 // Get badge tier based on days
@@ -64,15 +85,21 @@ function BadgeShield({
   size?: number;
 }) {
   const colors = TIER_COLORS[tier];
-  const fillColor = achieved ? colors.primary : "#9ca3af";
-  const strokeColor = achieved ? colors.secondary : "#6b7280";
+  const fillColor = achieved ? colors.primary : palette.gray400;
+  const strokeColor = achieved ? colors.secondary : palette.gray500;
 
   return (
     <Svg width={size} height={size} viewBox="0 0 64 64">
       <Defs>
         <LinearGradient id={`grad-${tier}`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <Stop offset="0%" stopColor={achieved ? colors.primary : "#d1d5db"} />
-          <Stop offset="100%" stopColor={achieved ? colors.secondary : "#9ca3af"} />
+          <Stop
+            offset="0%"
+            stopColor={achieved ? colors.primary : palette.slate260}
+          />
+          <Stop
+            offset="100%"
+            stopColor={achieved ? colors.secondary : palette.gray400}
+          />
         </LinearGradient>
       </Defs>
 
@@ -87,21 +114,21 @@ function BadgeShield({
       {/* Star in center */}
       <Path
         d="M32 18 L34.5 26 L43 26 L36.5 31 L39 39 L32 34 L25 39 L27.5 31 L21 26 L29.5 26 Z"
-        fill={achieved ? "#FFFFFF" : "#e5e7eb"}
+        fill={achieved ? palette.white : palette.slate220}
         opacity={achieved ? 1 : 0.5}
       />
 
       {/* Lock overlay for locked badges */}
       {!achieved && (
         <>
-          <Circle cx="32" cy="44" r="8" fill="#6b7280" />
+          <Circle cx="32" cy="44" r="8" fill={palette.gray500} />
           <Path
             d="M28 44 L28 40 C28 38 30 36 32 36 C34 36 36 38 36 40 L36 44"
-            stroke="#9ca3af"
+            stroke={palette.gray400}
             strokeWidth="2"
             fill="none"
           />
-          <Circle cx="32" cy="45" r="2" fill="#9ca3af" />
+          <Circle cx="32" cy="45" r="2" fill={palette.gray400} />
         </>
       )}
     </Svg>
@@ -198,10 +225,10 @@ const styles = StyleSheet.create({
     width: 100,
     alignItems: "center",
     padding: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    backgroundColor: `${colors.surface}CC`,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.6)",
+    borderColor: colors.borderLight,
     gap: 8,
     position: "relative",
     overflow: "hidden",
@@ -211,10 +238,10 @@ const styles = StyleSheet.create({
     height: 80,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    backgroundColor: `${colors.surface}CC`,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.6)",
+    borderColor: colors.borderLight,
     gap: 4,
     position: "relative",
     overflow: "hidden",
@@ -237,38 +264,38 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
     textAlign: "center",
   },
   days: {
     fontSize: 10,
     fontWeight: "500",
-    color: "#6b7280",
+    color: colors.textSecondary,
   },
   compactDays: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
   },
   xpBadge: {
-    backgroundColor: "rgba(34, 164, 93, 0.15)",
+    backgroundColor: `${colors.gold}26`,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
     marginTop: 2,
   },
   xpBadgeLocked: {
-    backgroundColor: "rgba(156, 163, 175, 0.15)",
+    backgroundColor: `${colors.textTertiary}26`,
   },
   xpText: {
     fontSize: 9,
     fontWeight: "700",
-    color: "#22A45D",
+    color: colors.gold,
   },
   xpTextLocked: {
-    color: "#9ca3af",
+    color: colors.textTertiary,
   },
   lockedText: {
-    color: "#9ca3af",
+    color: colors.textTertiary,
   },
 });

@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { alpha, colors, palette } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import { signUpByEmailAndPassword } from "@/lib/gen/authentication/authentication";
 
@@ -188,7 +189,7 @@ function LoginPanel({ onSubmitSuccess }: LoginPanelProps) {
         keyboardType="email-address"
         autoCapitalize="none"
         placeholder="you@domain.com"
-        placeholderTextColor="rgba(255,255,255,0.5)"
+        placeholderTextColor={alpha.offWhite50}
         style={styles.input}
       />
 
@@ -199,7 +200,7 @@ function LoginPanel({ onSubmitSuccess }: LoginPanelProps) {
           onChangeText={setPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="rgba(255,255,255,0.5)"
+          placeholderTextColor={alpha.offWhite50}
           style={styles.input}
         />
       </View>
@@ -289,7 +290,7 @@ function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
         keyboardType="email-address"
         autoCapitalize="none"
         placeholder="you@domain.com"
-        placeholderTextColor="rgba(255,255,255,0.5)"
+        placeholderTextColor={alpha.offWhite50}
         style={styles.input}
       />
 
@@ -300,7 +301,7 @@ function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
           onChangeText={setPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="rgba(255,255,255,0.5)"
+          placeholderTextColor={alpha.offWhite50}
           style={styles.input}
         />
       </View>
@@ -312,7 +313,7 @@ function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
           onChangeText={setConfirmPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="rgba(255,255,255,0.5)"
+          placeholderTextColor={alpha.offWhite50}
           style={[styles.input, passwordsMismatch && styles.inputError]}
         />
       </View>
@@ -335,7 +336,7 @@ function RegisterPanel({ onSubmitSuccess }: RegisterPanelProps) {
 
 const styles = StyleSheet.create({
   backdrop: {
-    backgroundColor: "rgba(3, 7, 18, 0.75)",
+    backgroundColor: alpha.deepInk75,
   },
   sheet: {
     position: "absolute",
@@ -343,7 +344,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     minHeight: SHEET_HEIGHT,
-    backgroundColor: "#050814",
+    backgroundColor: palette.slate940,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 20,
@@ -354,7 +355,7 @@ const styles = StyleSheet.create({
     height: 5,
     borderRadius: 999,
     alignSelf: "center",
-    backgroundColor: "rgba(148,163,184,0.6)",
+    backgroundColor: alpha.slate60,
     marginBottom: 16,
   },
   sheetHeader: {
@@ -363,18 +364,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   sheetTitle: {
-    color: "#f8fafc",
+    color: palette.slate190,
     fontSize: 20,
     fontWeight: "600",
   },
   closeText: {
-    color: "#94a3b8",
+    color: colors.textSecondary,
     fontSize: 15,
     fontWeight: "600",
   },
   segmented: {
     flexDirection: "row",
-    backgroundColor: "rgba(148,163,184,0.16)",
+    backgroundColor: alpha.slate16,
     borderRadius: 14,
     padding: 4,
     marginTop: 20,
@@ -386,15 +387,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   segmentButtonActive: {
-    backgroundColor: "rgba(59, 130, 246, 0.2)",
+    backgroundColor: "rgba(31, 138, 91, 0.12)",
   },
   segmentText: {
-    color: "#94a3b8",
+    color: colors.textTertiary,
     fontSize: 14,
     fontWeight: "600",
   },
   segmentTextActive: {
-    color: "#f8fafc",
+    color: colors.text,
   },
   sheetContent: {
     marginTop: 20,
@@ -403,7 +404,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   label: {
-    color: "rgba(248,250,252,0.8)",
+    color: alpha.offWhite80,
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.4,
@@ -416,18 +417,18 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 14,
     paddingHorizontal: 16,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: alpha.offWhite05,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    color: "#ffffff",
+    borderColor: alpha.offWhite12,
+    color: palette.white,
     fontSize: 16,
   },
   inputError: {
-    borderColor: "rgba(248,113,113,0.8)",
+    borderColor: alpha.red80,
   },
   primaryButton: {
     marginTop: 8,
-    backgroundColor: "#2563eb",
+    backgroundColor: colors.primary,
     borderRadius: 18,
     height: 56,
     alignItems: "center",
@@ -437,7 +438,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   primaryButtonText: {
-    color: "#ffffff",
+    color: colors.textLight,
     fontSize: 16,
     fontWeight: "600",
   },

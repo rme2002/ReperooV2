@@ -1,18 +1,11 @@
 import { useMemo, useState } from "react";
 import {
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  interpolate,
-  Extrapolation,
-} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
@@ -23,24 +16,18 @@ import { useInsightsContext } from "@/components/insights/InsightsProvider";
 import { useBudgetContext } from "@/components/budget/BudgetProvider";
 import { useExperience } from "@/components/home/ExperienceProvider";
 import { EvolutionStage } from "@/lib/gen/model";
+import { colors } from "@/constants/theme";
 
 // New components
 import { BudgetHeroCard } from "@/components/home/BudgetHeroCard";
-import { MilestoneProgressCard } from "@/components/home/MilestoneProgressCard";
 import { AchievementBadgesSection } from "@/components/home/AchievementBadgesSection";
-
-// Design constants
-const FAB_BOTTOM_OFFSET = 100;
 
 export default function OverviewScreen() {
   const router = useRouter();
   const [showAdd, setShowAdd] = useState(false);
   const [showIncome, setShowIncome] = useState(false);
   const [showActions, setShowActions] = useState(false);
-  const { width } = useWindowDimensions();
   const { formatCurrency } = useCurrencyFormatter();
-  const fabSize = Math.max(48, Math.min(56, width * 0.14));
-  const scrollY = useSharedValue(0);
 
   const { currentSnapshot } = useInsightsContext();
   const monthSnapshot = currentSnapshot;
@@ -92,35 +79,16 @@ export default function OverviewScreen() {
     router.push("/(tabs)/insights");
   };
 
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
-    },
-  });
-
-  // FAB animation - shrinks slightly on scroll
-  const animatedFabStyle = useAnimatedStyle(() => {
-    const scale = interpolate(
-      scrollY.value,
-      [0, 100],
-      [1, 0.9],
-      Extrapolation.CLAMP
-    );
-    return { transform: [{ scale }] };
-  });
-
   return (
     <View style={styles.screenContainer}>
       <SafeAreaView style={styles.safeArea}>
-        <Animated.ScrollView
+        <ScrollView
           style={styles.container}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
-          onScroll={scrollHandler}
-          scrollEventThrottle={16}
         >
           {/* Header */}
-          <View style={styles.headerRow}>
+          <View style={styles.header}>
             <View style={styles.brandRow}>
               <Text style={styles.mascot}>🦘</Text>
               <Text style={styles.brand}>Reperoo</Text>
@@ -130,19 +98,15 @@ export default function OverviewScreen() {
           {/* Budget Hero Card - Main financial overview with mascot */}
           <BudgetHeroCard
             remainingBudget={remainingBudget}
+            totalBudget={totalBudget}
             hasBudget={hasBudget}
             formatCurrency={formatCurrency}
             itemsLoggedThisMonth={itemsLoggedThisMonth}
             spendThisMonth={spendThisMonth}
             streakDays={streakDays}
             evolutionStage={evolutionStage}
-            onSetupPlan={handleSetPlanPress}
-          />
-
-          {/* Milestone Progress Card */}
-          <MilestoneProgressCard
-            currentStreak={streakDays}
             nextMilestone={nextMilestone}
+            onSetupPlan={handleSetPlanPress}
           />
 
           {/* Achievement Badges Section */}
@@ -151,31 +115,19 @@ export default function OverviewScreen() {
             currentStreak={streakDays}
           />
 
-          {/* Bottom padding for FAB clearance */}
-          <View style={{ height: FAB_BOTTOM_OFFSET }} />
-        </Animated.ScrollView>
+        </ScrollView>
 
-        {/* FAB Backdrop */}
         {showActions ? (
-          <Pressable
-            style={styles.fabBackdrop}
-            onPress={() => setShowActions(false)}
-          >
+          <Pressable style={styles.fabBackdrop} onPress={() => setShowActions(false)}>
             <View />
           </Pressable>
         ) : null}
 
-        {/* FAB - docked above bottom nav with safe spacing */}
-        <Animated.View
-          style={[styles.fabStack, { right: 20, bottom: 24 }, animatedFabStyle]}
-        >
+        <View style={[styles.fabStack, { right: 16, bottom: 28 }]}>
           {showActions ? (
             <View style={styles.fabMenuColumn}>
               <Pressable
-                style={({ pressed }) => [
-                  styles.fabAction,
-                  pressed && styles.fabActionPressed,
-                ]}
+                style={({ pressed }) => [styles.fabAction, pressed && styles.fabActionPressed]}
                 onPress={() => {
                   setShowActions(false);
                   setShowAdd(true);
@@ -194,9 +146,7 @@ export default function OverviewScreen() {
                   setShowIncome(true);
                 }}
               >
-                <Text
-                  style={[styles.fabActionLabel, styles.fabActionLabelSecondary]}
-                >
+                <Text style={[styles.fabActionLabel, styles.fabActionLabelSecondary]}>
                   Add income
                 </Text>
               </Pressable>
@@ -205,11 +155,6 @@ export default function OverviewScreen() {
             <Pressable
               style={({ pressed }) => [
                 styles.fab,
-                {
-                  width: fabSize,
-                  height: fabSize,
-                  borderRadius: fabSize / 2,
-                },
                 pressed && styles.fabPressed,
               ]}
               onPress={() => setShowActions(true)}
@@ -217,7 +162,7 @@ export default function OverviewScreen() {
               <Text style={styles.fabIcon}>+</Text>
             </Pressable>
           )}
-        </Animated.View>
+        </View>
 
         <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
         <AddIncomeModal
@@ -234,7 +179,7 @@ export default function OverviewScreen() {
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
-    backgroundColor: "#f6f3ed",
+    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
@@ -246,14 +191,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 24,
-    flexGrow: 1,
-    minHeight: "100%",
     gap: 16,
   },
-  headerRow: {
+  header: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   brandRow: {
@@ -267,7 +210,7 @@ const styles = StyleSheet.create({
   brand: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   fabBackdrop: {
     position: "absolute",
@@ -275,7 +218,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(15,23,42,0.2)",
+    backgroundColor: `${colors.text}33`,
   },
   fabStack: {
     position: "absolute",
@@ -283,16 +226,28 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   fab: {
-    backgroundColor: "#22A45D",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#166534",
+    shadowColor: colors.primaryDark,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.18,
     shadowRadius: 10,
     elevation: 5,
     borderWidth: 1,
-    borderColor: "#1E8F52",
+    borderColor: colors.primaryDark,
+  },
+  fabPressed: {
+    opacity: 0.9,
+  },
+  fabIcon: {
+    color: colors.textLight,
+    fontSize: 24,
+    fontWeight: "800",
+    marginTop: -2,
   },
   fabMenuColumn: {
     flexDirection: "column",
@@ -302,37 +257,28 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 9,
-    backgroundColor: "#22A45D",
+    backgroundColor: colors.primary,
     borderWidth: 1,
-    borderColor: "#1E8F52",
-    shadowColor: "#166534",
+    borderColor: colors.primaryDark,
+    shadowColor: colors.primaryDark,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 4,
   },
   fabActionSecondary: {
-    backgroundColor: "#f8fafc",
-    borderColor: "#e2e8f0",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   fabActionLabel: {
-    color: "#f8fafc",
+    color: colors.textLight,
     fontSize: 13,
     fontWeight: "700",
   },
   fabActionLabelSecondary: {
-    color: "#0f172a",
+    color: colors.text,
   },
   fabActionPressed: {
     opacity: 0.85,
-  },
-  fabPressed: {
-    opacity: 0.9,
-  },
-  fabIcon: {
-    color: "#f8fafc",
-    fontSize: 24,
-    fontWeight: "800",
-    marginTop: -2,
   },
 });

@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
+import { alpha, colors, palette } from "@/constants/theme";
 
 type Props = {
   visible: boolean;
@@ -214,7 +215,7 @@ function GoalSlider({ label, value, max, onChange, currencySymbol, formatValue }
           keyboardType="number-pad"
           style={styles.goalSliderInput}
           placeholder="0"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={palette.gray400}
         />
       </View>
       <View
@@ -232,16 +233,16 @@ function GoalSlider({ label, value, max, onChange, currencySymbol, formatValue }
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(15,23,42,0.5)",
+    backgroundColor: alpha.ink50,
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: "90%",
     paddingTop: 20,
-    shadowColor: "#0f172a",
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -254,12 +255,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#ede7dc",
+    borderBottomColor: colors.border,
   },
   title: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.text,
   },
   closeButton: {
     width: 32,
@@ -267,11 +268,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f3f4f6",
+    backgroundColor: colors.borderLight,
   },
   closeIcon: {
     fontSize: 28,
-    color: "#6b7280",
+    color: colors.textSecondary,
     marginTop: -2,
   },
   scrollView: {
@@ -284,12 +285,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text,
     marginTop: 8,
   },
   sectionDescription: {
     fontSize: 14,
-    color: "#6b7280",
+    color: colors.textSecondary,
     marginTop: 4,
   },
   fieldRow: {
@@ -304,48 +305,48 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: 13,
-    color: "#374151",
+    color: palette.gray700,
     fontWeight: "600",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: palette.slate220,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
-    color: "#111827",
-    backgroundColor: "#fff",
+    color: palette.gray900,
+    backgroundColor: palette.white,
   },
   inputDisabled: {
-    backgroundColor: "#f9fafb",
-    color: "#9ca3af",
+    backgroundColor: palette.slate180,
+    color: palette.gray400,
   },
   toggle: {
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: palette.slate220,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
+    backgroundColor: palette.white,
   },
   toggleActive: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
+    backgroundColor: palette.gray900,
+    borderColor: palette.gray900,
   },
   toggleLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#374151",
+    color: palette.gray700,
   },
   toggleLabelActive: {
-    color: "#fff",
+    color: palette.white,
   },
   divider: {
     height: 1,
-    backgroundColor: "#ede7dc",
+    backgroundColor: palette.sand200,
     marginVertical: 8,
   },
   goalSlider: {
@@ -360,12 +361,12 @@ const styles = StyleSheet.create({
   goalSliderLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: palette.gray900,
   },
   goalSliderValue: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: palette.gray900,
   },
   goalSliderInputRow: {
     flexDirection: "row",
@@ -375,29 +376,29 @@ const styles = StyleSheet.create({
   goalSliderInputPrefix: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: palette.gray900,
   },
   goalSliderInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: palette.slate220,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 16,
-    color: "#111827",
-    backgroundColor: "#fff",
+    color: palette.gray900,
+    backgroundColor: palette.white,
   },
   goalSliderTrack: {
     height: 12,
     borderRadius: 999,
-    backgroundColor: "#ede7dc",
+    backgroundColor: palette.sand200,
     position: "relative",
     overflow: "hidden",
   },
   goalSliderFill: {
     height: "100%",
-    backgroundColor: "#111827",
+    backgroundColor: palette.gray900,
   },
   goalSliderThumb: {
     position: "absolute",
@@ -405,17 +406,17 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 999,
-    backgroundColor: "#fff",
+    backgroundColor: palette.white,
     borderWidth: 2,
-    borderColor: "#111827",
+    borderColor: palette.gray900,
     transform: [{ translateX: -11 }, { translateY: -11 }],
   },
   infoBox: {
     flexDirection: "row",
     gap: 12,
-    backgroundColor: "#eff6ff",
+    backgroundColor: palette.blue150,
     borderWidth: 1,
-    borderColor: "#bfdbfe",
+    borderColor: palette.blue250,
     borderRadius: 12,
     padding: 14,
     marginTop: 8,
@@ -426,17 +427,17 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: "#1e40af",
+    color: palette.blue800,
     lineHeight: 18,
   },
   footer: {
     padding: 20,
     gap: 10,
     borderTopWidth: 1,
-    borderTopColor: "#ede7dc",
+    borderTopColor: palette.sand200,
   },
   submitButton: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
@@ -445,20 +446,20 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
-    color: "#fff",
+    color: colors.textLight,
     fontWeight: "700",
     fontSize: 16,
   },
   cancelButton: {
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
   },
   cancelButtonText: {
-    color: "#374151",
+    color: colors.textSecondary,
     fontWeight: "600",
     fontSize: 16,
   },
