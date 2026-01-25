@@ -295,7 +295,6 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.api == 'true'
     runs-on: ubuntu-latest
-    environment: development
     defaults:
       run:
         working-directory: apps/api
@@ -380,7 +379,6 @@ jobs:
       - integration-api
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-latest
-    environment: development
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -419,7 +417,6 @@ jobs:
     needs: build-api
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: development
     defaults:
       run:
         working-directory: apps/api
@@ -448,7 +445,6 @@ jobs:
     needs: build-api
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    environment: development
     defaults:
       run:
         working-directory: apps/api
@@ -479,7 +475,6 @@ jobs:
       - migrate-api-dev
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: development
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -513,7 +508,6 @@ jobs:
       - migrate-api-prd
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    environment: development
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -548,7 +542,6 @@ jobs:
       - typecheck-web
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: development
     defaults:
       run:
         working-directory: apps/web
@@ -576,7 +569,6 @@ jobs:
       - typecheck-web
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    environment: development
     defaults:
       run:
         working-directory: apps/web
@@ -604,7 +596,6 @@ jobs:
       - typecheck-mobile
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.mobile_deploy_env == 'dev'
     runs-on: ubuntu-latest
-    environment: development
     env:
       EXPO_NO_TELEMETRY: "1"
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -643,7 +634,6 @@ jobs:
       - typecheck-mobile
     if: startsWith(github.ref, 'refs/tags/mobile-v')
     runs-on: ubuntu-latest
-    environment: development
     env:
       EXPO_NO_TELEMETRY: "1"
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
