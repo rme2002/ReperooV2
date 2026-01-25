@@ -318,6 +318,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DB_URL_DEV }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL_DEV }}
           SUPABASE_SECRET_API_KEY: ${{ secrets.SUPABASE_SECRET_API_KEY_DEV }}
+          SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET_DEV }}
         run: uv run pytest -m integration .
 
   test-web:
