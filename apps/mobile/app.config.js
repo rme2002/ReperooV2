@@ -1,8 +1,17 @@
 // app.config.js
+import dotenv from 'dotenv';
+
 export default ({ config }) => {
   // APP_VARIANT comes from EAS / CI: "dev" or "prd"
   const variant = process.env.APP_VARIANT || "dev";
   const isProd = variant === "prd";
+
+  // Load environment-specific .env file for EAS builds
+  const envFile = isProd ? '.env.prd' : '.env.dev';
+
+  // Load the env file
+  dotenv.config({ path: envFile });
+  console.log(`[EAS] Loading environment from: ${envFile} (variant: ${variant})`);
 
   // Base identifier from your original app.json
   const baseId = "com.reperoo.app";
