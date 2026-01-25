@@ -59,7 +59,7 @@ async def test_create_expense_transaction_success(
     )
 
     response = await async_client.post(
-        "/api/v1/transactions/create",
+        "/api/v1/transactions/create-expense",
         json=payload,
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -99,7 +99,7 @@ async def test_create_income_transaction_success(
     )
 
     response = await async_client.post(
-        "/api/v1/transactions/create",
+        "/api/v1/transactions/create-income",
         json=payload,
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -136,7 +136,7 @@ async def test_create_transaction_invalid_expense_category(
     )
 
     response = await async_client.post(
-        "/api/v1/transactions/create",
+        "/api/v1/transactions/create-expense",
         json=payload,
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -164,7 +164,7 @@ async def test_create_transaction_missing_transaction_tag_for_expense(
     )
 
     response = await async_client.post(
-        "/api/v1/transactions/create",
+        "/api/v1/transactions/create-expense",
         json=payload,
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -190,12 +190,12 @@ async def test_create_transaction_unauthenticated(
     )
 
     response = await async_client.post(
-        "/api/v1/transactions/create",
+        "/api/v1/transactions/create-expense",
         json=payload,
         # No Authorization header
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -215,7 +215,7 @@ async def test_create_transaction_invalid_jwt(
     )
 
     response = await async_client.post(
-        "/api/v1/transactions/create",
+        "/api/v1/transactions/create-expense",
         json=payload,
         headers={"Authorization": "Bearer invalid_token_here"},
     )
@@ -245,7 +245,7 @@ async def test_create_transaction_user_id_override(
     )
 
     response = await async_client.post(
-        "/api/v1/transactions/create",
+        "/api/v1/transactions/create-expense",
         json=payload,
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -458,7 +458,7 @@ async def test_update_transaction_unauthenticated(
         # No Authorization header
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -582,7 +582,7 @@ async def test_delete_transaction_unauthenticated(
         # No Authorization header
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio

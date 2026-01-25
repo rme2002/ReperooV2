@@ -42,8 +42,12 @@ def integration_env() -> dict[str, str]:
     return {var: os.environ[var] for var in REQUIRED_ENV_VARS}
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="function", autouse=True)
 async def app_lifespan(integration_env: dict[str, str]) -> AsyncIterator[None]:
+    """
+    Recreate app lifespan (including Supabase client) for each test.
+    This prevents "Event loop is closed" errors from the async Supabase client.
+    """
     async with app.router.lifespan_context(app):
         yield
 
@@ -78,8 +82,15 @@ class IntegrationCleanup:
         self._transaction_ids.add(transaction_id)
 
     async def run(self) -> None:
-        # Cleanup temporarily disabled; re-enable once we want Supabase/auth cleanup again.
-        return
+        """Execute all cleanup tasks."""
+        # Clean up transactions first (foreign key constraints)
+        self._cleanup_transactions()
+
+        # Clean up profiles
+        self._cleanup_profiles()
+
+        # Clean up Supabase auth users last
+        await self._cleanup_supabase_users()
 
     async def _cleanup_supabase_users(self) -> None:
         if not self._supabase or not self._supabase_user_ids:
@@ -141,40 +152,108 @@ async def cleanup_manager(
         await cleanup.run()
 
 
-@pytest_asyncio.fixture
-async def authenticated_user(
-    async_client: AsyncClient, cleanup_manager: IntegrationCleanup
-) -> dict[str, str]:
+_shared_user_cache: dict[str, str] | None = None
+
+
+@pytest_asyncio.fixture(scope="session")
+async def shared_authenticated_user() -> dict[str, str]:
     """
-    Create a user and return their ID and JWT token for authenticated requests.
+    Create a shared user for all tests to avoid rate limiting.
+    This user persists for the entire test session.
     """
     import secrets
+    from httpx import ASGITransport, AsyncClient
 
-    # Generate unique email for this test
-    email = f"test_{secrets.token_hex(8)}@example.com"
+    global _shared_user_cache
+    if _shared_user_cache is not None:
+        return _shared_user_cache
+
+    # Generate unique email for this test session
+    email = f"test_shared_{secrets.token_hex(8)}@example.com"
     password = "TestPassword123!"
 
-    # Sign up the user
-    response = await async_client.post(
-        "/api/v1/auth/sign-up",
-        json={"email": email, "password": password},
-    )
-    assert response.status_code == 201
-    user_data = response.json()
-    user_id = user_data["id"]
+    # Create client for sign-up (using session-scoped lifespan won't work, so we do it manually)
+    # We need to create the user outside the normal test fixtures
+    async with app.router.lifespan_context(app):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            # Sign up the user
+            response = await client.post(
+                "/api/v1/auth/sign-up",
+                json={"email": email, "password": password},
+            )
 
-    # Track for cleanup
-    cleanup_manager.track_supabase_user(user_id)
-    cleanup_manager.track_profile(user_id)
+            if response.status_code != 201:
+                logger.error(f"Shared user sign-up failed: {response.status_code}")
+                logger.error(f"Response body: {response.text}")
 
-    # Sign in to get JWT token
-    supabase_client = getattr(app.state, "supabase", None)
-    auth_response = await supabase_client.auth.sign_in_with_password(
-        {"email": email, "password": password}
-    )
-    token = auth_response.session.access_token
+            assert response.status_code == 201, f"Sign-up failed: {response.text}"
+            user_data = response.json()
+            user_id = user_data["id"]
 
-    return {"user_id": user_id, "token": token}
+        # Sign in to get JWT token
+        supabase_client = getattr(app.state, "supabase", None)
+        auth_response = await supabase_client.auth.sign_in_with_password(
+            {"email": email, "password": password}
+        )
+        token = auth_response.session.access_token
+
+    _shared_user_cache = {"user_id": user_id, "token": token, "email": email}
+    return _shared_user_cache
+
+
+@pytest_asyncio.fixture
+async def authenticated_user(shared_authenticated_user: dict[str, str]) -> dict[str, str]:
+    """
+    Return the shared authenticated user to avoid rate limiting.
+    All tests use the same user, which is acceptable for integration tests.
+    """
+    return shared_authenticated_user
+
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def cleanup_shared_user(shared_authenticated_user: dict[str, str]) -> AsyncIterator[None]:
+    """
+    Cleanup the shared authenticated user at the end of the test session.
+    """
+    yield
+
+    # Cleanup after all tests complete
+    user_id = shared_authenticated_user["user_id"]
+    logger.info(f"Cleaning up shared test user: {user_id}")
+
+    # Create a temporary lifespan context for cleanup
+    async with app.router.lifespan_context(app):
+        supabase_client = getattr(app.state, "supabase", None)
+
+        # Delete transactions for this user
+        with session_scope() as session:
+            try:
+                session.execute(
+                    delete(Transaction).where(Transaction.user_id == UUID(user_id))
+                )
+                session.commit()
+                logger.info(f"Deleted transactions for user {user_id}")
+            except Exception as e:
+                logger.warning(f"Failed to delete transactions for user {user_id}: {e}")
+                session.rollback()
+
+        # Delete profile
+        with session_scope() as session:
+            try:
+                session.execute(delete(ProfileDB).where(ProfileDB.id == UUID(user_id)))
+                session.commit()
+                logger.info(f"Deleted profile for user {user_id}")
+            except Exception as e:
+                logger.warning(f"Failed to delete profile for user {user_id}: {e}")
+                session.rollback()
+
+        # Delete Supabase auth user
+        try:
+            await supabase_client.auth.admin.delete_user(user_id)
+            logger.info(f"Deleted Supabase auth user {user_id}")
+        except Exception as e:
+            logger.warning(f"Failed to delete Supabase user {user_id}: {e}")
 
 
 @pytest.fixture
