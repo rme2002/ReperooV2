@@ -1,6 +1,5 @@
 """Service for managing recurring transaction templates and auto-generation."""
 from datetime import datetime, timezone
-from decimal import Decimal
 from uuid import uuid4
 
 from sqlalchemy import and_, select

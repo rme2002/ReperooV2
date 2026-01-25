@@ -118,7 +118,7 @@ async def create_expense_transaction(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    except TransactionCreationError as e:
+    except TransactionCreationError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create expense transaction",
@@ -180,7 +180,7 @@ async def create_income_transaction(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    except TransactionCreationError as e:
+    except TransactionCreationError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create income transaction",
@@ -350,7 +350,7 @@ async def update_transaction(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    except TransactionUpdateError as e:
+    except TransactionUpdateError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update transaction",
@@ -392,7 +392,7 @@ async def delete_transaction(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
         )
-    except TransactionDeleteError as e:
+    except TransactionDeleteError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete transaction",

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from uuid import UUID
-from datetime import datetime
 
 from sqlalchemy.orm import Session
 from sqlalchemy import desc

@@ -77,7 +77,7 @@ async def create_budget_plan(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    except BudgetPlanCreationError as e:
+    except BudgetPlanCreationError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create budget plan",
@@ -172,7 +172,7 @@ async def update_budget_plan(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    except BudgetPlanUpdateError as e:
+    except BudgetPlanUpdateError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update budget plan",

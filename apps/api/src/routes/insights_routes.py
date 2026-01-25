@@ -75,7 +75,7 @@ async def get_month_snapshot(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    except BudgetPlanNotFoundError as e:
+    except BudgetPlanNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Budget plan not found. Create one to view insights.",

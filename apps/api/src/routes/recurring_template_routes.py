@@ -179,7 +179,7 @@ async def create_recurring_template_expense(
 
     except (CategoryNotFoundError, TransactionValidationError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
+    except Exception:
         session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -221,7 +221,7 @@ async def create_recurring_template_income(
 
     except (CategoryNotFoundError, TransactionValidationError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
+    except Exception:
         session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -300,7 +300,7 @@ async def update_recurring_template(
         else:
             return _template_to_income_response(template)
 
-    except Exception as e:
+    except Exception:
         session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -329,7 +329,7 @@ async def delete_recurring_template(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
