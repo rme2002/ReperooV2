@@ -1,5 +1,8 @@
 # Mobile Changelog
 
+## v1.0.2 - 2026-01-25
+- No changes
+
 ## v1.0.1 - 2026-01-25
 - chore: fix npm lint, type check and fixed tests
 - chore: lint mobile app
