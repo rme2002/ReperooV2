@@ -1,0 +1,24 @@
+# Example terraform.tfvars file
+# Copy this to terraform.tfvars and customize as needed
+
+# GCP Project (already set in terraform.auto.tfvars)
+project_id = "reperoo"
+
+# Optional: Override default region
+# region = "us-central1"
+
+# Optional: Add CI/CD service accounts for Artifact Registry
+# artifact_registry_writer_members = [
+#   "serviceAccount:github-actions@reperoo.iam.gserviceaccount.com",
+# ]
+
+# Optional: Adjust scaling limits
+# min_instances = 1  # Keep 1 instance warm
+# max_instances = 10
+
+# Optional: Change resource limits
+# cpu    = "2"
+# memory = "1Gi"
+
+# Optional: Disable public access
+# allow_unauthenticated = false
