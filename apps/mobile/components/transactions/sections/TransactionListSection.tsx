@@ -1,6 +1,11 @@
 import { forwardRef } from "react";
-import { SectionList, StyleSheet, View } from "react-native";
-import type { SectionList as SectionListType } from "react-native";
+import {
+  SectionList,
+  StyleSheet,
+  View,
+  type RefreshControlProps,
+  type SectionList as SectionListType,
+} from "react-native";
 import { colors } from "@/constants/theme";
 import type { ListTransactions200Item } from "@/lib/gen/model";
 import type { TransactionSection } from "@/hooks/useTransactionsSections";
@@ -19,7 +24,7 @@ type TransactionListSectionProps = {
   onEdit: (tx: ListTransactions200Item) => void;
   onDelete: (txId: string) => void;
   onPress: (tx: ListTransactions200Item) => void;
-  refreshControl?: React.ReactElement;
+  refreshControl?: React.ReactElement<RefreshControlProps>;
 };
 
 export const TransactionListSection = forwardRef<

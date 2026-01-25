@@ -1,9 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "@/constants/theme";
-import type { WeeklyPoint } from "@/hooks/useInsightsWeekly";
+import type { WeeklySpendingPoint } from "@/lib/gen/model";
 
 type WeeklySpendingChartProps = {
-  weeklyPoints: WeeklyPoint[];
+  weeklyPoints: WeeklySpendingPoint[];
   weeklyTotal: number;
   weeklyScaleMax: number;
   weeklyAxisTicks: number[];

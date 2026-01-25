@@ -1,24 +1,6 @@
 import { useMemo } from "react";
+import type { BudgetPlan, MonthSnapshot } from "@/lib/gen/model";
 import { DAY_IN_MS } from "@/utils/insightsConstants";
-
-/**
- * Budget plan with expected income
- */
-interface BudgetPlan {
-  expected_income?: number;
-  [key: string]: unknown;
-}
-
-/**
- * Insights snapshot with spending data
- */
-interface InsightsSnapshot {
-  currentDate?: string;
-  totalSpent?: number;
-  loggedDays?: number;
-  totalDays?: number;
-  [key: string]: unknown;
-}
 
 /**
  * Status badge labels
@@ -76,7 +58,7 @@ export interface UseInsightsBudgetReturn {
  * @returns Object containing all budget-related metrics and display values
  */
 export function useInsightsBudget(
-  snapshot: InsightsSnapshot | null,
+  snapshot: MonthSnapshot | null,
   budgetPlan: BudgetPlan | null,
   formatCurrency: (value: number) => string
 ): UseInsightsBudgetReturn {

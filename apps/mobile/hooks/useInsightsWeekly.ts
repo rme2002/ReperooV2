@@ -1,28 +1,12 @@
 import { useState, useEffect } from "react";
+import type { MonthSnapshot, WeeklySpendingPoint } from "@/lib/gen/model";
 import { computeAxisTicks } from "@/utils/insightsMath";
-
-/**
- * Weekly spending point data
- */
-export interface WeeklyPoint {
-  week: number;
-  label: string;
-  total: number;
-}
-
-/**
- * Insights snapshot with weekly data
- */
-interface InsightsSnapshot {
-  weekly?: WeeklyPoint[];
-  [key: string]: unknown;
-}
 
 /**
  * Return type for useInsightsWeekly hook
  */
 export interface UseInsightsWeeklyReturn {
-  weeklyPoints: WeeklyPoint[];
+  weeklyPoints: WeeklySpendingPoint[];
   weeklyTotal: number;
   weeklyPeak: number;
   weeklyScaleMax: number;
@@ -42,7 +26,7 @@ export interface UseInsightsWeeklyReturn {
  * @returns Object containing processed weekly data and state
  */
 export function useInsightsWeekly(
-  snapshot: InsightsSnapshot | null,
+  snapshot: MonthSnapshot | null,
   selectedMonth: { year: number; month: number }
 ): UseInsightsWeeklyReturn {
   const [isLoading, setIsLoading] = useState(true);

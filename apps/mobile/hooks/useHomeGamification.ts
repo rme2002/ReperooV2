@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type {
   ExperienceResponse,
-  MilestonesResponse,
+  StreakMilestonesResponse,
   StreakMilestone,
 } from "@/lib/gen/model";
 import { EvolutionStage } from "@/lib/gen/model";
@@ -25,7 +25,7 @@ export interface UseHomeGamificationReturn {
  */
 export function useHomeGamification(
   experience: ExperienceResponse | null,
-  milestones: MilestonesResponse | null
+  milestones: StreakMilestonesResponse | null
 ): UseHomeGamificationReturn {
   const streakDays = experience?.current_streak ?? 0;
   const evolutionStage = experience?.evolution_stage ?? EvolutionStage.Baby;
@@ -33,7 +33,7 @@ export function useHomeGamification(
   // Get next milestone (first unachieved)
   const nextMilestone = useMemo(() => {
     if (!milestones?.milestones) return null;
-    return milestones.milestones.find((m) => !m.achieved) ?? null;
+    return milestones.milestones.find((milestone) => !milestone.achieved) ?? null;
   }, [milestones]);
 
   return {

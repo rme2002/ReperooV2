@@ -259,7 +259,7 @@ export default function TransactionsScreen() {
 
         <RecurringFilterToggle
           showRecurringOnly={showRecurringOnly}
-          onToggle={() => setShowRecurringOnly((prev) => !prev)}
+          onToggle={() => setShowRecurringOnly(!showRecurringOnly)}
         />
 
         <CategoryFilterChips
@@ -306,15 +306,19 @@ export default function TransactionsScreen() {
         visible={modalVisible}
         mode={modalMode}
         initialValues={
-          modalMode !== "add" && editingTx && editingTx.kind === "expense"
+          modalMode !== "add" && editingTx && editingTx.type === "expense"
             ? {
                 amount: editingTx.amount,
-                categoryId: editingTx.categoryId,
-                subcategoryId: editingTx.subcategoryId,
-                note: editingTx.note,
-                date: new Date(editingTx.timestamp),
-                isRecurring: Boolean(editingTx.isRecurringInstance),
-                recurringDayOfMonth: editingTx.recurringDayOfMonth ?? undefined,
+                categoryId: editingTx.expense_category_id,
+                subcategoryId: editingTx.expense_subcategory_id ?? undefined,
+                note: editingTx.notes ?? undefined,
+                date: new Date(editingTx.occurred_at),
+                isRecurring: Boolean(editingTx.recurring_template_id),
+                transactionTag:
+                  editingTx.transaction_tag === "need" ||
+                  editingTx.transaction_tag === "want"
+                    ? editingTx.transaction_tag
+                    : undefined,
               }
             : undefined
         }

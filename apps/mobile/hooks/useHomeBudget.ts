@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import type { BudgetPlan } from "@/lib/gen/model";
-import type { MonthSnapshot } from "@/components/insights/InsightsProvider";
+import type { BudgetPlan, MonthSnapshot } from "@/lib/gen/model";
 
 /**
  * Return type for useHomeBudget hook
@@ -34,7 +33,10 @@ export function useHomeBudget(
   // Sum up items from all categories to get total transaction count
   const itemsLoggedThisMonth = useMemo(() => {
     if (!snapshot?.categories) return 0;
-    return snapshot.categories.reduce((sum, cat) => sum + (cat.items ?? 0), 0);
+    return snapshot.categories.reduce<number>(
+      (sum, cat) => sum + (cat.items ?? 0),
+      0,
+    );
   }, [snapshot?.categories]);
 
   const spendThisMonth = totalSpent;

@@ -6,15 +6,9 @@ import { GoalDisplayBar } from "@/components/insights/widgets/GoalDisplayBar";
 import { IncomeBreakdownSection } from "@/components/budget/IncomeBreakdownSection";
 import { sanitizeGoalValue } from "@/utils/insightsMath";
 import { SLIDER_MAX } from "@/utils/insightsConstants";
+import type { BudgetPlan } from "@/lib/gen/model";
 import type { TransactionIncome } from "@/lib/gen/model/transactionIncome";
 import type { RecurringTemplateIncome } from "@/lib/gen/model/recurringTemplateIncome";
-
-interface BudgetPlan {
-  expected_income?: number;
-  savings_goal?: number | null;
-  investment_goal?: number | null;
-  [key: string]: unknown;
-}
 
 type BudgetPlanPayload = {
   savings_goal: number | null;

@@ -5,7 +5,15 @@ import { colors } from "@/constants/theme";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
 import { AuthBottomSheet } from "@/components/auth/AuthBottomSheet";
 
-const baseSettings = [
+type SettingsItem = {
+  key: string;
+  title: string;
+  description: string;
+  accent?: boolean;
+  danger?: boolean;
+};
+
+const baseSettings: SettingsItem[] = [
   {
     key: "profile",
     title: "Profile & Identity",

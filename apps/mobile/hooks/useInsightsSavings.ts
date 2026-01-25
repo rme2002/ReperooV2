@@ -1,22 +1,4 @@
-/**
- * Budget plan with savings and investment goals
- */
-interface BudgetPlan {
-  savings_goal?: number | null;
-  investment_goal?: number | null;
-  [key: string]: unknown;
-}
-
-/**
- * Insights snapshot with savings data
- */
-interface InsightsSnapshot {
-  savings?: {
-    saved?: number;
-    invested?: number;
-  };
-  [key: string]: unknown;
-}
+import type { BudgetPlan, MonthSnapshot } from "@/lib/gen/model";
 
 /**
  * Return type for useInsightsSavings hook
@@ -61,7 +43,7 @@ export interface UseInsightsSavingsReturn {
  * @returns Object containing all savings-related metrics and display flags
  */
 export function useInsightsSavings(
-  snapshot: InsightsSnapshot | null,
+  snapshot: MonthSnapshot | null,
   budgetPlan: BudgetPlan | null,
   hasBudget: boolean
 ): UseInsightsSavingsReturn {

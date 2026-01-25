@@ -678,13 +678,7 @@ export default function InsightsScreen() {
                     pressed && styles.tableRowPressed,
                   ]}
                 >
-                  <View
-                    style={[
-                      styles.tableCell,
-                      styles.tableCategory,
-                      styles.tableCellRow,
-                    ]}
-                  >
+                  <View style={[styles.tableCategory, styles.tableCellRow]}>
                     <View
                       style={[styles.legendDot, { backgroundColor: cat.color }]}
                     />
