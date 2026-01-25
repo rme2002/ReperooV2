@@ -364,9 +364,15 @@ class TransactionService:
         )
 
         # Materialize recurring transactions for today (similar to list endpoint)
-        from src.services.materialization_service import MaterializationService
+        from src.repositories.recurring_template_repository import (
+            RecurringTemplateRepository,
+        )
+        from src.services.recurring_materialization_service import (
+            RecurringMaterializationService,
+        )
 
-        materialization_service = MaterializationService()
+        template_repository = RecurringTemplateRepository()
+        materialization_service = RecurringMaterializationService(template_repository)
         materialization_service.materialize_for_date_range(
             session, user_id, start_of_day, end_of_day
         )

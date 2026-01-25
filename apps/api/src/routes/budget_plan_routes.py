@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from src.core.auth import get_current_user_id
@@ -33,6 +33,8 @@ async def create_budget_plan(
     current_user_id: UUID = Depends(get_current_user_id),
     budget_plan_service: BudgetPlanService = Depends(get_budget_plan_service),
     session: Session = Depends(get_session),
+    year: int = Query(..., ge=2000, le=2100, description="Year (e.g., 2025)"),
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
 ) -> BudgetPlan:
     """
     Create a new budget plan for the authenticated user.
@@ -40,14 +42,16 @@ async def create_budget_plan(
     Each user can only have one budget plan. If a plan already exists,
     returns 400 Bad Request.
 
-    The expected_income field is automatically calculated from active
-    recurring income templates.
+    The expected_income field is automatically calculated from income
+    transactions in the requested month.
 
     Args:
         payload: Budget plan creation payload
         current_user_id: Authenticated user ID from JWT token
         budget_plan_service: Budget plan service instance
         session: Database session
+        year: Year for expected income calculation
+        month: Month (1-12) for expected income calculation
 
     Returns:
         Created budget plan with calculated expected_income
@@ -60,6 +64,8 @@ async def create_budget_plan(
             payload=payload,
             authenticated_user_id=current_user_id,
             session=session,
+            year=year,
+            month=month,
         )
     except BudgetPlanAlreadyExistsError as e:
         raise HTTPException(
@@ -83,17 +89,21 @@ async def get_budget_plan(
     current_user_id: UUID = Depends(get_current_user_id),
     budget_plan_service: BudgetPlanService = Depends(get_budget_plan_service),
     session: Session = Depends(get_session),
+    year: int = Query(..., ge=2000, le=2100, description="Year (e.g., 2025)"),
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
 ) -> BudgetPlan:
     """
     Get the budget plan for the authenticated user.
 
-    The expected_income field is automatically calculated from active
-    recurring income templates.
+    The expected_income field is automatically calculated from income
+    transactions in the requested month.
 
     Args:
         current_user_id: Authenticated user ID from JWT token
         budget_plan_service: Budget plan service instance
         session: Database session
+        year: Year for expected income calculation
+        month: Month (1-12) for expected income calculation
 
     Returns:
         Budget plan with calculated expected_income
@@ -105,6 +115,8 @@ async def get_budget_plan(
         return await budget_plan_service.get_budget_plan(
             authenticated_user_id=current_user_id,
             session=session,
+            year=year,
+            month=month,
         )
     except BudgetPlanNotFoundError as e:
         raise HTTPException(
@@ -119,18 +131,22 @@ async def update_budget_plan(
     current_user_id: UUID = Depends(get_current_user_id),
     budget_plan_service: BudgetPlanService = Depends(get_budget_plan_service),
     session: Session = Depends(get_session),
+    year: int = Query(..., ge=2000, le=2100, description="Year (e.g., 2025)"),
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
 ) -> BudgetPlan:
     """
     Update the budget plan for the authenticated user (partial update).
 
     Only provided fields will be updated. The expected_income field is
-    automatically calculated from active recurring income templates.
+    automatically calculated from income transactions in the requested month.
 
     Args:
         payload: Budget plan update payload (partial)
         current_user_id: Authenticated user ID from JWT token
         budget_plan_service: Budget plan service instance
         session: Database session
+        year: Year for expected income calculation
+        month: Month (1-12) for expected income calculation
 
     Returns:
         Updated budget plan with calculated expected_income
@@ -143,6 +159,8 @@ async def update_budget_plan(
             payload=payload,
             authenticated_user_id=current_user_id,
             session=session,
+            year=year,
+            month=month,
         )
     except BudgetPlanNotFoundError as e:
         raise HTTPException(

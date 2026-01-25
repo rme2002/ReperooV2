@@ -1,6 +1,7 @@
 from calendar import monthrange
 from collections import defaultdict
 from datetime import datetime, timezone
+from math import floor
 from decimal import Decimal
 from typing import Optional
 from uuid import UUID
@@ -224,26 +225,42 @@ class InsightsService:
                     "total": total,
                 })
 
+        # Pre-calculate rounded category percentages that sum to 100
+        category_ids = list(category_data.keys())
+        category_raw_percents = [
+            self._calculate_percent(category_data[cat_id]["total"], total_spent)
+            for cat_id in category_ids
+        ]
+        category_percents = self._round_percentages(category_raw_percents)
+        category_percent_by_id = {
+            cat_id: percent for cat_id, percent in zip(category_ids, category_percents)
+        }
+
         # Build CategoryBreakdown objects
         categories = []
         for cat_id, data in category_data.items():
             cat_total = data["total"]
-            cat_percent = self._calculate_percent(cat_total, total_spent)
+            cat_percent = category_percent_by_id.get(cat_id, 0)
             cat_color = self._category_colors.get(cat_id, "#cccccc")
 
             # Build subcategories
             subcategories = []
-            for sub in data["subcategories"]:
-                sub_percent = self._calculate_percent(sub["total"], cat_total)
-                sub_color = self._subcategory_colors.get(sub["id"], "#cccccc")
-                subcategories.append(
-                    SubCategoryBreakdown(
-                        id=sub["id"],
-                        total=float(sub["total"]),
-                        percent=sub_percent,
-                        color=sub_color,
+            if data["subcategories"]:
+                subcategory_raw_percents = [
+                    self._calculate_percent(sub["total"], cat_total)
+                    for sub in data["subcategories"]
+                ]
+                subcategory_percents = self._round_percentages(subcategory_raw_percents)
+                for sub, sub_percent in zip(data["subcategories"], subcategory_percents):
+                    sub_color = self._subcategory_colors.get(sub["id"], "#cccccc")
+                    subcategories.append(
+                        SubCategoryBreakdown(
+                            id=sub["id"],
+                            total=float(sub["total"]),
+                            percent=sub_percent,
+                            color=sub_color,
+                        )
                     )
-                )
 
             categories.append(
                 CategoryBreakdown(
@@ -410,6 +427,48 @@ class InsightsService:
         if total == 0:
             return 0.0
         return float((part / total) * 100)
+
+    def _round_percentages(self, percents: list[float]) -> list[int]:
+        """
+        Round percentages to whole integers while ensuring the sum is 100.
+
+        Args:
+            percents: Raw percentages (float) that should total ~100
+
+        Returns:
+            List of integer percentages summing to 100 (or all zeros if total is 0)
+        """
+        if not percents:
+            return []
+
+        total = sum(percents)
+        if total == 0:
+            return [0 for _ in percents]
+
+        scale = 100.0 / total
+        scaled = [p * scale for p in percents]
+        rounded = [int(floor(p)) for p in scaled]
+        remainder = 100 - sum(rounded)
+
+        if remainder > 0:
+            remainders = sorted(
+                [(idx, scaled[idx] - rounded[idx]) for idx in range(len(scaled))],
+                key=lambda item: item[1],
+                reverse=True,
+            )
+            for idx in range(remainder):
+                rounded[remainders[idx][0]] += 1
+        elif remainder < 0:
+            remainders = sorted(
+                [(idx, scaled[idx] - rounded[idx]) for idx in range(len(scaled))],
+                key=lambda item: item[1],
+            )
+            for idx in range(-remainder):
+                target_idx = remainders[idx][0]
+                if rounded[target_idx] > 0:
+                    rounded[target_idx] -= 1
+
+        return rounded
 
     def _get_month_boundaries(self, year: int, month: int) -> tuple[datetime, datetime]:
         """

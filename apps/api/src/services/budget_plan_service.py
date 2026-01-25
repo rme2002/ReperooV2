@@ -1,10 +1,11 @@
+from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from src.db.models.recurring_template import RecurringTemplate
+from src.db.models.transaction import Transaction
 from src.models.model import BudgetPlan, CreateBudgetPlanPayload, UpdateBudgetPlanPayload
 from src.repositories.budget_plan_repository import BudgetPlanRepository
 from src.services.errors import (
@@ -24,23 +25,34 @@ class BudgetPlanService:
         self,
         session: Session,
         user_id: UUID,
+        year: int,
+        month: int,
     ) -> Decimal:
         """
-        Calculate expected monthly income from recurring income templates.
+        Calculate expected monthly income from income transactions in a specific month.
 
         Args:
             session: SQLAlchemy database session
             user_id: User ID to calculate income for
+            year: Year of the month to calculate income for
+            month: Month (1-12) to calculate income for
 
         Returns:
-            Total expected monthly income from active recurring income templates
+            Total expected monthly income from income transactions in the requested month
         """
+        first_day = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+        if month == 12:
+            next_month = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        else:
+            next_month = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+
         result = (
-            session.query(func.sum(RecurringTemplate.amount))
+            session.query(func.sum(Transaction.amount))
             .filter(
-                RecurringTemplate.user_id == user_id,
-                RecurringTemplate.type == "income",
-                RecurringTemplate.is_paused == False,
+                Transaction.user_id == user_id,
+                Transaction.type == "income",
+                Transaction.occurred_at >= first_day,
+                Transaction.occurred_at < next_month,
             )
             .scalar()
         )
@@ -73,6 +85,8 @@ class BudgetPlanService:
         payload: CreateBudgetPlanPayload,
         authenticated_user_id: UUID,
         session: Session,
+        year: int,
+        month: int,
     ) -> BudgetPlan:
         """
         Create a new budget plan for the user.
@@ -127,7 +141,12 @@ class BudgetPlanService:
             raise BudgetPlanCreationError("Failed to create budget plan") from e
 
         # Calculate expected income from recurring templates
-        expected_income = self._calculate_expected_income(session, authenticated_user_id)
+        expected_income = self._calculate_expected_income(
+            session,
+            authenticated_user_id,
+            year,
+            month,
+        )
 
         # Convert to response model with calculated expected_income
         return BudgetPlan(
@@ -146,6 +165,8 @@ class BudgetPlanService:
         self,
         authenticated_user_id: UUID,
         session: Session,
+        year: int,
+        month: int,
     ) -> BudgetPlan:
         """
         Get the budget plan for the authenticated user.
@@ -170,7 +191,12 @@ class BudgetPlanService:
             )
 
         # Calculate expected income from recurring templates
-        expected_income = self._calculate_expected_income(session, authenticated_user_id)
+        expected_income = self._calculate_expected_income(
+            session,
+            authenticated_user_id,
+            year,
+            month,
+        )
 
         # Convert to response model with calculated expected_income
         return BudgetPlan(
@@ -190,6 +216,8 @@ class BudgetPlanService:
         payload: UpdateBudgetPlanPayload,
         authenticated_user_id: UUID,
         session: Session,
+        year: int,
+        month: int,
     ) -> BudgetPlan:
         """
         Update the budget plan for the authenticated user.
@@ -239,7 +267,12 @@ class BudgetPlanService:
             raise BudgetPlanUpdateError("Failed to update budget plan") from e
 
         # Calculate expected income from recurring templates
-        expected_income = self._calculate_expected_income(session, authenticated_user_id)
+        expected_income = self._calculate_expected_income(
+            session,
+            authenticated_user_id,
+            year,
+            month,
+        )
 
         # Convert to response model with calculated expected_income
         return BudgetPlan(
