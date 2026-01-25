@@ -27,7 +27,7 @@ env:
   GAR_LOCATION: ${{ vars.GAR_LOCATION }} # Artifact Registry location, e.g. us-central1
   REPOSITORY: ${{ vars.GAR_REPOSITORY }} # Artifact Registry repository name
   IMAGE_NAME: api # Docker image name inside Artifact Registry
-  IMAGE: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/api:${{ github.sha }}
+  IMAGE: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/api:latest
   REGION: ${{ vars.CLOUD_RUN_REGION }} # Cloud Run service region
   CLOUD_RUN_SERVICE_DEV: ${{ vars.CLOUD_RUN_SERVICE_DEV }} # Dev Cloud Run service name
   CLOUD_RUN_SERVICE_PRD: ${{ vars.CLOUD_RUN_SERVICE_PRD }} # Prod Cloud Run service name
