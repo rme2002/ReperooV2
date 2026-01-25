@@ -39,6 +39,10 @@ yarn-error.*
 .env.production.local
 .env.local
 
+# Allow environment-specific files for EAS builds
+!.env.dev
+!.env.prd
+
 # typescript
 *.tsbuildinfo
 

@@ -8,14 +8,16 @@
       "environment": "development",
       "env": {
         "APP_VARIANT": "dev"
-      }
+      },
+      "envFile": ".env.dev"
     },
     "prd": {
       "distribution": "store",
       "environment": "production",
       "env": {
         "APP_VARIANT": "prd"
-      }
+      },
+      "envFile": ".env.prd"
     }
   }
 }

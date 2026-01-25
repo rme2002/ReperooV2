@@ -600,6 +600,10 @@ jobs:
     env:
       EXPO_NO_TELEMETRY: "1"
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      # Optional: Override environment variables from GitHub Secrets
+      # EXPO_PUBLIC_API_BASE_URL: ${{ vars.API_BASE_URL_DEV }}
+      # EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL_DEV }}
+      # EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY_DEV }}
     defaults:
       run:
         working-directory: apps/mobile
@@ -638,6 +642,10 @@ jobs:
     env:
       EXPO_NO_TELEMETRY: "1"
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      # Optional: Override environment variables from GitHub Secrets
+      # EXPO_PUBLIC_API_BASE_URL: ${{ vars.API_BASE_URL_PRD }}
+      # EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL_PRD }}
+      # EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY_PRD }}
     defaults:
       run:
         working-directory: apps/mobile
