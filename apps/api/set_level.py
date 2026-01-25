@@ -68,7 +68,7 @@ async def set_level(target_level: int, additional_xp: int = 0, email: str = "rom
                 exp_service = ExperienceService(profile_repo, xp_event_repo)
 
                 # Display current state
-                print(f"\n2. Current Status:")
+                print("\n2. Current Status:")
                 print(f"   Level: {profile.current_level}")
                 print(f"   XP: {profile.current_xp}")
                 print(f"   Evolution Stage: {exp_service.get_evolution_stage(profile.current_level)}")
@@ -78,7 +78,7 @@ async def set_level(target_level: int, additional_xp: int = 0, email: str = "rom
                 new_xp = total_xp_for_level + additional_xp
 
                 # Update profile
-                print(f"\n3. Setting new level:")
+                print("\n3. Setting new level:")
                 print(f"   Target Level: {target_level}")
                 print(f"   Base XP for level {target_level}: {total_xp_for_level}")
                 print(f"   Additional XP: {additional_xp}")
@@ -99,7 +99,7 @@ async def set_level(target_level: int, additional_xp: int = 0, email: str = "rom
                 total_xp_for_current = exp_service.calculate_total_xp_for_level(target_level)
                 xp_within_level = new_xp - total_xp_for_current
 
-                print(f"\n4. ✅ Level Updated Successfully!")
+                print("\n4. ✅ Level Updated Successfully!")
                 print(f"   Old: Level {old_level} ({old_xp} XP)")
                 print(f"   New: Level {target_level} ({new_xp} XP)")
                 print(f"   Evolution Stage: {new_stage}")
@@ -107,7 +107,7 @@ async def set_level(target_level: int, additional_xp: int = 0, email: str = "rom
                 print(f"   Streak: {profile.current_streak} days")
 
                 # Show evolution stages
-                print(f"\n5. Evolution Stages Reference:")
+                print("\n5. Evolution Stages Reference:")
                 stages = [
                     ("Baby", 1, 5),
                     ("Young", 6, 15),
