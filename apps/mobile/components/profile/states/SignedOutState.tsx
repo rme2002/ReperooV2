@@ -8,7 +8,7 @@ type SignedOutStateProps = {
 export function SignedOutState({ onGoToLogin }: SignedOutStateProps) {
   return (
     <View style={styles.signedOutCard}>
-      <Text style={styles.title}>You're signed out</Text>
+      <Text style={styles.title}>You{"'"}re signed out</Text>
       <Text style={styles.subtitle}>
         Log back in to change your display name, currency, or account actions.
       </Text>

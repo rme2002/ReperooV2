@@ -156,7 +156,7 @@ export function useInsightsBudget(
   const headlineSubtitle = hasBudget
     ? "projected left"
     : "Create a budget plan";
-  const budgetHelperLabel = hasBudget ? "Based on recurring income" : null;
+  const budgetHelperLabel = hasBudget ? "Based on income transactions" : null;
 
   return {
     hasBudget,

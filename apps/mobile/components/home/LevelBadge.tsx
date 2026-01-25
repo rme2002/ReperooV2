@@ -10,9 +10,7 @@ export function LevelBadge({ level, variant = "dark" }: LevelBadgeProps) {
   const isDark = variant === "dark";
 
   return (
-    <View
-      style={[styles.badge, isDark ? styles.badgeDark : styles.badgeLight]}
-    >
+    <View style={[styles.badge, isDark ? styles.badgeDark : styles.badgeLight]}>
       <Text style={[styles.text, isDark ? styles.textDark : styles.textLight]}>
         Level {level}
       </Text>

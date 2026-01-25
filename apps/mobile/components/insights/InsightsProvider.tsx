@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 
 import {
   getMonthSnapshot,
@@ -14,13 +20,16 @@ type InsightsContextValue = {
   fetchSnapshot: (year: number, month: number) => Promise<void>;
   refetchAvailableMonths: () => Promise<void>;
   prefetchSnapshot: (year: number, month: number) => Promise<void>;
+  invalidateSnapshot: (year: number, month: number) => void;
 };
 
 const InsightsContext = createContext<InsightsContextValue | null>(null);
 
 export function InsightsProvider({ children }: { children: React.ReactNode }) {
   const [availableMonths, setAvailableMonths] = useState<AvailableMonth[]>([]);
-  const [currentSnapshot, setCurrentSnapshot] = useState<MonthSnapshot | null>(null);
+  const [currentSnapshot, setCurrentSnapshot] = useState<MonthSnapshot | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,92 +53,130 @@ export function InsightsProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const fetchSnapshot = useCallback(async (year: number, month: number) => {
-    const cacheKey = `${year}-${month}`;
-    console.log(`[InsightsProvider] fetchSnapshot called with year: ${year}, month: ${month}, cacheKey: ${cacheKey}`);
+  const getCurrentMonthParams = useCallback(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() + 1 };
+  }, []);
 
-    // Check cache first
-    if (snapshotCache.has(cacheKey)) {
-      console.log(`[InsightsProvider] Using cached snapshot for ${cacheKey}`);
-      setCurrentSnapshot(snapshotCache.get(cacheKey)!);
-      setError(null);
-      return;
-    }
+  const fetchSnapshot = useCallback(
+    async (year: number, month: number) => {
+      const cacheKey = `${year}-${month}`;
+      console.log(
+        `[InsightsProvider] fetchSnapshot called with year: ${year}, month: ${month}, cacheKey: ${cacheKey}`,
+      );
 
-    try {
-      setIsLoading(true);
-      setError(null);
-      console.log(`[InsightsProvider] Calling API getMonthSnapshot({ year: ${year}, month: ${month} })`);
-
-      const response = await getMonthSnapshot({ year, month });
-      console.log(`[InsightsProvider] API response status: ${response.status}`);
-
-      if (response.status === 200 && response.data) {
-        console.log(`[InsightsProvider] Setting currentSnapshot for ${response.data.label} (${response.data.key})`);
-        setCurrentSnapshot(response.data);
-        // Cache the snapshot
-        snapshotCache.set(cacheKey, response.data);
-      } else if (response.status === 404) {
-        // No budget plan exists
-        setError("NO_BUDGET_PLAN");
-        setCurrentSnapshot(null);
-      } else if (response.status === 401) {
-        setError("UNAUTHORIZED");
-        setCurrentSnapshot(null);
-      } else {
-        setError("FETCH_ERROR");
-        setCurrentSnapshot(null);
+      // Check cache first
+      if (snapshotCache.has(cacheKey)) {
+        console.log(`[InsightsProvider] Using cached snapshot for ${cacheKey}`);
+        setCurrentSnapshot(snapshotCache.get(cacheKey)!);
+        setError(null);
+        return;
       }
-    } catch (err) {
-      console.error("Error fetching month snapshot:", err);
 
-      // Check if it's a 404 error (no budget plan)
-      if (err && typeof err === 'object' && 'status' in err) {
-        if (err.status === 404) {
+      try {
+        setIsLoading(true);
+        setError(null);
+        console.log(
+          `[InsightsProvider] Calling API getMonthSnapshot({ year: ${year}, month: ${month} })`,
+        );
+
+        const response = await getMonthSnapshot({ year, month });
+        console.log(
+          `[InsightsProvider] API response status: ${response.status}`,
+        );
+
+        if (response.status === 200 && response.data) {
+          console.log(
+            `[InsightsProvider] Setting currentSnapshot for ${response.data.label} (${response.data.key})`,
+          );
+          setCurrentSnapshot(response.data);
+          // Cache the snapshot
+          snapshotCache.set(cacheKey, response.data);
+        } else if (response.status === 404) {
+          // No budget plan exists
           setError("NO_BUDGET_PLAN");
-        } else if (err.status === 401) {
+          setCurrentSnapshot(null);
+        } else if (response.status === 401) {
           setError("UNAUTHORIZED");
+          setCurrentSnapshot(null);
+        } else {
+          setError("FETCH_ERROR");
+          setCurrentSnapshot(null);
+        }
+      } catch (err) {
+        console.error("Error fetching month snapshot:", err);
+
+        // Check if it's a 404 error (no budget plan)
+        if (err && typeof err === "object" && "status" in err) {
+          if (err.status === 404) {
+            setError("NO_BUDGET_PLAN");
+          } else if (err.status === 401) {
+            setError("UNAUTHORIZED");
+          } else {
+            setError("FETCH_ERROR");
+          }
         } else {
           setError("FETCH_ERROR");
         }
-      } else {
-        setError("FETCH_ERROR");
+        setCurrentSnapshot(null);
+      } finally {
+        setIsLoading(false);
       }
-      setCurrentSnapshot(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [snapshotCache]);
+    },
+    [snapshotCache],
+  );
 
-  const prefetchSnapshot = useCallback(async (year: number, month: number) => {
-    const cacheKey = `${year}-${month}`;
+  const prefetchSnapshot = useCallback(
+    async (year: number, month: number) => {
+      const cacheKey = `${year}-${month}`;
 
-    // Don't prefetch if already cached
-    if (snapshotCache.has(cacheKey)) {
-      return;
-    }
-
-    try {
-      const response = await getMonthSnapshot({ year, month });
-
-      if (response.status === 200 && response.data) {
-        // Cache the snapshot
-        snapshotCache.set(cacheKey, response.data);
+      // Don't prefetch if already cached
+      if (snapshotCache.has(cacheKey)) {
+        return;
       }
-    } catch (err) {
-      // Silently fail for prefetch - we'll fetch again when needed
-      console.log("Prefetch failed for", year, month);
-    }
-  }, [snapshotCache]);
+
+      try {
+        const response = await getMonthSnapshot({ year, month });
+
+        if (response.status === 200 && response.data) {
+          // Cache the snapshot
+          snapshotCache.set(cacheKey, response.data);
+        }
+      } catch (err) {
+        // Silently fail for prefetch - we'll fetch again when needed
+        console.log("Prefetch failed for", year, month, err);
+      }
+    },
+    [snapshotCache],
+  );
+
+  const invalidateSnapshot = useCallback(
+    (year: number, month: number) => {
+      const cacheKey = `${year}-${month}`;
+      if (snapshotCache.has(cacheKey)) {
+        snapshotCache.delete(cacheKey);
+      }
+    },
+    [snapshotCache],
+  );
 
   const refetchAvailableMonths = useCallback(async () => {
     await fetchAvailableMonths();
   }, []);
 
-  // Fetch available months on mount
+  const fetchCurrentMonthSnapshot = useCallback(async () => {
+    const { year, month } = getCurrentMonthParams();
+    console.log(
+      `[InsightsProvider] Auto-fetching current month snapshot on mount: ${year}-${month}`,
+    );
+    await fetchSnapshot(year, month);
+  }, [getCurrentMonthParams, fetchSnapshot]);
+
+  // Fetch available months and current snapshot on mount
   useEffect(() => {
     fetchAvailableMonths();
-  }, []);
+    fetchCurrentMonthSnapshot();
+  }, [fetchCurrentMonthSnapshot]);
 
   const value: InsightsContextValue = {
     availableMonths,
@@ -139,6 +186,7 @@ export function InsightsProvider({ children }: { children: React.ReactNode }) {
     fetchSnapshot,
     refetchAvailableMonths,
     prefetchSnapshot,
+    invalidateSnapshot,
   };
 
   return (

@@ -1,10 +1,13 @@
+import { forwardRef } from "react";
 import { SectionList, StyleSheet, View } from "react-native";
+import type { SectionList as SectionListType } from "react-native";
 import { colors } from "@/constants/theme";
-import type { TransactionEntry } from "@/components/dummy_data/transactions";
+import type { ListTransactions200Item } from "@/lib/gen/model";
 import type { TransactionSection } from "@/hooks/useTransactionsSections";
 import { TransactionSwipeRow } from "../widgets/TransactionSwipeRow";
 import { TransactionRow } from "./TransactionRow";
 import { SectionHeader } from "./SectionHeader";
+import { getUTCDateKey } from "@/utils/dateHelpers";
 
 type TransactionListSectionProps = {
   sections: TransactionSection[];
@@ -13,33 +16,45 @@ type TransactionListSectionProps = {
   getSubcategoryLabel: (catId: string, subId?: string) => string | null;
   getIncomeCategoryLabel: (id: string) => string;
   formatMoney: (value: number) => string;
-  onEdit: (tx: TransactionEntry) => void;
+  onEdit: (tx: ListTransactions200Item) => void;
   onDelete: (txId: string) => void;
-  onPress: (tx: TransactionEntry) => void;
+  onPress: (tx: ListTransactions200Item) => void;
+  refreshControl?: React.ReactElement;
 };
 
-export function TransactionListSection({
-  sections,
-  categoryOrder,
-  getCategoryLabel,
-  getSubcategoryLabel,
-  getIncomeCategoryLabel,
-  formatMoney,
-  onEdit,
-  onDelete,
-  onPress,
-}: TransactionListSectionProps) {
+export const TransactionListSection = forwardRef<
+  SectionListType,
+  TransactionListSectionProps
+>(function TransactionListSection(
+  {
+    sections,
+    categoryOrder,
+    getCategoryLabel,
+    getSubcategoryLabel,
+    getIncomeCategoryLabel,
+    formatMoney,
+    onEdit,
+    onDelete,
+    onPress,
+    refreshControl,
+  },
+  ref,
+) {
+  const todayKey = getUTCDateKey(new Date());
+
   return (
     <View style={[styles.listCard, styles.listCardExpanded]}>
       <SectionList
+        ref={ref}
         style={styles.sectionList}
         sections={sections}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)}
         stickySectionHeadersEnabled={false}
+        refreshControl={refreshControl}
         renderItem={({ item }) => (
           <TransactionSwipeRow
             onEdit={() => onEdit(item)}
-            onDelete={() => onDelete(item.id)}
+            onDelete={() => onDelete(String(item.id))}
           >
             <TransactionRow
               transaction={item}
@@ -59,6 +74,7 @@ export function TransactionListSection({
             categoryOrder={categoryOrder}
             formatMoney={formatMoney}
             sectionKey={section.dateKey}
+            isToday={section.dateKey === todayKey}
           />
         )}
         contentContainerStyle={styles.listContent}
@@ -66,7 +82,7 @@ export function TransactionListSection({
       />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   listCard: {

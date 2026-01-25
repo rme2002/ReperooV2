@@ -1,4 +1,4 @@
-import { type ReactNode, useRef, useMemo } from "react";
+import { type ReactNode, useCallback, useMemo, useRef } from "react";
 import {
   Animated,
   PanResponder,
@@ -24,7 +24,7 @@ export function TransactionSwipeRow({
   const translateX = useRef(new Animated.Value(0)).current;
   const isOpen = useRef(false);
 
-  const openActions = () => {
+  const openActions = useCallback(() => {
     Animated.timing(translateX, {
       toValue: -ACTION_WIDTH,
       duration: 200,
@@ -32,9 +32,9 @@ export function TransactionSwipeRow({
     }).start(() => {
       isOpen.current = true;
     });
-  };
+  }, [translateX]);
 
-  const closeActions = () => {
+  const closeActions = useCallback(() => {
     Animated.timing(translateX, {
       toValue: 0,
       duration: 200,
@@ -42,13 +42,14 @@ export function TransactionSwipeRow({
     }).start(() => {
       isOpen.current = false;
     });
-  };
+  }, [translateX]);
 
   const panResponder = useMemo(
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, gesture) =>
-          Math.abs(gesture.dx) > 10 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+          Math.abs(gesture.dx) > 10 &&
+          Math.abs(gesture.dx) > Math.abs(gesture.dy),
         onPanResponderMove: (_, gesture) => {
           if (gesture.dx < 0) {
             translateX.setValue(Math.max(gesture.dx, -ACTION_WIDTH));
@@ -65,7 +66,7 @@ export function TransactionSwipeRow({
         },
         onPanResponderTerminate: closeActions,
       }),
-    [translateX]
+    [closeActions, openActions, translateX],
   );
 
   return (

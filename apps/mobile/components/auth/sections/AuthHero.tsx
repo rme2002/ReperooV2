@@ -7,8 +7,8 @@ export function AuthHero() {
       <Text style={styles.badge}>Reperoo</Text>
       <Text style={styles.heading}>Log in or start your budgeting streak.</Text>
       <Text style={styles.subtitle}>
-        Use your email and password to get into Reperoo. Sign up goes straight to
-        the FastAPI backend, while login uses Supabase.
+        Use your email and password to get into Reperoo. Sign up goes straight
+        to the FastAPI backend, while login uses Supabase.
       </Text>
     </View>
   );

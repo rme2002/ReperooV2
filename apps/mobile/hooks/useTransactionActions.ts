@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { Alert } from "react-native";
 import { createExpenseTransaction } from "@/lib/gen/transactions/transactions";
 import type { ModalMode } from "./useTransactionsModals";
-import type { TransactionEntry } from "@/components/dummy_data/transactions";
+import type { ListTransactions200Item } from "@/lib/gen/model";
 
 /**
  * Submit payload type
@@ -38,7 +38,7 @@ export interface UseTransactionActionsReturn {
  */
 export function useTransactionActions(
   modalMode: ModalMode,
-  editingTx: TransactionEntry | null,
+  editingTx: ListTransactions200Item | null,
   userId: string | undefined,
   refetchTransactions: () => Promise<void>
 ): UseTransactionActionsReturn {

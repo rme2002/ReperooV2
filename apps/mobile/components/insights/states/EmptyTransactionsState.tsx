@@ -14,7 +14,7 @@ export function EmptyTransactionsState({
       <View style={[styles.container, styles.centerContent]}>
         <Text style={styles.emptyTitle}>No transactions yet</Text>
         <Text style={styles.emptyCopy}>
-          You haven't logged any transactions for this month
+          You haven{"'"}t logged any transactions for this month
         </Text>
         <Pressable style={styles.primaryButton} onPress={onAddTransaction}>
           <Text style={styles.primaryButtonText}>Add Transaction</Text>

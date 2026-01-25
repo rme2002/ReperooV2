@@ -9,10 +9,16 @@ type TransactionSummaryContextValue = {
   refetch: () => Promise<void>;
 };
 
-const TransactionSummaryContext = createContext<TransactionSummaryContextValue | null>(null);
+const TransactionSummaryContext =
+  createContext<TransactionSummaryContextValue | null>(null);
 
-export function TransactionSummaryProvider({ children }: { children: React.ReactNode }) {
-  const [todaySummary, setTodaySummary] = useState<TodayTransactionSummary | null>(null);
+export function TransactionSummaryProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [todaySummary, setTodaySummary] =
+    useState<TodayTransactionSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,7 +81,9 @@ export function TransactionSummaryProvider({ children }: { children: React.React
 export function useTransactionSummary() {
   const context = useContext(TransactionSummaryContext);
   if (!context) {
-    throw new Error("useTransactionSummary must be used within TransactionSummaryProvider");
+    throw new Error(
+      "useTransactionSummary must be used within TransactionSummaryProvider",
+    );
   }
   return context;
 }

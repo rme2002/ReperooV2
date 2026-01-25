@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import type { TransactionEntry } from "@/components/dummy_data/transactions";
 import type {
   ListTransactions200Item,
   ListRecurringTemplates200Item,
@@ -15,49 +14,13 @@ import { listIncomeCategories } from "@/lib/gen/income-categories/income-categor
  * Return type for useTransactionsData hook
  */
 export interface UseTransactionsDataReturn {
-  apiTransactions: TransactionEntry[];
+  apiTransactions: ListTransactions200Item[];
   recurringTemplates: ListRecurringTemplates200Item[];
   expenseCategories: ExpenseCategory[];
   incomeCategories: IncomeCategory[];
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
-}
-
-/**
- * Transform API transaction to local format
- */
-function transformApiTransaction(
-  apiTx: ListTransactions200Item
-): TransactionEntry | null {
-  const isRecurring = Boolean(apiTx.recurring_template_id);
-
-  if (apiTx.type === "expense") {
-    return {
-      id: apiTx.id?.toString() ?? `api-${Date.now()}`,
-      kind: "expense",
-      amount: apiTx.amount,
-      categoryId: apiTx.expense_category_id,
-      subcategoryId: apiTx.expense_subcategory_id ?? undefined,
-      note: apiTx.notes ?? undefined,
-      timestamp: apiTx.occurred_at,
-      isRecurringInstance: isRecurring,
-      recurringDayOfMonth: null,
-    };
-  } else if (apiTx.type === "income") {
-    return {
-      id: apiTx.id?.toString() ?? `api-${Date.now()}`,
-      kind: "income",
-      amount: apiTx.amount,
-      incomeCategoryId: apiTx.income_category_id,
-      note: apiTx.notes ?? undefined,
-      timestamp: apiTx.occurred_at,
-      isRecurringInstance: isRecurring,
-      recurringDayOfMonth: null,
-    };
-  }
-
-  return null;
 }
 
 /**
@@ -72,7 +35,9 @@ export function useTransactionsData(
   monthCurrentDate: string,
   userId: string | undefined
 ): UseTransactionsDataReturn {
-  const [apiTransactions, setApiTransactions] = useState<TransactionEntry[]>(
+  const [apiTransactions, setApiTransactions] = useState<
+    ListTransactions200Item[]
+  >(
     []
   );
   const [recurringTemplates, setRecurringTemplates] = useState<
@@ -163,10 +128,7 @@ export function useTransactionsData(
       });
 
       if (response.status === 200) {
-        const transformed = response.data
-          .map(transformApiTransaction)
-          .filter((tx): tx is TransactionEntry => tx !== null);
-        setApiTransactions(transformed);
+        setApiTransactions(response.data);
       } else {
         setError("Failed to load transactions");
         setApiTransactions([]);

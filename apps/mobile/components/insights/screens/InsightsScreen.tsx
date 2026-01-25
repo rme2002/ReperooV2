@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Circle, Svg } from "react-native-svg";
 
-import spendingCategories from "../../../../shared/config/spending-categories.json";
+import spendingCategories from "../../../../../shared/config/spending-categories.json";
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
 import { useInsightsContext } from "@/components/insights/InsightsProvider";
 import { colors, palette } from "@/constants/theme";
@@ -18,12 +26,16 @@ type SpendingCategoriesConfig = {
 };
 
 const categoryConfig: SpendingCategoriesConfig = spendingCategories;
-const categoryLookup = new Map(categoryConfig.categories.map((category) => [category.id, category]));
-const getCategoryLabel = (categoryId: string) => categoryLookup.get(categoryId)?.label ?? categoryId;
+const categoryLookup = new Map(
+  categoryConfig.categories.map((category) => [category.id, category]),
+);
+const getCategoryLabel = (categoryId: string) =>
+  categoryLookup.get(categoryId)?.label ?? categoryId;
 const getSubcategoryLabel = (categoryId: string, subcategoryId: string) =>
   categoryLookup
     .get(categoryId)
-    ?.subcategories?.find((sub) => sub.id === subcategoryId)?.label ?? subcategoryId;
+    ?.subcategories?.find((sub) => sub.id === subcategoryId)?.label ??
+  subcategoryId;
 
 const fallbackSubcategoryColors = [
   palette.green200,
@@ -35,7 +47,8 @@ const fallbackSubcategoryColors = [
   palette.green80,
 ];
 
-const formatCurrency = (value: number) => `€${value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+const formatCurrency = (value: number) =>
+  `€${value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
 
 const niceNumber = (value: number, round: boolean) => {
@@ -79,7 +92,14 @@ const computeAxisTicks = (maxValue: number) => {
 };
 
 export default function InsightsScreen() {
-  const { availableMonths, currentSnapshot, isLoading, error, fetchSnapshot, prefetchSnapshot } = useInsightsContext();
+  const {
+    availableMonths,
+    currentSnapshot,
+    isLoading,
+    error,
+    fetchSnapshot,
+    prefetchSnapshot,
+  } = useInsightsContext();
   const [monthIndex, setMonthIndex] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
   const [showActions, setShowActions] = useState(false);
@@ -91,7 +111,9 @@ export default function InsightsScreen() {
   useEffect(() => {
     if (availableMonths.length > 0 && availableMonths[monthIndex]) {
       const month = availableMonths[monthIndex];
-      console.log(`[InsightsScreen] Fetching snapshot for ${month.label} (year: ${month.year}, month: ${month.month})`);
+      console.log(
+        `[InsightsScreen] Fetching snapshot for ${month.label} (year: ${month.year}, month: ${month.month})`,
+      );
       fetchSnapshot(month.year, month.month);
     }
   }, [monthIndex, availableMonths, fetchSnapshot]);
@@ -156,7 +178,9 @@ export default function InsightsScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={[styles.container, styles.centerContent]}>
-          <Text style={styles.loadingText}>{isLoading ? "Loading insights..." : "No data available"}</Text>
+          <Text style={styles.loadingText}>
+            {isLoading ? "Loading insights..." : "No data available"}
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -166,7 +190,9 @@ export default function InsightsScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={[styles.container, styles.centerContent]}>
-          <Text style={styles.errorText}>Create a budget plan to view insights</Text>
+          <Text style={styles.errorText}>
+            Create a budget plan to view insights
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -184,11 +210,20 @@ export default function InsightsScreen() {
 
   // Snapshot-dependent calculations (only reached after null checks)
   const remaining = snapshot.budget - snapshot.totalSpent;
-  const remainingPct = snapshot.budget ? Math.max(0, remaining / snapshot.budget) : 0;
-  const spentPct = snapshot.budget ? Math.min(1, snapshot.totalSpent / snapshot.budget) : 0;
-  const onTrackBadge = remainingPct > 0.35 ? "On track" : remainingPct > 0.1 ? "Tight" : "Over";
+  const remainingPct = snapshot.budget
+    ? Math.max(0, remaining / snapshot.budget)
+    : 0;
+  const spentPct = snapshot.budget
+    ? Math.min(1, snapshot.totalSpent / snapshot.budget)
+    : 0;
+  const onTrackBadge =
+    remainingPct > 0.35 ? "On track" : remainingPct > 0.1 ? "Tight" : "Over";
   const badgeTone =
-    onTrackBadge === "On track" ? styles.badgePositive : onTrackBadge === "Tight" ? styles.badgeWarn : styles.badgeDanger;
+    onTrackBadge === "On track"
+      ? styles.badgePositive
+      : onTrackBadge === "Tight"
+        ? styles.badgeWarn
+        : styles.badgeDanger;
   const badgeTextTone =
     onTrackBadge === "On track"
       ? styles.badgeTextPositive
@@ -208,7 +243,9 @@ export default function InsightsScreen() {
 
   const daysLeft = Math.max(snapshot.totalDays - snapshot.loggedDays, 0);
   const perDay = daysLeft > 0 ? remaining / daysLeft : remaining;
-  const averagePerDay = snapshot.loggedDays ? snapshot.totalSpent / snapshot.loggedDays : snapshot.totalSpent;
+  const averagePerDay = snapshot.loggedDays
+    ? snapshot.totalSpent / snapshot.loggedDays
+    : snapshot.totalSpent;
   const lastDeltaText =
     snapshot.lastMonthDelta > 0
       ? `↑ ${formatPercent(snapshot.lastMonthDelta)} vs last month`
@@ -218,8 +255,12 @@ export default function InsightsScreen() {
 
   const savingsTotal = snapshot.savings.saved + snapshot.savings.invested;
   const hasSavingsSplit = savingsTotal > 0;
-  const savedShareWidth = hasSavingsSplit ? (snapshot.savings.saved / savingsTotal) * 100 : 0;
-  const investedShareWidth = hasSavingsSplit ? (snapshot.savings.invested / savingsTotal) * 100 : 0;
+  const savedShareWidth = hasSavingsSplit
+    ? (snapshot.savings.saved / savingsTotal) * 100
+    : 0;
+  const investedShareWidth = hasSavingsSplit
+    ? (snapshot.savings.invested / savingsTotal) * 100
+    : 0;
 
   const chartSize = Math.max(200, Math.min(width - 48, 260));
   const pieStroke = Math.max(14, chartSize * 0.12);
@@ -227,12 +268,27 @@ export default function InsightsScreen() {
   const centerSize = chartSize * 0.56;
   const circumference = 2 * Math.PI * pieRadius;
   const pieSegments = snapshot.categories.reduce<
-    { length: number; offset: number; color: string; id: string; label: string }[]
+    {
+      length: number;
+      offset: number;
+      color: string;
+      id: string;
+      label: string;
+    }[]
   >((acc, cat) => {
     const prevTotal = acc.reduce((sum, item) => sum + item.length, 0);
     const length = (cat.percent / 100) * circumference;
     const offset = prevTotal;
-    return [...acc, { length, offset, color: cat.color, id: cat.id, label: getCategoryLabel(cat.id) }];
+    return [
+      ...acc,
+      {
+        length,
+        offset,
+        color: cat.color,
+        id: cat.id,
+        label: getCategoryLabel(cat.id),
+      },
+    ];
   }, []);
 
   return (
@@ -243,11 +299,16 @@ export default function InsightsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Pressable onPress={goPrev} style={styles.navButton} disabled={monthIndex >= availableMonths.length - 1}>
+          <Pressable
+            onPress={goPrev}
+            style={styles.navButton}
+            disabled={monthIndex >= availableMonths.length - 1}
+          >
             <Text
               style={[
                 styles.navIcon,
-                monthIndex >= availableMonths.length - 1 && styles.navIconDisabled,
+                monthIndex >= availableMonths.length - 1 &&
+                  styles.navIconDisabled,
               ]}
             >
               ‹
@@ -259,8 +320,19 @@ export default function InsightsScreen() {
               Logged {snapshot.loggedDays}/{snapshot.totalDays} days
             </Text>
           </View>
-          <Pressable onPress={goNext} style={styles.navButton} disabled={monthIndex === 0}>
-            <Text style={[styles.navIcon, monthIndex === 0 && styles.navIconDisabled]}>›</Text>
+          <Pressable
+            onPress={goNext}
+            style={styles.navButton}
+            disabled={monthIndex === 0}
+          >
+            <Text
+              style={[
+                styles.navIcon,
+                monthIndex === 0 && styles.navIconDisabled,
+              ]}
+            >
+              ›
+            </Text>
           </Pressable>
         </View>
 
@@ -268,29 +340,43 @@ export default function InsightsScreen() {
           <View style={styles.insightWidget}>
             <View style={styles.insightHeader}>
               <View>
-                <Text style={[styles.remainingValue, { fontSize: 34 * fontFactor }]}>
+                <Text
+                  style={[styles.remainingValue, { fontSize: 34 * fontFactor }]}
+                >
                   {formatCurrency(Math.max(remaining, 0))} left
                 </Text>
-                <Text style={[styles.metricLabel, { fontSize: 13 * fontFactor }]}>this month</Text>
+                <Text
+                  style={[styles.metricLabel, { fontSize: 13 * fontFactor }]}
+                >
+                  this month
+                </Text>
               </View>
               <View style={[styles.badge, badgeTone]}>
-                <Text style={[styles.badgeText, badgeTextTone]}>{onTrackBadge}</Text>
+                <Text style={[styles.badgeText, badgeTextTone]}>
+                  {onTrackBadge}
+                </Text>
               </View>
             </View>
             <View style={styles.insightStatsRow}>
               <View style={styles.insightStatBlock}>
                 <Text style={styles.metricHelper}>Total budget</Text>
-                <Text style={styles.metricHelperBold}>{formatCurrency(snapshot.budget)}</Text>
+                <Text style={styles.metricHelperBold}>
+                  {formatCurrency(snapshot.budget)}
+                </Text>
               </View>
               <View style={styles.insightStatBlock}>
                 <Text style={styles.metricHelper}>Total spent</Text>
-                <Text style={styles.metricHelperBold}>{formatCurrency(snapshot.totalSpent)}</Text>
+                <Text style={styles.metricHelperBold}>
+                  {formatCurrency(snapshot.totalSpent)}
+                </Text>
               </View>
             </View>
             <View style={styles.insightStatsRow}>
               <View style={styles.insightStatBlock}>
                 <Text style={styles.metricHelper}>Average spend</Text>
-                <Text style={styles.metricHelperBold}>{formatCurrency(Math.round(averagePerDay))} / day</Text>
+                <Text style={styles.metricHelperBold}>
+                  {formatCurrency(Math.round(averagePerDay))} / day
+                </Text>
               </View>
               <View style={styles.insightStatBlock}>
                 <Text style={styles.metricHelper}>You can still spend</Text>
@@ -301,13 +387,19 @@ export default function InsightsScreen() {
             </View>
             <View style={styles.insightWeeklyRow}>
               <Text style={styles.metricLabel}>Weekly spending</Text>
-              <Text style={styles.metricHelperBold}>{formatCurrency(weeklyTotal)}</Text>
+              <Text style={styles.metricHelperBold}>
+                {formatCurrency(weeklyTotal)}
+              </Text>
             </View>
             <View style={[styles.progressStack, { marginTop: 4 * scale }]}>
               <View style={[styles.progressTrack, { height: progressHeight }]}>
-                <View style={[styles.progressFill, { width: `${spentPct * 100}%` }]} />
+                <View
+                  style={[styles.progressFill, { width: `${spentPct * 100}%` }]}
+                />
               </View>
-              <Text style={[styles.metricDelta, { fontSize: 13 * fontFactor }]}>{lastDeltaText}</Text>
+              <Text style={[styles.metricDelta, { fontSize: 13 * fontFactor }]}>
+                {lastDeltaText}
+              </Text>
             </View>
           </View>
         </View>
@@ -315,10 +407,14 @@ export default function InsightsScreen() {
         <View style={[styles.surface, { padding: cardPadding, gap: cardGap }]}>
           <View style={styles.sectionHeaderCentered}>
             <Text style={styles.sectionTitle}>Where your money went</Text>
-            <Text style={styles.subText}>Spending by category for this month</Text>
+            <Text style={styles.subText}>
+              Spending by category for this month
+            </Text>
           </View>
           <View style={styles.donutRow}>
-            <View style={[styles.donut, { width: chartSize, height: chartSize }]}>
+            <View
+              style={[styles.donut, { width: chartSize, height: chartSize }]}
+            >
               <Svg width={chartSize} height={chartSize} style={styles.svg}>
                 <Circle
                   cx={chartSize / 2}
@@ -349,79 +445,125 @@ export default function InsightsScreen() {
               <View
                 style={[
                   styles.donutCenter,
-                  { width: centerSize, height: centerSize, borderRadius: centerSize / 2 },
+                  {
+                    width: centerSize,
+                    height: centerSize,
+                    borderRadius: centerSize / 2,
+                  },
                 ]}
               >
-                <Text style={styles.donutValue}>{formatCurrency(snapshot.totalSpent)}</Text>
+                <Text style={styles.donutValue}>
+                  {formatCurrency(snapshot.totalSpent)}
+                </Text>
                 <Text style={styles.donutLabel}>This month</Text>
               </View>
             </View>
-          <View style={styles.legendColumns}>
-            {(() => {
-              const mid = Math.ceil(snapshot.categories.length / 2);
-              const left = snapshot.categories.slice(0, mid);
-              const right = snapshot.categories.slice(mid);
-              return (
-                <>
-                  <View style={styles.legendColumn}>
-                    {left.map((cat) => {
-                      const label = getCategoryLabel(cat.id);
-                      return (
-                        <View key={`legend-left-${cat.id}`} style={styles.legendRow}>
-                          <View style={styles.legendLeft}>
-                            <View style={[styles.legendDot, { backgroundColor: cat.color }]} />
-                            <Text style={styles.legendLabel}>{label}</Text>
+            <View style={styles.legendColumns}>
+              {(() => {
+                const mid = Math.ceil(snapshot.categories.length / 2);
+                const left = snapshot.categories.slice(0, mid);
+                const right = snapshot.categories.slice(mid);
+                return (
+                  <>
+                    <View style={styles.legendColumn}>
+                      {left.map((cat) => {
+                        const label = getCategoryLabel(cat.id);
+                        return (
+                          <View
+                            key={`legend-left-${cat.id}`}
+                            style={styles.legendRow}
+                          >
+                            <View style={styles.legendLeft}>
+                              <View
+                                style={[
+                                  styles.legendDot,
+                                  { backgroundColor: cat.color },
+                                ]}
+                              />
+                              <Text style={styles.legendLabel}>{label}</Text>
+                            </View>
+                            <Text style={styles.legendPercent}>
+                              {cat.percent}%
+                            </Text>
                           </View>
-                          <Text style={styles.legendPercent}>{cat.percent}%</Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                  <View style={styles.legendColumn}>
-                    {right.map((cat) => {
-                      const label = getCategoryLabel(cat.id);
-                      return (
-                        <View key={`legend-right-${cat.id}`} style={styles.legendRow}>
-                          <View style={styles.legendLeft}>
-                            <View style={[styles.legendDot, { backgroundColor: cat.color }]} />
-                            <Text style={styles.legendLabel}>{label}</Text>
+                        );
+                      })}
+                    </View>
+                    <View style={styles.legendColumn}>
+                      {right.map((cat) => {
+                        const label = getCategoryLabel(cat.id);
+                        return (
+                          <View
+                            key={`legend-right-${cat.id}`}
+                            style={styles.legendRow}
+                          >
+                            <View style={styles.legendLeft}>
+                              <View
+                                style={[
+                                  styles.legendDot,
+                                  { backgroundColor: cat.color },
+                                ]}
+                              />
+                              <Text style={styles.legendLabel}>{label}</Text>
+                            </View>
+                            <Text style={styles.legendPercent}>
+                              {cat.percent}%
+                            </Text>
                           </View>
-                          <Text style={styles.legendPercent}>{cat.percent}%</Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </>
-              );
-            })()}
-          </View>
+                        );
+                      })}
+                    </View>
+                  </>
+                );
+              })()}
+            </View>
           </View>
         </View>
 
         <View style={styles.surface}>
           <View style={styles.sectionHeaderStacked}>
             <Text style={styles.sectionTitle}>Savings & investments</Text>
-            <Text style={styles.subText}>Money moved toward your future this month</Text>
+            <Text style={styles.subText}>
+              Money moved toward your future this month
+            </Text>
           </View>
           <View style={[styles.savingsRow, styles.savingsRowFirst]}>
             <View style={styles.savingsLabelGroup}>
               <View style={styles.savingsLegendRow}>
-                <View style={[styles.savingsLegendDot, styles.savingsLegendSaved]} />
+                <View
+                  style={[styles.savingsLegendDot, styles.savingsLegendSaved]}
+                />
                 <Text style={styles.progressLabel}>Saved</Text>
               </View>
             </View>
-            <Text style={styles.savingsAmount}>{formatCurrency(snapshot.savings.saved)}</Text>
+            <Text style={styles.savingsAmount}>
+              {formatCurrency(snapshot.savings.saved)}
+            </Text>
           </View>
           <View style={styles.savingsRow}>
             <View style={styles.savingsLabelGroup}>
               <View style={styles.savingsLegendRow}>
-                <View style={[styles.savingsLegendDot, styles.savingsLegendInvested]} />
+                <View
+                  style={[
+                    styles.savingsLegendDot,
+                    styles.savingsLegendInvested,
+                  ]}
+                />
                 <Text style={styles.progressLabel}>Invested</Text>
               </View>
             </View>
-            <Text style={styles.savingsAmount}>{formatCurrency(snapshot.savings.invested)}</Text>
+            <Text style={styles.savingsAmount}>
+              {formatCurrency(snapshot.savings.invested)}
+            </Text>
           </View>
-          <View style={[styles.progressTrack, styles.progressMuted, styles.savingsTrack, styles.savingsCombinedTrack]}>
+          <View
+            style={[
+              styles.progressTrack,
+              styles.progressMuted,
+              styles.savingsTrack,
+              styles.savingsCombinedTrack,
+            ]}
+          >
             <View
               style={[
                 styles.progressFill,
@@ -441,7 +583,9 @@ export default function InsightsScreen() {
           <View style={styles.cardDivider} />
           <View style={styles.savingsSummaryRow}>
             <Text style={styles.progressLabel}>Total toward goals</Text>
-            <Text style={styles.savingsAmount}>{formatCurrency(savingsTotal)}</Text>
+            <Text style={styles.savingsAmount}>
+              {formatCurrency(savingsTotal)}
+            </Text>
           </View>
         </View>
 
@@ -451,7 +595,9 @@ export default function InsightsScreen() {
             <Text style={styles.subText}>Totals, share, and items</Text>
           </View>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableCell, styles.tableCategory]}>Category</Text>
+            <Text style={[styles.tableCell, styles.tableCategory]}>
+              Category
+            </Text>
             <Text style={[styles.tableCell, styles.tableNumeric]}>Total</Text>
             <Text style={[styles.tableCell, styles.tableNumeric]}>%</Text>
             <Text style={[styles.tableCell, styles.tableNumeric]}>Items</Text>
@@ -462,14 +608,18 @@ export default function InsightsScreen() {
             const rawSubcategories = cat.subcategories ?? [];
             const configCategory = categoryLookup.get(cat.id);
             const configuredSubcategories = configCategory?.subcategories ?? [];
-            const subcategoryDataMap = new Map(rawSubcategories.map((sub) => [sub.id, sub]));
+            const subcategoryDataMap = new Map(
+              rawSubcategories.map((sub) => [sub.id, sub]),
+            );
             const orderedSubcategories =
               configuredSubcategories.length > 0
                 ? configuredSubcategories.map((configSub, index) => {
                     const existing = subcategoryDataMap.get(configSub.id);
                     const fallbackColor =
                       existing?.color ??
-                      fallbackSubcategoryColors[index % fallbackSubcategoryColors.length] ??
+                      fallbackSubcategoryColors[
+                        index % fallbackSubcategoryColors.length
+                      ] ??
                       cat.color;
                     return (
                       existing ?? {
@@ -484,10 +634,16 @@ export default function InsightsScreen() {
             const additionalSubcategories =
               rawSubcategories.length > configuredSubcategories.length
                 ? rawSubcategories.filter(
-                    (sub) => !configuredSubcategories.some((configSub) => configSub.id === sub.id),
+                    (sub) =>
+                      !configuredSubcategories.some(
+                        (configSub) => configSub.id === sub.id,
+                      ),
                   )
                 : [];
-            const subcategories = [...orderedSubcategories, ...additionalSubcategories];
+            const subcategories = [
+              ...orderedSubcategories,
+              ...additionalSubcategories,
+            ];
             const hasSubcategories = subcategories.length > 0;
             const compactLayout = width < 420;
             const availableWidth = width - (compactLayout ? 48 : 140);
@@ -497,10 +653,18 @@ export default function InsightsScreen() {
             const subCircumference = 2 * Math.PI * subPieRadius;
             const subSegments = subcategories
               .filter((sub) => sub.percent > 0)
-              .reduce<{ length: number; offset: number; color: string; id: string }[]>((acc, sub) => {
-                const prevTotal = acc.reduce((sum, item) => sum + item.length, 0);
+              .reduce<
+                { length: number; offset: number; color: string; id: string }[]
+              >((acc, sub) => {
+                const prevTotal = acc.reduce(
+                  (sum, item) => sum + item.length,
+                  0,
+                );
                 const length = (sub.percent / 100) * subCircumference;
-                return [...acc, { length, offset: prevTotal, color: sub.color, id: sub.id }];
+                return [
+                  ...acc,
+                  { length, offset: prevTotal, color: sub.color, id: sub.id },
+                ];
               }, []);
 
             return (
@@ -514,20 +678,46 @@ export default function InsightsScreen() {
                     pressed && styles.tableRowPressed,
                   ]}
                 >
-                  <View style={[styles.tableCell, styles.tableCategory, styles.tableCellRow]}>
-                    <View style={[styles.legendDot, { backgroundColor: cat.color }]} />
+                  <View
+                    style={[
+                      styles.tableCell,
+                      styles.tableCategory,
+                      styles.tableCellRow,
+                    ]}
+                  >
+                    <View
+                      style={[styles.legendDot, { backgroundColor: cat.color }]}
+                    />
                     <Text style={styles.tableText}>{catLabel}</Text>
                   </View>
-                  <Text style={[styles.tableCell, styles.tableNumeric]}>{Math.round(cat.total)}</Text>
-                  <Text style={[styles.tableCell, styles.tableNumeric]}>{cat.percent}%</Text>
-                  <Text style={[styles.tableCell, styles.tableNumeric]}>{cat.items}</Text>
+                  <Text style={[styles.tableCell, styles.tableNumeric]}>
+                    {Math.round(cat.total)}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.tableNumeric]}>
+                    {cat.percent}%
+                  </Text>
+                  <Text style={[styles.tableCell, styles.tableNumeric]}>
+                    {cat.items}
+                  </Text>
                 </Pressable>
                 {isActive && hasSubcategories && (
                   <View style={styles.subCategoryPanel}>
-                    <Text style={styles.subCategoryTitle}>{catLabel} breakdown</Text>
-                    <View style={[styles.subCategoryContent, compactLayout && styles.subCategoryContentStacked]}>
+                    <Text style={styles.subCategoryTitle}>
+                      {catLabel} breakdown
+                    </Text>
+                    <View
+                      style={[
+                        styles.subCategoryContent,
+                        compactLayout && styles.subCategoryContentStacked,
+                      ]}
+                    >
                       <View style={styles.subCategoryChartColumn}>
-                        <View style={[styles.subCategoryChart, { width: subChartSize, height: subChartSize }]}>
+                        <View
+                          style={[
+                            styles.subCategoryChart,
+                            { width: subChartSize, height: subChartSize },
+                          ]}
+                        >
                           <Svg width={subChartSize} height={subChartSize}>
                             <Circle
                               cx={subChartSize / 2}
@@ -565,19 +755,36 @@ export default function InsightsScreen() {
                               },
                             ]}
                           >
-                            <Text style={styles.subCategoryValue}>{formatCurrency(Math.round(cat.total))}</Text>
+                            <Text style={styles.subCategoryValue}>
+                              {formatCurrency(Math.round(cat.total))}
+                            </Text>
                             <Text style={styles.subCategoryLabel}>Total</Text>
                           </View>
                         </View>
                       </View>
-                      <View style={[styles.subCategoryLegend, compactLayout && styles.subCategoryLegendFull]}>
+                      <View
+                        style={[
+                          styles.subCategoryLegend,
+                          compactLayout && styles.subCategoryLegendFull,
+                        ]}
+                      >
                         {subcategories.map((sub, index) => {
                           const subLabel = getSubcategoryLabel(cat.id, sub.id);
                           return (
-                            <View key={`${sub.id}-${index}`} style={styles.legendRowSmall}>
-                              <View style={[styles.legendDot, { backgroundColor: sub.color }]} />
+                            <View
+                              key={`${sub.id}-${index}`}
+                              style={styles.legendRowSmall}
+                            >
+                              <View
+                                style={[
+                                  styles.legendDot,
+                                  { backgroundColor: sub.color },
+                                ]}
+                              />
                               <View style={styles.legendTextBlock}>
-                                <Text style={styles.legendLabelSmall}>{subLabel}</Text>
+                                <Text style={styles.legendLabelSmall}>
+                                  {subLabel}
+                                </Text>
                                 <Text style={styles.legendPercentSmall}>
                                   {sub.percent > 0
                                     ? `${sub.percent}% · ${formatCurrency(Math.round(sub.total))}`
@@ -600,27 +807,46 @@ export default function InsightsScreen() {
           <View style={styles.sectionHeader}>
             <View>
               <Text style={styles.sectionTitle}>Weekly spending</Text>
-              <Text style={styles.subText}>Total spent per week this month</Text>
+              <Text style={styles.subText}>
+                Total spent per week this month
+              </Text>
             </View>
-            <Text style={styles.weeklyTotalLabel}>{formatCurrency(weeklyTotal)}</Text>
+            <Text style={styles.weeklyTotalLabel}>
+              {formatCurrency(weeklyTotal)}
+            </Text>
           </View>
           {isWeeklyLoading ? (
-            <View style={[styles.weeklySkeletonRow, { height: weeklyChartHeight }]}>
+            <View
+              style={[styles.weeklySkeletonRow, { height: weeklyChartHeight }]}
+            >
               {Array.from({ length: 5 }).map((_, idx) => (
-                <View key={`weekly-skeleton-${idx}`} style={styles.weeklySkeletonBar} />
+                <View
+                  key={`weekly-skeleton-${idx}`}
+                  style={styles.weeklySkeletonBar}
+                />
               ))}
             </View>
           ) : hasWeeklySpending ? (
             <View style={styles.weeklyChartBlock}>
               <View style={styles.weeklyPlotWrapper}>
-                <View style={[styles.weeklyAxisColumn, { width: weeklyAxisWidth, height: weeklyChartHeight }]}>
+                <View
+                  style={[
+                    styles.weeklyAxisColumn,
+                    { width: weeklyAxisWidth, height: weeklyChartHeight },
+                  ]}
+                >
                   {weeklyAxisTicks.map((value, idx) => (
-                    <Text key={`weekly-axis-${value}-${idx}`} style={styles.weeklyAxisLabel}>
+                    <Text
+                      key={`weekly-axis-${value}-${idx}`}
+                      style={styles.weeklyAxisLabel}
+                    >
                       {formatCurrency(value)}
                     </Text>
                   ))}
                 </View>
-                <View style={[styles.weeklyPlotArea, { height: weeklyChartHeight }]}>
+                <View
+                  style={[styles.weeklyPlotArea, { height: weeklyChartHeight }]}
+                >
                   <View style={styles.weeklyGridLayer} pointerEvents="none">
                     {weeklyAxisTicks.map((tickValue, idx) => (
                       <View
@@ -635,29 +861,45 @@ export default function InsightsScreen() {
                   <View
                     style={[
                       styles.weeklyBarsRow,
-                      displayWeeklyPoints.length === 1 && styles.weeklyBarsRowSingle,
+                      displayWeeklyPoints.length === 1 &&
+                        styles.weeklyBarsRowSingle,
                     ]}
                   >
                     {displayWeeklyPoints.map((point, idx) => {
-                      const ratio = weeklyScaleMax ? (point.total / weeklyScaleMax) * 100 : 0;
-                      const heightPct = point.total === 0 ? 4 : Math.max(12, ratio);
+                      const ratio = weeklyScaleMax
+                        ? (point.total / weeklyScaleMax) * 100
+                        : 0;
+                      const heightPct =
+                        point.total === 0 ? 4 : Math.max(12, ratio);
                       const isActive = activeWeekIndex === idx;
                       return (
                         <Pressable
                           key={`week-${point.week}-${idx}`}
-                          onPress={() => setActiveWeekIndex(isActive ? null : idx)}
+                          onPress={() =>
+                            setActiveWeekIndex(isActive ? null : idx)
+                          }
                           style={styles.weeklyBarPressable}
                         >
-                          <View style={[styles.weeklyBarWrapper, { minHeight: weeklyChartHeight - 40 }]}>
+                          <View
+                            style={[
+                              styles.weeklyBarWrapper,
+                              { minHeight: weeklyChartHeight - 40 },
+                            ]}
+                          >
                             {isActive ? (
                               <View
                                 pointerEvents="none"
                                 style={[
                                   styles.weeklyTooltip,
-                                  { width: weeklyTooltipWidth, marginLeft: -weeklyTooltipWidth / 2 },
+                                  {
+                                    width: weeklyTooltipWidth,
+                                    marginLeft: -weeklyTooltipWidth / 2,
+                                  },
                                 ]}
                               >
-                                <Text style={styles.weeklyTooltipValue}>{formatCurrency(point.total)}</Text>
+                                <Text style={styles.weeklyTooltipValue}>
+                                  {formatCurrency(point.total)}
+                                </Text>
                               </View>
                             ) : null}
                             <View
@@ -670,7 +912,9 @@ export default function InsightsScreen() {
                               ]}
                             />
                           </View>
-                          <Text style={styles.weeklyXAxisLabel}>{point.label}</Text>
+                          <Text style={styles.weeklyXAxisLabel}>
+                            {point.label}
+                          </Text>
                         </Pressable>
                       );
                     })}
@@ -679,8 +923,15 @@ export default function InsightsScreen() {
               </View>
             </View>
           ) : (
-            <View style={[styles.weeklyEmptyState, { minHeight: weeklyChartHeight - 20 }]}>
-              <Text style={styles.weeklyEmptyText}>No spending logged this month yet.</Text>
+            <View
+              style={[
+                styles.weeklyEmptyState,
+                { minHeight: weeklyChartHeight - 20 },
+              ]}
+            >
+              <Text style={styles.weeklyEmptyText}>
+                No spending logged this month yet.
+              </Text>
             </View>
           )}
         </View>
@@ -699,9 +950,13 @@ export default function InsightsScreen() {
               return (
                 <View key={`${tx.date}-${idx}`} style={styles.txRow}>
                   <View>
-                    <Text style={styles.txAmount}>{formatCurrency(tx.amount)}</Text>
+                    <Text style={styles.txAmount}>
+                      {formatCurrency(tx.amount)}
+                    </Text>
                     <Text style={styles.txCategory}>
-                      {subcategoryLabel ? `${categoryLabel} · ${subcategoryLabel}` : categoryLabel}
+                      {subcategoryLabel
+                        ? `${categoryLabel} · ${subcategoryLabel}`
+                        : categoryLabel}
                     </Text>
                   </View>
                   <Text style={styles.txDate}>{tx.date}</Text>
@@ -712,7 +967,10 @@ export default function InsightsScreen() {
         </View>
       </ScrollView>
       {showActions ? (
-        <Pressable style={styles.fabBackdrop} onPress={() => setShowActions(false)}>
+        <Pressable
+          style={styles.fabBackdrop}
+          onPress={() => setShowActions(false)}
+        >
           <View />
         </Pressable>
       ) : null}
@@ -720,7 +978,10 @@ export default function InsightsScreen() {
         {showActions ? (
           <View style={styles.fabMenuColumn}>
             <Pressable
-              style={({ pressed }) => [styles.fabAction, pressed && styles.fabActionPressed]}
+              style={({ pressed }) => [
+                styles.fabAction,
+                pressed && styles.fabActionPressed,
+              ]}
               onPress={() => {
                 setShowActions(false);
                 setShowAdd(true);
@@ -739,7 +1000,11 @@ export default function InsightsScreen() {
                 Alert.alert("Add income", "Income tracking is coming soon.");
               }}
             >
-              <Text style={[styles.fabActionLabel, styles.fabActionLabelSecondary]}>Add income</Text>
+              <Text
+                style={[styles.fabActionLabel, styles.fabActionLabelSecondary]}
+              >
+                Add income
+              </Text>
             </Pressable>
           </View>
         ) : (

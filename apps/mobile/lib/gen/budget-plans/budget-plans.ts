@@ -7,11 +7,14 @@
  */
 import type {
   BudgetPlan,
+  CreateBudgetPlanParams,
   CreateBudgetPlanPayload,
   ErrorResponse400Response,
   ErrorResponse401Response,
   ErrorResponse404Response,
   ErrorResponse500Response,
+  GetBudgetPlanParams,
+  UpdateBudgetPlanParams,
   UpdateBudgetPlanPayload
 } from '.././model';
 
@@ -50,17 +53,25 @@ export type createBudgetPlanResponseError = (createBudgetPlanResponse400 | creat
 
 export type createBudgetPlanResponse = (createBudgetPlanResponseSuccess | createBudgetPlanResponseError)
 
-export const getCreateBudgetPlanUrl = () => {
+export const getCreateBudgetPlanUrl = (params: CreateBudgetPlanParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
-  
+  const stringifiedParams = normalizedParams.toString();
 
-  return `http://example.com/api/v1/budget-plans/create`
+  return stringifiedParams.length > 0 ? `http://example.com/api/v1/budget-plans/create?${stringifiedParams}` : `http://example.com/api/v1/budget-plans/create`
 }
 
-export const createBudgetPlan = async (createBudgetPlanPayload: CreateBudgetPlanPayload, options?: RequestInit): Promise<createBudgetPlanResponse> => {
+export const createBudgetPlan = async (createBudgetPlanPayload: CreateBudgetPlanPayload,
+    params: CreateBudgetPlanParams, options?: RequestInit): Promise<createBudgetPlanResponse> => {
   
-  return customFetch<createBudgetPlanResponse>(getCreateBudgetPlanUrl(),
+  return customFetch<createBudgetPlanResponse>(getCreateBudgetPlanUrl(params),
   {      
     ...options,
     method: 'POST',
@@ -104,17 +115,24 @@ export type getBudgetPlanResponseError = (getBudgetPlanResponse401 | getBudgetPl
 
 export type getBudgetPlanResponse = (getBudgetPlanResponseSuccess | getBudgetPlanResponseError)
 
-export const getGetBudgetPlanUrl = () => {
+export const getGetBudgetPlanUrl = (params: GetBudgetPlanParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
-  
+  const stringifiedParams = normalizedParams.toString();
 
-  return `http://example.com/api/v1/budget-plans/get`
+  return stringifiedParams.length > 0 ? `http://example.com/api/v1/budget-plans/get?${stringifiedParams}` : `http://example.com/api/v1/budget-plans/get`
 }
 
-export const getBudgetPlan = async ( options?: RequestInit): Promise<getBudgetPlanResponse> => {
+export const getBudgetPlan = async (params: GetBudgetPlanParams, options?: RequestInit): Promise<getBudgetPlanResponse> => {
   
-  return customFetch<getBudgetPlanResponse>(getGetBudgetPlanUrl(),
+  return customFetch<getBudgetPlanResponse>(getGetBudgetPlanUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -162,17 +180,25 @@ export type updateBudgetPlanResponseError = (updateBudgetPlanResponse400 | updat
 
 export type updateBudgetPlanResponse = (updateBudgetPlanResponseSuccess | updateBudgetPlanResponseError)
 
-export const getUpdateBudgetPlanUrl = () => {
+export const getUpdateBudgetPlanUrl = (params: UpdateBudgetPlanParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
-  
+  const stringifiedParams = normalizedParams.toString();
 
-  return `http://example.com/api/v1/budget-plans/update`
+  return stringifiedParams.length > 0 ? `http://example.com/api/v1/budget-plans/update?${stringifiedParams}` : `http://example.com/api/v1/budget-plans/update`
 }
 
-export const updateBudgetPlan = async (updateBudgetPlanPayload: UpdateBudgetPlanPayload, options?: RequestInit): Promise<updateBudgetPlanResponse> => {
+export const updateBudgetPlan = async (updateBudgetPlanPayload: UpdateBudgetPlanPayload,
+    params: UpdateBudgetPlanParams, options?: RequestInit): Promise<updateBudgetPlanResponse> => {
   
-  return customFetch<updateBudgetPlanResponse>(getUpdateBudgetPlanUrl(),
+  return customFetch<updateBudgetPlanResponse>(getUpdateBudgetPlanUrl(params),
   {      
     ...options,
     method: 'PATCH',

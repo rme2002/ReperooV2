@@ -10,7 +10,10 @@ type PreferenceRowProps = {
 export function PreferenceRow({ label, value, onPress }: PreferenceRowProps) {
   return (
     <Pressable
-      style={({ pressed }) => [styles.listRow, pressed && styles.listRowPressed]}
+      style={({ pressed }) => [
+        styles.listRow,
+        pressed && styles.listRowPressed,
+      ]}
       onPress={onPress}
     >
       <View>

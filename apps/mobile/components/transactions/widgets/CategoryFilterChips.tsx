@@ -44,7 +44,9 @@ export function CategoryFilterChips({
               }}
               style={[styles.chip, isActive && styles.chipActive]}
             >
-              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+              <Text
+                style={[styles.chipText, isActive && styles.chipTextActive]}
+              >
                 {chip.label}
               </Text>
             </Pressable>

@@ -33,7 +33,9 @@ export function AccountSection({
           maxLength={50}
         />
         <FormField label="Email" value={email ?? ""} editable={false} />
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        ) : null}
         {hasChanges ? (
           <Pressable
             style={({ pressed }) => [

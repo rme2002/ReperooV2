@@ -30,7 +30,10 @@ export function AddTransactionMenu({
           onPress={onAddIncome}
         >
           <Text
-            style={[styles.addMenuOptionLabel, styles.addMenuOptionLabelSecondary]}
+            style={[
+              styles.addMenuOptionLabel,
+              styles.addMenuOptionLabelSecondary,
+            ]}
           >
             Add Income
           </Text>

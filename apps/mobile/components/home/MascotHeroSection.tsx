@@ -1,5 +1,11 @@
 import { useEffect } from "react";
-import { View, Image, Text, StyleSheet, useWindowDimensions } from "react-native";
+import {
+  View,
+  Image,
+  Text,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -12,7 +18,10 @@ import Animated, {
   SharedValue,
 } from "react-native-reanimated";
 import { EvolutionStage } from "@/lib/gen/model";
-import { getEvolutionImage, getEvolutionDisplayName } from "@/utils/evolutionHelpers";
+import {
+  getEvolutionImage,
+  getEvolutionDisplayName,
+} from "@/utils/evolutionHelpers";
 import { colors } from "@/constants/theme";
 
 type MascotHeroSectionProps = {
@@ -58,13 +67,10 @@ function Sparkle({ offsetX, offsetY, delay, duration }: SparkleProps) {
     opacity.value = withDelay(
       delay,
       withRepeat(
-        withSequence(
-          withTiming(1, { duration }),
-          withTiming(0, { duration })
-        ),
+        withSequence(withTiming(1, { duration }), withTiming(0, { duration })),
         -1,
-        false
-      )
+        false,
+      ),
     );
 
     scale.value = withDelay(
@@ -72,13 +78,13 @@ function Sparkle({ offsetX, offsetY, delay, duration }: SparkleProps) {
       withRepeat(
         withSequence(
           withTiming(1, { duration }),
-          withTiming(0.5, { duration })
+          withTiming(0.5, { duration }),
         ),
         -1,
-        false
-      )
+        false,
+      ),
     );
-  }, [delay, duration]);
+  }, [delay, duration, opacity, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -121,7 +127,7 @@ export function MascotHeroSection({
       scrollY.value,
       [COLLAPSE_START, COLLAPSE_END],
       [HERO_HEIGHT_EXPANDED, HERO_HEIGHT_COLLAPSED],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     return { height };
   });
@@ -132,19 +138,19 @@ export function MascotHeroSection({
       scrollY.value,
       [COLLAPSE_START, COLLAPSE_END * 0.8],
       [1, 0],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     const scale = interpolate(
       scrollY.value,
       [COLLAPSE_START, COLLAPSE_END],
       [1, 0.75],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     const translateY = interpolate(
       scrollY.value,
       [COLLAPSE_START, COLLAPSE_END],
       [0, -30],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     return { opacity, transform: [{ scale }, { translateY }] };
   });
@@ -155,15 +161,13 @@ export function MascotHeroSection({
       scrollY.value,
       [COLLAPSE_END * 0.7, COLLAPSE_END],
       [0, 1],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     return { opacity };
   });
 
-
   return (
     <Animated.View style={[styles.container, animatedContainerStyle]}>
-
       {/* Expanded state: Hero base image */}
       <View style={[styles.heroContent, { width: containerWidth }]}>
         <Animated.View style={[styles.heroImageWrapper, animatedHeroStyle]}>
@@ -203,13 +207,18 @@ export function MascotHeroSection({
         <View style={styles.miniMascotContainer}>
           <Image
             source={getEvolutionImage(evolutionStage)}
-            style={[styles.miniMascot, { width: miniMascotSize, height: miniMascotSize }]}
+            style={[
+              styles.miniMascot,
+              { width: miniMascotSize, height: miniMascotSize },
+            ]}
             resizeMode="contain"
           />
         </View>
         <View style={styles.collapsedInfo}>
           <View style={styles.collapsedTopRow}>
-            <Text style={styles.collapsedXpText}>{currentXP}/{maxXP} XP</Text>
+            <Text style={styles.collapsedXpText}>
+              {currentXP}/{maxXP} XP
+            </Text>
             <View style={styles.miniStreakIndicator}>
               <Text style={styles.miniStreakNumber}>{streakDays}d</Text>
             </View>

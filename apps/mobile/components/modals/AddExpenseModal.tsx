@@ -36,6 +36,7 @@ type Props = {
   onClose: () => void;
   mode?: "add" | "edit" | "view";
   initialValues?: TransactionFormValues | null;
+  onSuccess?: (date: Date) => void | Promise<void>;
   onSubmit?: (payload: {
     amount: number;
     categoryId: string;
@@ -67,7 +68,11 @@ const categories: CategoryOption[] = categoryConfig.categories;
 const MAX_VISIBLE_SUBCATEGORIES = 6;
 
 const formatDate = (date: Date) =>
-  date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
 const getMonthStart = (date: Date) => {
   const d = new Date(date);
@@ -98,6 +103,7 @@ export function AddExpenseModal({
   onClose,
   mode = "add",
   initialValues,
+  onSuccess,
   onSubmit,
   onEditRequest,
   isSaving = false,
@@ -105,17 +111,26 @@ export function AddExpenseModal({
   const { session } = useSupabaseAuthSync();
 
   useEffect(() => {
-    if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+    if (
+      Platform.OS === "android" &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
       UIManager.setLayoutAnimationEnabledExperimental(true);
     }
   }, []);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(
+    null,
+  );
+  const [expandedCategories, setExpandedCategories] = useState<
+    Record<string, boolean>
+  >({});
   const [amountText, setAmountText] = useState("");
   const [note, setNote] = useState("");
-  const [transactionTag, setTransactionTag] = useState<"need" | "want" | null>(null);
+  const [transactionTag, setTransactionTag] = useState<"need" | "want" | null>(
+    null,
+  );
   const [saving, setSaving] = useState(false);
 
   const today = useMemo(() => {
@@ -127,8 +142,12 @@ export function AddExpenseModal({
   const [monthCursor, setMonthCursor] = useState<Date>(getMonthStart(today));
   const [showCalendar, setShowCalendar] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
-  const [recurringFrequency, setRecurringFrequency] = useState<"monthly" | "weekly" | "biweekly">("monthly");
-  const [recurringDayOfMonth, setRecurringDayOfMonth] = useState<number>(today.getDate());
+  const [recurringFrequency, setRecurringFrequency] = useState<
+    "monthly" | "weekly" | "biweekly"
+  >("monthly");
+  const [recurringDayOfMonth, setRecurringDayOfMonth] = useState<number>(
+    today.getDate(),
+  );
   const [recurringDayDirty, setRecurringDayDirty] = useState(false);
   const { currencySymbol } = useCurrencyFormatter();
   const isViewMode = mode === "view";
@@ -139,7 +158,15 @@ export function AddExpenseModal({
     return day === 0 ? 6 : day - 1; // Convert to 0=Monday, 6=Sunday
   }, [selectedDate]);
 
-  const dayOfWeekNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const dayOfWeekNames = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
 
   const scrollRef = useRef<ScrollView>(null);
   const [categorySectionTop, setCategorySectionTop] = useState(0);
@@ -152,7 +179,8 @@ export function AddExpenseModal({
 
   const isAmountValid = amountValue > 0;
   const currentCategory = useMemo(
-    () => categories.find((category) => category.id === selectedCategory) ?? null,
+    () =>
+      categories.find((category) => category.id === selectedCategory) ?? null,
     [selectedCategory],
   );
   const subcategoryOptions = currentCategory?.subcategories ?? [];
@@ -161,14 +189,20 @@ export function AddExpenseModal({
   const formValid = isAmountValid && isCategoryValid && isTagValid;
   const monthDays = useMemo(() => getMonthDays(monthCursor), [monthCursor]);
 
-  const selectedSubcategoryData = subcategoryOptions.find((sub) => sub.id === selectedSubcategory);
-  const isCurrentCategoryExpanded = selectedCategory ? Boolean(expandedCategories[selectedCategory]) : false;
+  const selectedSubcategoryData = subcategoryOptions.find(
+    (sub) => sub.id === selectedSubcategory,
+  );
+  const isCurrentCategoryExpanded = selectedCategory
+    ? Boolean(expandedCategories[selectedCategory])
+    : false;
   const visibleSubcategories =
     isCurrentCategoryExpanded || isViewMode
       ? subcategoryOptions
       : subcategoryOptions.slice(0, MAX_VISIBLE_SUBCATEGORIES);
   const hasHiddenSubcategories =
-    !isViewMode && subcategoryOptions.length > MAX_VISIBLE_SUBCATEGORIES && !isCurrentCategoryExpanded;
+    !isViewMode &&
+    subcategoryOptions.length > MAX_VISIBLE_SUBCATEGORIES &&
+    !isCurrentCategoryExpanded;
 
   const animateLayout = () => {
     if (LayoutAnimation.configureNext) {
@@ -178,7 +212,10 @@ export function AddExpenseModal({
 
   const scrollToCategories = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTo({ y: Math.max(categorySectionTop - 16, 0), animated: true });
+      scrollRef.current.scrollTo({
+        y: Math.max(categorySectionTop - 16, 0),
+        animated: true,
+      });
     }
   };
 
@@ -201,7 +238,9 @@ export function AddExpenseModal({
       return;
     }
     animateLayout();
-    setSelectedSubcategory((current) => (current === subcategoryId ? null : subcategoryId));
+    setSelectedSubcategory((current) =>
+      current === subcategoryId ? null : subcategoryId,
+    );
   };
 
   const clearSelection = () => {
@@ -269,14 +308,18 @@ export function AddExpenseModal({
         initialValues.subcategoryId ? { [initialValues.categoryId]: true } : {},
       );
       setAmountText(
-        initialValues.amount || initialValues.amount === 0 ? String(initialValues.amount) : "",
+        initialValues.amount || initialValues.amount === 0
+          ? String(initialValues.amount)
+          : "",
       );
       setNote(initialValues.note ?? "");
       setSelectedDate(parsedDate);
       setMonthCursor(getMonthStart(parsedDate));
       setShowCalendar(false);
       setIsRecurring(Boolean(initialValues.isRecurring));
-      setRecurringDayOfMonth(initialValues.recurringDayOfMonth ?? parsedDate.getDate());
+      setRecurringDayOfMonth(
+        initialValues.recurringDayOfMonth ?? parsedDate.getDate(),
+      );
       setRecurringDayDirty(false);
       setTransactionTag(initialValues.transactionTag ?? null);
     } else if (mode === "add") {
@@ -318,8 +361,10 @@ export function AddExpenseModal({
             amount: amountValue,
             type: "expense" as const,
             frequency: recurringFrequency,
-            day_of_week: recurringFrequency !== "monthly" ? recurringDayOfWeek : null,
-            day_of_month: recurringFrequency === "monthly" ? recurringDayOfMonth : null,
+            day_of_week:
+              recurringFrequency !== "monthly" ? recurringDayOfWeek : null,
+            day_of_month:
+              recurringFrequency === "monthly" ? recurringDayOfMonth : null,
             start_date: selectedDate.toISOString(),
             end_date: null, // MVP: never ends
             total_occurrences: null, // MVP: never ends
@@ -329,17 +374,28 @@ export function AddExpenseModal({
             notes: note.trim() || null,
           };
 
-          console.log("[AddExpenseModal] Creating recurring template:", JSON.stringify(payload, null, 2));
+          console.log(
+            "[AddExpenseModal] Creating recurring template:",
+            JSON.stringify(payload, null, 2),
+          );
           const response = await createRecurringExpenseTemplate(payload);
 
           if (response.status === 201) {
             Alert.alert("Success", "Recurring expense template created!");
+            await onSuccess?.(selectedDate);
             resetForm();
             onClose();
           } else {
             console.error("[AddExpenseModal] Error response:", response);
-            const errorMessage = (response.data as any)?.detail || "Failed to create recurring template";
-            Alert.alert("Error", typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+            const errorMessage =
+              (response.data as any)?.detail ||
+              "Failed to create recurring template";
+            Alert.alert(
+              "Error",
+              typeof errorMessage === "string"
+                ? errorMessage
+                : JSON.stringify(errorMessage),
+            );
           }
         } else {
           // Create one-time transaction
@@ -354,22 +410,36 @@ export function AddExpenseModal({
             expense_subcategory_id: selectedSubcategory || null,
           };
 
-          console.log("[AddExpenseModal] Creating one-time expense:", JSON.stringify(payload, null, 2));
+          console.log(
+            "[AddExpenseModal] Creating one-time expense:",
+            JSON.stringify(payload, null, 2),
+          );
           const response = await createExpenseTransaction(payload);
 
           if (response.status === 201) {
             Alert.alert("Success", "Expense created successfully!");
+            await onSuccess?.(selectedDate);
             resetForm();
             onClose();
           } else {
             console.error("[AddExpenseModal] Error response:", response);
-            const errorMessage = (response.data as any)?.detail || "Failed to create expense transaction";
-            Alert.alert("Error", typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+            const errorMessage =
+              (response.data as any)?.detail ||
+              "Failed to create expense transaction";
+            Alert.alert(
+              "Error",
+              typeof errorMessage === "string"
+                ? errorMessage
+                : JSON.stringify(errorMessage),
+            );
           }
         }
       } catch (error) {
         console.error("[AddExpenseModal] Exception caught:", error);
-        Alert.alert("Error", `Failed to create expense: ${error instanceof Error ? error.message : String(error)}`);
+        Alert.alert(
+          "Error",
+          `Failed to create expense: ${error instanceof Error ? error.message : String(error)}`,
+        );
       } finally {
         setSaving(false);
       }
@@ -401,7 +471,12 @@ export function AddExpenseModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
       <View style={styles.overlay}>
         <Pressable
           style={styles.backdrop}
@@ -412,7 +487,11 @@ export function AddExpenseModal({
         <View style={styles.sheet}>
           <View style={styles.sheetHeader}>
             <Text style={styles.title}>
-              {mode === "edit" ? "Edit expense" : mode === "view" ? "Transaction overview" : "Add expense"}
+              {mode === "edit"
+                ? "Edit expense"
+                : mode === "view"
+                  ? "Transaction overview"
+                  : "Add expense"}
             </Text>
             <Pressable onPress={onClose} hitSlop={8}>
               <Text style={styles.close}>×</Text>
@@ -427,7 +506,9 @@ export function AddExpenseModal({
           >
             <View
               style={styles.surface}
-              onLayout={(event) => setCategorySectionTop(event.nativeEvent.layout.y)}
+              onLayout={(event) =>
+                setCategorySectionTop(event.nativeEvent.layout.y)
+              }
             >
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Category</Text>
@@ -444,7 +525,9 @@ export function AddExpenseModal({
               >
                 {categories.map((category) => {
                   const selected = selectedCategory === category.id;
-                  const dimmed = Boolean(selectedCategory && selectedCategory !== category.id);
+                  const dimmed = Boolean(
+                    selectedCategory && selectedCategory !== category.id,
+                  );
                   return (
                     <Pressable
                       key={category.id}
@@ -474,15 +557,21 @@ export function AddExpenseModal({
                   <View style={styles.subcategoryHeader}>
                     <View>
                       <Text style={styles.sectionTitle}>Subcategory</Text>
-                      <Text style={styles.subcategoryHint}>{currentCategory?.label}</Text>
+                      <Text style={styles.subcategoryHint}>
+                        {currentCategory?.label}
+                      </Text>
                     </View>
                     {selectedSubcategory && !isViewMode ? (
                       <Pressable onPress={clearSubcategory} hitSlop={8}>
-                        <Text style={styles.clearAction}>Clear subcategory</Text>
+                        <Text style={styles.clearAction}>
+                          Clear subcategory
+                        </Text>
                       </Pressable>
                     ) : null}
                   </View>
-                  <View style={[styles.subcategoryList, styles.subcategoryListWrap]}>
+                  <View
+                    style={[styles.subcategoryList, styles.subcategoryListWrap]}
+                  >
                     {visibleSubcategories.map((sub) => {
                       const active = selectedSubcategory === sub.id;
                       return (
@@ -513,7 +602,14 @@ export function AddExpenseModal({
                         onPress={() => revealAllSubcategories(selectedCategory)}
                         style={[styles.subcategoryChip, styles.moreChip]}
                       >
-                        <Text style={[styles.subcategoryLabel, styles.moreChipLabel]}>More…</Text>
+                        <Text
+                          style={[
+                            styles.subcategoryLabel,
+                            styles.moreChipLabel,
+                          ]}
+                        >
+                          More…
+                        </Text>
                       </Pressable>
                     ) : null}
                   </View>
@@ -525,7 +621,10 @@ export function AddExpenseModal({
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Transaction type *</Text>
                 {!isViewMode && transactionTag ? (
-                  <Pressable onPress={() => setTransactionTag(null)} hitSlop={8}>
+                  <Pressable
+                    onPress={() => setTransactionTag(null)}
+                    hitSlop={8}
+                  >
                     <Text style={styles.clearAction}>Clear</Text>
                   </Pressable>
                 ) : null}
@@ -537,7 +636,9 @@ export function AddExpenseModal({
                   style={[
                     styles.tagChip,
                     transactionTag === "need" && styles.tagChipSelected,
-                    transactionTag && transactionTag !== "need" && styles.tagChipDimmed,
+                    transactionTag &&
+                      transactionTag !== "need" &&
+                      styles.tagChipDimmed,
                   ]}
                 >
                   <Text style={styles.tagIcon}>💡</Text>
@@ -559,7 +660,9 @@ export function AddExpenseModal({
                   style={[
                     styles.tagChip,
                     transactionTag === "want" && styles.tagChipSelected,
-                    transactionTag && transactionTag !== "want" && styles.tagChipDimmed,
+                    transactionTag &&
+                      transactionTag !== "want" &&
+                      styles.tagChipDimmed,
                   ]}
                 >
                   <Text style={styles.tagIcon}>✨</Text>
@@ -595,7 +698,9 @@ export function AddExpenseModal({
                 />
               </View>
               {!isAmountValid && amountText.length > 0 ? (
-                <Text style={styles.helperText}>Enter an amount greater than zero.</Text>
+                <Text style={styles.helperText}>
+                  Enter an amount greater than zero.
+                </Text>
               ) : null}
               {selectedCategory ? (
                 <Pressable
@@ -607,7 +712,9 @@ export function AddExpenseModal({
                 >
                   <Text style={styles.summaryChipText}>
                     {currentCategory?.label}
-                    {selectedSubcategoryData ? ` · ${selectedSubcategoryData.label}` : ""}
+                    {selectedSubcategoryData
+                      ? ` · ${selectedSubcategoryData.label}`
+                      : ""}
                   </Text>
                   {selectedSubcategory && !isViewMode ? (
                     <Pressable
@@ -651,13 +758,15 @@ export function AddExpenseModal({
                   }}
                   style={[
                     styles.dateChip,
-                    selectedDate.getTime() === today.getTime() && styles.dateChipSelected,
+                    selectedDate.getTime() === today.getTime() &&
+                      styles.dateChipSelected,
                   ]}
                 >
                   <Text
                     style={[
                       styles.dateText,
-                      selectedDate.getTime() === today.getTime() && styles.dateTextSelected,
+                      selectedDate.getTime() === today.getTime() &&
+                        styles.dateTextSelected,
                     ]}
                   >
                     Today
@@ -669,14 +778,16 @@ export function AddExpenseModal({
                   style={[
                     styles.dateChip,
                     styles.calendarChip,
-                    selectedDate.getTime() !== today.getTime() && styles.dateChipSelected,
+                    selectedDate.getTime() !== today.getTime() &&
+                      styles.dateChipSelected,
                   ]}
                 >
                   <Text style={styles.calendarIcon}>📅</Text>
                   <Text
                     style={[
                       styles.dateText,
-                      selectedDate.getTime() !== today.getTime() && styles.dateTextSelected,
+                      selectedDate.getTime() !== today.getTime() &&
+                        styles.dateTextSelected,
                     ]}
                   >
                     {formatDate(selectedDate)}
@@ -698,7 +809,10 @@ export function AddExpenseModal({
                       setRecurringDayDirty(false);
                     }
                   }}
-                  trackColor={{ false: palette.slate260, true: palette.slate900 }}
+                  trackColor={{
+                    false: palette.slate260,
+                    true: palette.slate900,
+                  }}
                   thumbColor={palette.white}
                 />
               </View>
@@ -712,7 +826,8 @@ export function AddExpenseModal({
                       <Pressable
                         style={[
                           styles.frequencyButton,
-                          recurringFrequency === "monthly" && styles.frequencyButtonActive,
+                          recurringFrequency === "monthly" &&
+                            styles.frequencyButtonActive,
                         ]}
                         onPress={() => setRecurringFrequency("monthly")}
                         disabled={isViewMode}
@@ -720,7 +835,8 @@ export function AddExpenseModal({
                         <Text
                           style={[
                             styles.frequencyButtonText,
-                            recurringFrequency === "monthly" && styles.frequencyButtonTextActive,
+                            recurringFrequency === "monthly" &&
+                              styles.frequencyButtonTextActive,
                           ]}
                         >
                           Monthly
@@ -729,7 +845,8 @@ export function AddExpenseModal({
                       <Pressable
                         style={[
                           styles.frequencyButton,
-                          recurringFrequency === "weekly" && styles.frequencyButtonActive,
+                          recurringFrequency === "weekly" &&
+                            styles.frequencyButtonActive,
                         ]}
                         onPress={() => setRecurringFrequency("weekly")}
                         disabled={isViewMode}
@@ -737,7 +854,8 @@ export function AddExpenseModal({
                         <Text
                           style={[
                             styles.frequencyButtonText,
-                            recurringFrequency === "weekly" && styles.frequencyButtonTextActive,
+                            recurringFrequency === "weekly" &&
+                              styles.frequencyButtonTextActive,
                           ]}
                         >
                           Weekly
@@ -746,7 +864,8 @@ export function AddExpenseModal({
                       <Pressable
                         style={[
                           styles.frequencyButton,
-                          recurringFrequency === "biweekly" && styles.frequencyButtonActive,
+                          recurringFrequency === "biweekly" &&
+                            styles.frequencyButtonActive,
                         ]}
                         onPress={() => setRecurringFrequency("biweekly")}
                         disabled={isViewMode}
@@ -754,7 +873,8 @@ export function AddExpenseModal({
                         <Text
                           style={[
                             styles.frequencyButtonText,
-                            recurringFrequency === "biweekly" && styles.frequencyButtonTextActive,
+                            recurringFrequency === "biweekly" &&
+                              styles.frequencyButtonTextActive,
                           ]}
                         >
                           Biweekly
@@ -768,8 +888,8 @@ export function AddExpenseModal({
                     {recurringFrequency === "monthly"
                       ? `Repeat this expense on day ${recurringDayOfMonth} of every month.`
                       : recurringFrequency === "weekly"
-                      ? `Repeat this expense every ${dayOfWeekNames[recurringDayOfWeek]}.`
-                      : `Repeat this expense every other ${dayOfWeekNames[recurringDayOfWeek]}.`}
+                        ? `Repeat this expense every ${dayOfWeekNames[recurringDayOfWeek]}.`
+                        : `Repeat this expense every other ${dayOfWeekNames[recurringDayOfWeek]}.`}
                   </Text>
 
                   {/* Day Selector - Only for Monthly */}
@@ -780,25 +900,33 @@ export function AddExpenseModal({
                         <Pressable
                           style={[
                             styles.dayButton,
-                            (isViewMode || recurringDayOfMonth <= 1) && styles.dayButtonDisabled,
+                            (isViewMode || recurringDayOfMonth <= 1) &&
+                              styles.dayButtonDisabled,
                           ]}
                           disabled={isViewMode || recurringDayOfMonth <= 1}
                           onPress={() => {
-                            setRecurringDayOfMonth((current) => Math.max(1, current - 1));
+                            setRecurringDayOfMonth((current) =>
+                              Math.max(1, current - 1),
+                            );
                             setRecurringDayDirty(true);
                           }}
                         >
                           <Text style={styles.dayButtonText}>−</Text>
                         </Pressable>
-                        <Text style={styles.dayValue}>Day {recurringDayOfMonth}</Text>
+                        <Text style={styles.dayValue}>
+                          Day {recurringDayOfMonth}
+                        </Text>
                         <Pressable
                           style={[
                             styles.dayButton,
-                            (isViewMode || recurringDayOfMonth >= 31) && styles.dayButtonDisabled,
+                            (isViewMode || recurringDayOfMonth >= 31) &&
+                              styles.dayButtonDisabled,
                           ]}
                           disabled={isViewMode || recurringDayOfMonth >= 31}
                           onPress={() => {
-                            setRecurringDayOfMonth((current) => Math.min(31, current + 1));
+                            setRecurringDayOfMonth((current) =>
+                              Math.min(31, current + 1),
+                            );
                             setRecurringDayDirty(true);
                           }}
                         >
@@ -809,13 +937,16 @@ export function AddExpenseModal({
                   ) : (
                     <View style={styles.recurringDayBlock}>
                       <Text style={styles.recurringHelper}>
-                        Based on selected date: {dayOfWeekNames[recurringDayOfWeek]}
+                        Based on selected date:{" "}
+                        {dayOfWeekNames[recurringDayOfWeek]}
                       </Text>
                     </View>
                   )}
                 </>
               ) : (
-                <Text style={styles.recurringCopy}>Enable to repeat this expense automatically.</Text>
+                <Text style={styles.recurringCopy}>
+                  Enable to repeat this expense automatically.
+                </Text>
               )}
             </View>
           </ScrollView>
@@ -837,24 +968,41 @@ export function AddExpenseModal({
               style={({ pressed }) => [
                 styles.saveButton,
                 (!formValid || saving || isSaving) && styles.saveButtonDisabled,
-                pressed && formValid && !saving && !isSaving && styles.saveButtonPressed,
+                pressed &&
+                  formValid &&
+                  !saving &&
+                  !isSaving &&
+                  styles.saveButtonPressed,
               ]}
               disabled={!formValid || saving || isSaving}
               onPress={handleSave}
             >
               <Text style={styles.saveText}>
-                {saving || isSaving ? "Saving…" : mode === "edit" ? "Save changes" : "Save entry"}
+                {saving || isSaving
+                  ? "Saving…"
+                  : mode === "edit"
+                    ? "Save changes"
+                    : "Save entry"}
               </Text>
             </Pressable>
           )}
         </View>
         {!isViewMode && showCalendar ? (
-          <Pressable style={styles.calendarOverlay} onPress={() => setShowCalendar(false)}>
-            <Pressable style={styles.calendarModal} onPress={(e) => e.stopPropagation()}>
+          <Pressable
+            style={styles.calendarOverlay}
+            onPress={() => setShowCalendar(false)}
+          >
+            <Pressable
+              style={styles.calendarModal}
+              onPress={(e) => e.stopPropagation()}
+            >
               <View style={styles.calendarHeader}>
                 <Pressable
                   onPress={() =>
-                    setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
+                    setMonthCursor(
+                      (prev) =>
+                        new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
+                    )
                   }
                   style={styles.calendarNav}
                 >
@@ -872,7 +1020,10 @@ export function AddExpenseModal({
                     monthCursor.getMonth() === today.getMonth()
                   }
                   onPress={() =>
-                    setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
+                    setMonthCursor(
+                      (prev) =>
+                        new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
+                    )
                   }
                   style={[
                     styles.calendarNav,
@@ -901,7 +1052,12 @@ export function AddExpenseModal({
                 ))}
                 {monthDays.map((day, index) => {
                   if (!day) {
-                    return <View key={`empty-${index}`} style={styles.calendarCell} />;
+                    return (
+                      <View
+                        key={`empty-${index}`}
+                        style={styles.calendarCell}
+                      />
+                    );
                   }
                   const isFuture = day.getTime() > today.getTime();
                   const isSelected = day.getTime() === selectedDate.getTime();

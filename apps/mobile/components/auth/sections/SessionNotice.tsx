@@ -6,8 +6,8 @@ export function SessionNotice() {
     <View style={styles.sessionNotice}>
       <Text style={styles.sessionTitle}>Already signed in</Text>
       <Text style={styles.sessionDescription}>
-        You are authenticated with Supabase. You can switch accounts from Settings
-        if needed.
+        You are authenticated with Supabase. You can switch accounts from
+        Settings if needed.
       </Text>
     </View>
   );

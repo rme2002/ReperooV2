@@ -100,6 +100,7 @@ export function BudgetPlanWidget({
         setIsEditingPlan(false);
       }
     } catch (err) {
+      console.error("[BudgetPlanWidget] Save error:", err);
       Alert.alert("Error", "Failed to save budget plan");
     } finally {
       setIsSaving(false);
@@ -133,10 +134,7 @@ export function BudgetPlanWidget({
   const planSummaryGoals = savingsGoal + investmentsGoal;
   const planSummaryExceedsIncome =
     expectedIncome > 0 && planSummaryGoals > expectedIncome;
-  const planSummarySpendable = Math.max(
-    expectedIncome - planSummaryGoals,
-    0
-  );
+  const planSummarySpendable = Math.max(expectedIncome - planSummaryGoals, 0);
 
   return (
     <View style={styles.surface}>
@@ -173,13 +171,11 @@ export function BudgetPlanWidget({
           <>
             {/* Summary Card */}
             <View style={styles.planSummaryCard}>
-              <View
-                style={[styles.planSummaryRow, styles.planSummaryRowFirst]}
-              >
+              <View style={[styles.planSummaryRow, styles.planSummaryRowFirst]}>
                 <View>
                   <Text style={styles.planSummaryLabel}>Expected income</Text>
                   <Text style={styles.planSummaryMeta}>
-                    From recurring income
+                    From income transactions
                   </Text>
                 </View>
                 <Text
@@ -289,9 +285,7 @@ export function BudgetPlanWidget({
                   style={[styles.planSummaryRow, styles.planSummaryRowFirst]}
                 >
                   <View>
-                    <Text style={styles.planSummaryLabel}>
-                      Expected income
-                    </Text>
+                    <Text style={styles.planSummaryLabel}>Expected income</Text>
                     <Text style={styles.planSummaryMeta}>
                       From recurring income
                     </Text>
@@ -310,8 +304,8 @@ export function BudgetPlanWidget({
                   <View>
                     <Text style={styles.planSummaryLabel}>Goals</Text>
                     <Text style={styles.planSummaryMeta}>
-                      Savings {formatCurrency(editingSavingsGoal)} ·
-                      Investments {formatCurrency(editingInvestmentsGoal)}
+                      Savings {formatCurrency(editingSavingsGoal)} · Investments{" "}
+                      {formatCurrency(editingInvestmentsGoal)}
                     </Text>
                   </View>
                   <Text
@@ -321,7 +315,7 @@ export function BudgetPlanWidget({
                     ]}
                   >
                     {formatCurrency(
-                      editingSavingsGoal + editingInvestmentsGoal
+                      editingSavingsGoal + editingInvestmentsGoal,
                     )}
                   </Text>
                 </View>
@@ -341,7 +335,7 @@ export function BudgetPlanWidget({
                     {formatCurrency(
                       expectedIncome -
                         editingSavingsGoal -
-                        editingInvestmentsGoal
+                        editingInvestmentsGoal,
                     )}
                   </Text>
                 </View>

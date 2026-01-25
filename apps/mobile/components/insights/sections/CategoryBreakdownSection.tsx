@@ -58,7 +58,7 @@ export function CategoryBreakdownSection({
         const configCategory = categoryLookup.get(cat.id);
         const configuredSubcategories = configCategory?.subcategories ?? [];
         const subcategoryDataMap = new Map(
-          rawSubcategories.map((sub) => [sub.id, sub])
+          rawSubcategories.map((sub) => [sub.id, sub]),
         );
         const orderedSubcategories =
           configuredSubcategories.length > 0
@@ -85,8 +85,8 @@ export function CategoryBreakdownSection({
             ? rawSubcategories.filter(
                 (sub) =>
                   !configuredSubcategories.some(
-                    (configSub) => configSub.id === sub.id
-                  )
+                    (configSub) => configSub.id === sub.id,
+                  ),
               )
             : [];
         const subcategories = [
@@ -97,21 +97,38 @@ export function CategoryBreakdownSection({
         const compactLayout = width < 420;
         const availableWidth = width - (compactLayout ? 48 : 140);
         const subChartSize = Math.max(160, Math.min(availableWidth, 240));
-        const subPieStroke = Math.max(10, subChartSize * 0.18);
+        const subPieStroke = Math.max(10, subChartSize * 0.12);
         const subPieRadius = subChartSize / 2 - subPieStroke / 2;
         const subCircumference = 2 * Math.PI * subPieRadius;
-        const subSegments = subcategories
-          .filter((sub) => sub.percent > 0)
-          .reduce<
-            { length: number; offset: number; color: string; id: string }[]
-          >((acc, sub) => {
-            const prevTotal = acc.reduce((sum, item) => sum + item.length, 0);
-            const length = (sub.percent / 100) * subCircumference;
-            return [
-              ...acc,
-              { length, offset: prevTotal, color: sub.color, id: sub.id },
-            ];
-          }, []);
+        const visibleSubcategories = subcategories.filter(
+          (sub) => sub.percent > 0,
+        );
+        const segmentCount = visibleSubcategories.length;
+        const gapLength =
+          segmentCount > 1 ? Math.min(6, subCircumference * 0.012) : 0;
+        const subSegments = visibleSubcategories.reduce<
+          {
+            length: number;
+            offset: number;
+            color: string;
+            id: string;
+            fullLength: number;
+          }[]
+        >((acc, sub) => {
+          const prevTotal = acc.reduce((sum, item) => sum + item.fullLength, 0);
+          const fullLength = (sub.percent / 100) * subCircumference;
+          const length = Math.max(0, fullLength - gapLength);
+          return [
+            ...acc,
+            {
+              length,
+              offset: prevTotal,
+              color: sub.color,
+              id: sub.id,
+              fullLength,
+            },
+          ];
+        }, []);
 
         return (
           <View key={cat.id}>
@@ -160,7 +177,11 @@ export function CategoryBreakdownSection({
                         { width: subChartSize, height: subChartSize },
                       ]}
                     >
-                      <Svg width={subChartSize} height={subChartSize}>
+                      <Svg
+                        width={subChartSize}
+                        height={subChartSize}
+                        style={styles.subCategorySvg}
+                      >
                         <Circle
                           cx={subChartSize / 2}
                           cy={subChartSize / 2}
@@ -168,6 +189,7 @@ export function CategoryBreakdownSection({
                           stroke={colors.borderLight}
                           strokeWidth={subPieStroke}
                           fill="none"
+                          strokeLinecap="round"
                         />
                         {subSegments.map((segment) => (
                           <Circle
@@ -177,9 +199,9 @@ export function CategoryBreakdownSection({
                             r={subPieRadius}
                             stroke={segment.color}
                             strokeWidth={subPieStroke}
-                            strokeDasharray={`${segment.length} ${subCircumference}`}
+                            strokeDasharray={`${segment.length} ${subCircumference - segment.length}`}
                             strokeDashoffset={-segment.offset}
-                            strokeLinecap="butt"
+                            strokeLinecap="round"
                             fill="none"
                             rotation={-90}
                             originX={subChartSize / 2}
@@ -321,9 +343,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   subCategoryPanel: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     padding: 16,
     gap: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    shadowColor: colors.text,
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
   },
   subCategoryTitle: {
     fontSize: 15,
@@ -346,11 +376,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  subCategorySvg: {
+    position: "absolute",
+  },
   subCategoryCenter: {
     backgroundColor: colors.surface,
     justifyContent: "center",
     alignItems: "center",
     gap: 4,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    shadowColor: colors.text,
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   subCategoryValue: {
     fontSize: 18,
@@ -371,7 +411,7 @@ const styles = StyleSheet.create({
   },
   legendRowSmall: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 8,
   },
   legendTextBlock: {

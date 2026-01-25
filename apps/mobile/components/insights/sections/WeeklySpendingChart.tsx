@@ -45,7 +45,10 @@ export function WeeklySpendingChart({
       {isLoading ? (
         <View style={[styles.weeklySkeletonRow, { height: weeklyChartHeight }]}>
           {Array.from({ length: 5 }).map((_, idx) => (
-            <View key={`weekly-skeleton-${idx}`} style={styles.weeklySkeletonBar} />
+            <View
+              key={`weekly-skeleton-${idx}`}
+              style={styles.weeklySkeletonBar}
+            />
           ))}
         </View>
       ) : hasWeeklySpending ? (
@@ -66,7 +69,9 @@ export function WeeklySpendingChart({
                 </Text>
               ))}
             </View>
-            <View style={[styles.weeklyPlotArea, { height: weeklyChartHeight }]}>
+            <View
+              style={[styles.weeklyPlotArea, { height: weeklyChartHeight }]}
+            >
               <View style={styles.weeklyGridLayer} pointerEvents="none">
                 {weeklyAxisTicks.map((tickValue, idx) => (
                   <View
@@ -88,15 +93,12 @@ export function WeeklySpendingChart({
                   const ratio = weeklyScaleMax
                     ? (point.total / weeklyScaleMax) * 100
                     : 0;
-                  const heightPct =
-                    point.total === 0 ? 4 : Math.max(12, ratio);
+                  const heightPct = point.total === 0 ? 4 : Math.max(12, ratio);
                   const isActive = activeWeekIndex === idx;
                   return (
                     <Pressable
                       key={`week-${point.week}-${idx}`}
-                      onPress={() =>
-                        setActiveWeekIndex(isActive ? null : idx)
-                      }
+                      onPress={() => setActiveWeekIndex(isActive ? null : idx)}
                       style={styles.weeklyBarPressable}
                     >
                       <View

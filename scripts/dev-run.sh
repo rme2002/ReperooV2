@@ -3,6 +3,7 @@ set -euo pipefail
 
 WEB_MODE=${DEV_WEB:-true}
 MOBILE_MODE=${DEV_MOBILE:-true}
+API_MODE=${DEV_API:-true}
 WEB_DIR=${WEB_DIR:-apps/web}
 MOBILE_DIR=${MOBILE_DIR:-apps/mobile}
 WEB_PORT=${WEB_PORT:-3000}
@@ -77,7 +78,9 @@ cleanup() {
   if [ ${#LOG_PIDS[@]} -gt 0 ]; then
     wait "${LOG_PIDS[@]}" 2>/dev/null || true
   fi
-  docker compose down >/dev/null 2>&1 || true
+  if [ "$API_MODE" = "true" ]; then
+    docker compose down >/dev/null 2>&1 || true
+  fi
   printf '✅ Dev stack stopped.\n'
 }
 
@@ -94,12 +97,18 @@ else
 fi
 
 if [ ${#PIDS[@]} -eq 0 ]; then
-  log "No local dev servers selected. API is running via Docker."
+  if [ "$API_MODE" = "true" ]; then
+    log "No local dev servers selected. API is running via Docker."
+  else
+    log "No local dev servers selected."
+  fi
   trap - INT TERM
   exit 0
 fi
 
-start_api_logs
+if [ "$API_MODE" = "true" ]; then
+  start_api_logs
+fi
 
 wait "${PIDS[@]}"
 cleanup

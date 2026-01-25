@@ -1,3 +1,5 @@
+import { getUTCDateKey } from "@/utils/dateHelpers";
+
 /**
  * Formats a date relative to a reference date
  * Returns "Today", "Yesterday", or formatted date string
@@ -7,17 +9,18 @@
  * @returns Formatted relative date string
  */
 export function formatRelativeDate(value: Date, reference: Date): string {
-  const dayMs = 24 * 60 * 60 * 1000;
-  const normalizedTarget = new Date(value);
-  normalizedTarget.setHours(0, 0, 0, 0);
-  const normalizedRef = new Date(reference);
-  normalizedRef.setHours(0, 0, 0, 0);
-  const diff = Math.round(
-    (normalizedRef.getTime() - normalizedTarget.getTime()) / dayMs
-  );
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Yesterday";
-  return normalizedTarget.toLocaleDateString("en-GB", {
+  const targetKey = getUTCDateKey(value);
+  const refKey = getUTCDateKey(reference);
+
+  if (targetKey === refKey) return "Today";
+
+  const yesterday = new Date(reference);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  const yesterdayKey = getUTCDateKey(yesterday);
+
+  if (targetKey === yesterdayKey) return "Yesterday";
+
+  return value.toLocaleDateString("en-GB", {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -26,7 +29,7 @@ export function formatRelativeDate(value: Date, reference: Date): string {
 
 /**
  * Generates an array of months for navigation
- * Creates 12 months starting from current month going backwards
+ * Creates months including past, current, and future months
  *
  * @returns Array of month objects with key, label, and currentDate
  */
@@ -39,8 +42,30 @@ export function generateMonthsArray() {
   }> = [];
   const now = new Date();
 
-  // Generate 12 months (current month and 11 previous months)
-  for (let i = 0; i < 12; i++) {
+  const PAST_MONTHS = 12;
+  const FUTURE_MONTHS = 6;
+
+  // Generate future months in reverse order (so they appear first in the array)
+  for (let i = FUTURE_MONTHS; i > 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() + i, 15);
+    const key = `${date
+      .toLocaleString("en-US", { month: "short" })
+      .toLowerCase()}-${date.getFullYear()}`;
+    const label = date.toLocaleString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+
+    result.push({
+      key,
+      label,
+      currentDate: date.toISOString(),
+      transactions: [],
+    });
+  }
+
+  // Generate current month and past months
+  for (let i = 0; i < PAST_MONTHS; i++) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 15);
     const key = `${date
       .toLocaleString("en-US", { month: "short" })
@@ -54,7 +79,7 @@ export function generateMonthsArray() {
       key,
       label,
       currentDate: date.toISOString(),
-      transactions: [], // Will be populated from API
+      transactions: [],
     });
   }
 

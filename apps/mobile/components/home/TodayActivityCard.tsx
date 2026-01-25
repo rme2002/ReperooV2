@@ -43,7 +43,7 @@ export function TodayActivityCard({
         {hasLoggedToday && (
           <View style={styles.loggedIndicator}>
             <Text style={styles.checkmark}>✓</Text>
-            <Text style={styles.loggedText}>You've logged today</Text>
+            <Text style={styles.loggedText}>You{"'"}ve logged today</Text>
           </View>
         )}
       </View>

@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 import {
   checkIn,
@@ -24,14 +30,21 @@ type ExperienceContextValue = {
 
 const ExperienceContext = createContext<ExperienceContextValue | null>(null);
 
-export function ExperienceProvider({ children }: { children: React.ReactNode }) {
+export function ExperienceProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [experience, setExperience] = useState<ExperienceResponse | null>(null);
-  const [milestones, setMilestones] = useState<StreakMilestonesResponse | null>(null);
+  const [milestones, setMilestones] = useState<StreakMilestonesResponse | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastCheckInResponse, setLastCheckInResponse] = useState<CheckInResponse | null>(null);
+  const [lastCheckInResponse, setLastCheckInResponse] =
+    useState<CheckInResponse | null>(null);
 
-  const fetchExperienceStatus = async () => {
+  const fetchExperienceStatus = useCallback(async () => {
     try {
       const response = await getExperienceStatus();
 
@@ -47,7 +60,7 @@ export function ExperienceProvider({ children }: { children: React.ReactNode }) 
       console.error("Error fetching experience status:", err);
 
       // Check for specific error status codes
-      if (err && typeof err === 'object' && 'status' in err) {
+      if (err && typeof err === "object" && "status" in err) {
         if (err.status === 401) {
           setError("UNAUTHORIZED");
         } else {
@@ -57,9 +70,9 @@ export function ExperienceProvider({ children }: { children: React.ReactNode }) 
         setError("FETCH_ERROR");
       }
     }
-  };
+  }, []);
 
-  const performCheckIn = async () => {
+  const performCheckIn = useCallback(async () => {
     try {
       setError(null);
 
@@ -68,7 +81,10 @@ export function ExperienceProvider({ children }: { children: React.ReactNode }) 
 
       if (checkInResp.status === 200 && checkInResp.data) {
         setLastCheckInResponse(checkInResp.data);
-        console.log("[ExperienceProvider] Check-in successful:", checkInResp.data);
+        console.log(
+          "[ExperienceProvider] Check-in successful:",
+          checkInResp.data,
+        );
 
         // TODO: Future enhancement - show notifications for:
         // - Level up (checkInResp.data.level_up)
@@ -86,7 +102,7 @@ export function ExperienceProvider({ children }: { children: React.ReactNode }) 
       console.error("Error performing check-in:", err);
 
       // Check for specific error status codes
-      if (err && typeof err === 'object' && 'status' in err) {
+      if (err && typeof err === "object" && "status" in err) {
         if (err.status === 401) {
           setError("UNAUTHORIZED");
         } else {
@@ -96,18 +112,18 @@ export function ExperienceProvider({ children }: { children: React.ReactNode }) 
         setError("FETCH_ERROR");
       }
     }
-  };
+  }, [fetchExperienceStatus]);
 
-  const refreshExperience = async () => {
+  const refreshExperience = useCallback(async () => {
     try {
       setIsLoading(true);
       await fetchExperienceStatus();
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [fetchExperienceStatus]);
 
-  const fetchMilestones = async () => {
+  const fetchMilestones = useCallback(async () => {
     try {
       const response = await getStreakMilestones();
 
@@ -120,11 +136,11 @@ export function ExperienceProvider({ children }: { children: React.ReactNode }) 
       console.error("Error fetching milestones:", err);
       // Don't override main error state for milestone fetch failures
     }
-  };
+  }, []);
 
-  const refreshMilestones = async () => {
+  const refreshMilestones = useCallback(async () => {
     await fetchMilestones();
-  };
+  }, [fetchMilestones]);
 
   // Initialize on mount: perform check-in, fetch experience, and fetch milestones
   useEffect(() => {
@@ -136,7 +152,7 @@ export function ExperienceProvider({ children }: { children: React.ReactNode }) 
     };
 
     initialize();
-  }, []); // Run once on mount
+  }, [fetchMilestones, performCheckIn]); // Run once on mount
 
   const value: ExperienceContextValue = {
     experience,

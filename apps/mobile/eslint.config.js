@@ -6,6 +6,19 @@ export default defineConfig([
   expoConfig,
   eslintPluginPrettierRecommended,
   {
-    ignores: ["dist/*", "lib/gen/**"],
+    files: ["**/__tests__/**"],
+    rules: {
+      "import/no-unresolved": "off",
+    },
+  },
+  {
+    ignores: ["dist/*", "lib/gen/**", "**/__tests__/**"],
+    settings: {
+      "import/resolver": {
+        node: {
+          extensions: [".js", ".jsx", ".ts", ".tsx", ".json"],
+        },
+      },
+    },
   },
 ]);

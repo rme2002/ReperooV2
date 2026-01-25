@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -42,6 +43,7 @@ import { useInsightsBudget } from "@/hooks/useInsightsBudget";
 import { useInsightsSavings } from "@/hooks/useInsightsSavings";
 import { useInsightsIncome } from "@/hooks/useInsightsIncome";
 import { useInsightsWeekly } from "@/hooks/useInsightsWeekly";
+import { useTransactionRefresh } from "@/hooks/useTransactionRefresh";
 
 export default function InsightsScreen() {
   // Modal states
@@ -52,6 +54,7 @@ export default function InsightsScreen() {
 
   // Interaction states
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Contexts
   const {
@@ -61,17 +64,34 @@ export default function InsightsScreen() {
     fetchSnapshot,
     refetchAvailableMonths,
     prefetchSnapshot,
+    invalidateSnapshot,
   } = useInsightsContext();
 
-  const { budgetPlan, isLoading, error, createBudgetPlan, updateBudgetPlan } = useBudgetContext();
+  const {
+    budgetPlan,
+    isLoading,
+    error,
+    createBudgetPlan,
+    updateBudgetPlan,
+    refetch: refetchBudgetPlan,
+  } = useBudgetContext();
   const { formatCurrency, currencySymbol } = useCurrencyFormatter();
+  const refreshTransactionData = useTransactionRefresh();
 
   // Custom hooks
   const { selectedMonth, goPrevious, goNext } = useInsightsMonthNavigation();
 
-  const budgetMetrics = useInsightsBudget(currentSnapshot, budgetPlan, formatCurrency);
+  const budgetMetrics = useInsightsBudget(
+    currentSnapshot,
+    budgetPlan,
+    formatCurrency,
+  );
 
-  const savingsMetrics = useInsightsSavings(currentSnapshot, budgetPlan, Boolean(budgetPlan));
+  const savingsMetrics = useInsightsSavings(
+    currentSnapshot,
+    budgetPlan,
+    Boolean(budgetPlan),
+  );
 
   const {
     incomeTransactions,
@@ -94,16 +114,28 @@ export default function InsightsScreen() {
     }
   }, [selectedMonth, fetchSnapshot]);
 
+  // Fetch budget plan when month changes
+  useEffect(() => {
+    if (selectedMonth) {
+      refetchBudgetPlan({
+        year: selectedMonth.year,
+        month: selectedMonth.month,
+      });
+    }
+  }, [refetchBudgetPlan, selectedMonth]);
+
   // Prefetch adjacent months
   useEffect(() => {
     if (currentSnapshot && selectedMonth) {
-      const prevMonth = selectedMonth.month === 1
-        ? { year: selectedMonth.year - 1, month: 12 }
-        : { year: selectedMonth.year, month: selectedMonth.month - 1 };
+      const prevMonth =
+        selectedMonth.month === 1
+          ? { year: selectedMonth.year - 1, month: 12 }
+          : { year: selectedMonth.year, month: selectedMonth.month - 1 };
 
-      const nextMonth = selectedMonth.month === 12
-        ? { year: selectedMonth.year + 1, month: 1 }
-        : { year: selectedMonth.year, month: selectedMonth.month + 1 };
+      const nextMonth =
+        selectedMonth.month === 12
+          ? { year: selectedMonth.year + 1, month: 1 }
+          : { year: selectedMonth.year, month: selectedMonth.month + 1 };
 
       prefetchSnapshot(prevMonth.year, prevMonth.month);
       prefetchSnapshot(nextMonth.year, nextMonth.month);
@@ -121,11 +153,18 @@ export default function InsightsScreen() {
     investment_goal: number | null;
   }) => {
     try {
-      await createBudgetPlan(payload);
+      if (!selectedMonth) {
+        return;
+      }
+      await createBudgetPlan(payload, {
+        year: selectedMonth.year,
+        month: selectedMonth.month,
+      });
       setShowCreatePlanModal(false);
       await refetchAvailableMonths();
       await fetchSnapshot(selectedMonth.year, selectedMonth.month);
     } catch (err) {
+      console.error("[Insights] Create plan error:", err);
       Alert.alert("Error", "Failed to create budget plan");
     }
   };
@@ -138,6 +177,62 @@ export default function InsightsScreen() {
     // This would ideally scroll to or focus the budget plan widget
     // For now, it's a placeholder that could trigger a ref scroll
   };
+
+  const handleTransactionSuccess = useCallback(
+    async (date: Date) => {
+      invalidateSnapshot(selectedMonth.year, selectedMonth.month);
+      await Promise.allSettled([
+        refreshTransactionData({ date }),
+        fetchSnapshot(selectedMonth.year, selectedMonth.month),
+        fetchMonthlyIncome(),
+        refetchBudgetPlan({
+          year: selectedMonth.year,
+          month: selectedMonth.month,
+        }),
+      ]);
+    },
+    [
+      fetchMonthlyIncome,
+      fetchSnapshot,
+      invalidateSnapshot,
+      refetchBudgetPlan,
+      refreshTransactionData,
+      selectedMonth.month,
+      selectedMonth.year,
+    ],
+  );
+
+  const handleRefresh = useCallback(async () => {
+    if (refreshing || !selectedMonth) return; // Prevent concurrent refreshes
+
+    setRefreshing(true);
+    try {
+      invalidateSnapshot(selectedMonth.year, selectedMonth.month);
+      await Promise.allSettled([
+        fetchSnapshot(selectedMonth.year, selectedMonth.month),
+        refetchBudgetPlan({
+          year: selectedMonth.year,
+          month: selectedMonth.month,
+        }),
+        fetchMonthlyIncome(),
+        refreshTransactionData({
+          date: new Date(selectedMonth.year, selectedMonth.month - 1),
+        }),
+      ]);
+    } catch (error) {
+      console.error("[Insights] Refresh error:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [
+    refreshing,
+    selectedMonth,
+    invalidateSnapshot,
+    fetchSnapshot,
+    refetchBudgetPlan,
+    fetchMonthlyIncome,
+    refreshTransactionData,
+  ]);
 
   // Loading state
   if (insightsLoading) {
@@ -173,7 +268,11 @@ export default function InsightsScreen() {
     return (
       <>
         <EmptyTransactionsState onAddTransaction={() => setShowAdd(true)} />
-        <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
+        <AddExpenseModal
+          visible={showAdd}
+          onClose={() => setShowAdd(false)}
+          onSuccess={handleTransactionSuccess}
+        />
       </>
     );
   }
@@ -184,6 +283,14 @@ export default function InsightsScreen() {
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
       >
         <MonthNavigator
           monthLabel={currentSnapshot.label}
@@ -228,8 +335,18 @@ export default function InsightsScreen() {
           loadingIncome={loadingIncome}
           incomeError={incomeError}
           onRetryIncome={fetchMonthlyIncome}
-          onUpdatePlan={updateBudgetPlan}
-          onCreatePlan={createBudgetPlan}
+          onUpdatePlan={(payload) =>
+            updateBudgetPlan(payload, {
+              year: selectedMonth.year,
+              month: selectedMonth.month,
+            })
+          }
+          onCreatePlan={(payload) =>
+            createBudgetPlan(payload, {
+              year: selectedMonth.year,
+              month: selectedMonth.month,
+            })
+          }
           formatCurrency={formatCurrency}
           currencySymbol={currencySymbol}
           scale={scale}
@@ -252,7 +369,9 @@ export default function InsightsScreen() {
           savingsGoalPercent={savingsMetrics.savingsGoalPercent}
           investmentsGoalPercent={savingsMetrics.investmentsGoalPercent}
           savingsGoalPercentLabel={savingsMetrics.savingsGoalPercentLabel}
-          investmentsGoalPercentLabel={savingsMetrics.investmentsGoalPercentLabel}
+          investmentsGoalPercentLabel={
+            savingsMetrics.investmentsGoalPercentLabel
+          }
           hasSavingsSplit={savingsMetrics.hasSavingsSplit}
           savedShareWidth={savingsMetrics.savedShareWidth}
           investedShareWidth={savingsMetrics.investedShareWidth}
@@ -300,12 +419,17 @@ export default function InsightsScreen() {
         }}
       />
 
-      <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
+      <AddExpenseModal
+        visible={showAdd}
+        onClose={() => setShowAdd(false)}
+        onSuccess={handleTransactionSuccess}
+      />
       <AddIncomeModal
         visible={showIncome}
         onClose={() => setShowIncome(false)}
         monthKey={currentSnapshot.key ?? ""}
         currentDate={currentSnapshot.currentDate ?? new Date().toISOString()}
+        onSuccess={handleTransactionSuccess}
       />
       <CreateMonthlyPlanModal
         visible={showCreatePlanModal}

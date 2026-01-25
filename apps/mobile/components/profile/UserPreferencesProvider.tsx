@@ -22,7 +22,9 @@ export const currencySymbolMap: Record<CurrencyCode, string> = {
   GBP: "£",
 };
 
-const currencySet = new Set<CurrencyCode>(CURRENCY_OPTIONS.map((option) => option.code));
+const currencySet = new Set<CurrencyCode>(
+  CURRENCY_OPTIONS.map((option) => option.code),
+);
 
 const localeCurrencyMap: Record<string, CurrencyCode> = {
   US: "USD",
@@ -53,9 +55,14 @@ const getLocaleCurrency = (): CurrencyCode => {
   return "EUR";
 };
 
-const sessionCurrency = (session: Session | null | undefined): CurrencyCode | null => {
+const sessionCurrency = (
+  session: Session | null | undefined,
+): CurrencyCode | null => {
   const metadataValue = session?.user?.user_metadata?.preferred_currency;
-  if (typeof metadataValue === "string" && currencySet.has(metadataValue as CurrencyCode)) {
+  if (
+    typeof metadataValue === "string" &&
+    currencySet.has(metadataValue as CurrencyCode)
+  ) {
     return metadataValue as CurrencyCode;
   }
   return null;
@@ -82,12 +89,14 @@ export function UserPreferencesProvider({
   useEffect(() => {
     const metadataCurrency = sessionCurrency(session);
     if (metadataCurrency) {
-      setCurrency((current) => (current === metadataCurrency ? current : metadataCurrency));
+      setCurrency((current) =>
+        current === metadataCurrency ? current : metadataCurrency,
+      );
       return;
     }
     const fallback = getLocaleCurrency();
     setCurrency((current) => (current === fallback ? current : fallback));
-  }, [session?.user?.id, session?.user?.user_metadata?.preferred_currency]);
+  }, [session]);
 
   const value = useMemo<ContextValue>(
     () => ({
@@ -97,13 +106,19 @@ export function UserPreferencesProvider({
     [currency],
   );
 
-  return <UserPreferencesContext.Provider value={value}>{children}</UserPreferencesContext.Provider>;
+  return (
+    <UserPreferencesContext.Provider value={value}>
+      {children}
+    </UserPreferencesContext.Provider>
+  );
 }
 
 export function useUserPreferences() {
   const context = useContext(UserPreferencesContext);
   if (!context) {
-    throw new Error("useUserPreferences must be used within a UserPreferencesProvider");
+    throw new Error(
+      "useUserPreferences must be used within a UserPreferencesProvider",
+    );
   }
   return context;
 }

@@ -1,12 +1,20 @@
 import { useCallback } from "react";
 
-import { currencySymbolMap, type CurrencyCode, useUserPreferences } from "./UserPreferencesProvider";
+import {
+  currencySymbolMap,
+  type CurrencyCode,
+  useUserPreferences,
+} from "./UserPreferencesProvider";
 
 const formatterCache = new Map<string, Intl.NumberFormat>();
 
 const makeKey = (
   currency: CurrencyCode,
-  options: { minimumFractionDigits: number; maximumFractionDigits: number; notation: string },
+  options: {
+    minimumFractionDigits: number;
+    maximumFractionDigits: number;
+    notation: string;
+  },
 ) => {
   const { minimumFractionDigits, maximumFractionDigits, notation } = options;
   return `${currency}-${minimumFractionDigits}-${maximumFractionDigits}-${notation}`;

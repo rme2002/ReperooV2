@@ -22,7 +22,12 @@ type Props = {
   isSaving?: boolean;
 };
 
-export function CreateMonthlyPlanModal({ visible, onClose, onSubmit, isSaving = false }: Props) {
+export function CreateMonthlyPlanModal({
+  visible,
+  onClose,
+  onSubmit,
+  isSaving = false,
+}: Props) {
   const [savingsGoal, setSavingsGoal] = useState(0);
   const [investmentsGoal, setInvestmentsGoal] = useState(0);
   const { formatCurrency, currencySymbol } = useCurrencyFormatter();
@@ -48,9 +53,17 @@ export function CreateMonthlyPlanModal({ visible, onClose, onSubmit, isSaving = 
   const sliderMax = 10000;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onRequestClose={handleClose}
+    >
       <Pressable style={styles.overlay} onPress={handleClose}>
-        <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+        <Pressable
+          style={styles.modalContent}
+          onPress={(e) => e.stopPropagation()}
+        >
           <View style={styles.header}>
             <Text style={styles.title}>Create Monthly Plan</Text>
             <Pressable onPress={handleClose} style={styles.closeButton}>
@@ -58,11 +71,15 @@ export function CreateMonthlyPlanModal({ visible, onClose, onSubmit, isSaving = 
             </Pressable>
           </View>
 
-          <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+          >
             <View style={styles.form}>
               <Text style={styles.sectionTitle}>Monthly Goals</Text>
               <Text style={styles.sectionDescription}>
-                Set savings and investment targets. You can adjust these anytime.
+                Set savings and investment targets. You can adjust these
+                anytime.
               </Text>
 
               <GoalSlider
@@ -86,7 +103,8 @@ export function CreateMonthlyPlanModal({ visible, onClose, onSubmit, isSaving = 
               <View style={styles.infoBox}>
                 <Text style={styles.infoIcon}>💡</Text>
                 <Text style={styles.infoText}>
-                  Recurring income and income transactions will automatically show up in your monthly plan widget
+                  Recurring income and income transactions will automatically
+                  show up in your monthly plan widget
                 </Text>
               </View>
             </View>
@@ -94,7 +112,10 @@ export function CreateMonthlyPlanModal({ visible, onClose, onSubmit, isSaving = 
 
           <View style={styles.footer}>
             <Pressable
-              style={[styles.submitButton, isSaving && styles.submitButtonDisabled]}
+              style={[
+                styles.submitButton,
+                isSaving && styles.submitButtonDisabled,
+              ]}
               onPress={handleSubmit}
               disabled={isSaving}
             >
@@ -127,7 +148,8 @@ const LINEAR_PORTION = 0.5;
 
 const formatNumber = (value: number) => value.toLocaleString("en-US");
 
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
 
 const snapGoalValue = (value: number, maxValue: number) =>
   clamp(Math.round(value / SLIDER_STEP) * SLIDER_STEP, 0, maxValue);
@@ -150,7 +172,14 @@ function percentFromValue(value: number, maxValue: number) {
   return LINEAR_PORTION + t * (1 - LINEAR_PORTION);
 }
 
-function GoalSlider({ label, value, max, onChange, currencySymbol, formatValue }: GoalSliderProps) {
+function GoalSlider({
+  label,
+  value,
+  max,
+  onChange,
+  currencySymbol,
+  formatValue,
+}: GoalSliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
   const [inputValue, setInputValue] = useState(formatNumber(value));
   const maxValue = Math.max(max, LINEAR_MAX, 1);
@@ -167,7 +196,9 @@ function GoalSlider({ label, value, max, onChange, currencySymbol, formatValue }
       }
       const pct = Math.min(Math.max(locationX / trackWidth, 0), 1);
       const rawValue = valueFromPercent(pct, maxValue);
-      const nextValue = shouldSnap ? snapGoalValue(rawValue, maxValue) : clamp(rawValue, 0, maxValue);
+      const nextValue = shouldSnap
+        ? snapGoalValue(rawValue, maxValue)
+        : clamp(rawValue, 0, maxValue);
       onChange(nextValue);
     },
     [trackWidth, maxValue, onChange],
@@ -178,10 +209,14 @@ function GoalSlider({ label, value, max, onChange, currencySymbol, formatValue }
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
-        onPanResponderGrant: (event) => updateFromLocation(event.nativeEvent.locationX),
-        onPanResponderMove: (event) => updateFromLocation(event.nativeEvent.locationX),
-        onPanResponderRelease: (event) => updateFromLocation(event.nativeEvent.locationX, true),
-        onPanResponderTerminate: (event) => updateFromLocation(event.nativeEvent.locationX, true),
+        onPanResponderGrant: (event) =>
+          updateFromLocation(event.nativeEvent.locationX),
+        onPanResponderMove: (event) =>
+          updateFromLocation(event.nativeEvent.locationX),
+        onPanResponderRelease: (event) =>
+          updateFromLocation(event.nativeEvent.locationX, true),
+        onPanResponderTerminate: (event) =>
+          updateFromLocation(event.nativeEvent.locationX, true),
       }),
     [updateFromLocation],
   );

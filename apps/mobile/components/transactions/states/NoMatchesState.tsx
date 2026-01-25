@@ -9,7 +9,9 @@ export function NoMatchesState({ onClearFilters }: NoMatchesStateProps) {
   return (
     <View style={[styles.emptyState, styles.listCard]}>
       <Text style={styles.emptyTitle}>No matches found</Text>
-      <Text style={styles.emptyCopy}>Try a different search or clear filters.</Text>
+      <Text style={styles.emptyCopy}>
+        Try a different search or clear filters.
+      </Text>
       <Pressable style={styles.secondaryButton} onPress={onClearFilters}>
         <Text style={styles.secondaryButtonText}>Clear filters</Text>
       </Pressable>

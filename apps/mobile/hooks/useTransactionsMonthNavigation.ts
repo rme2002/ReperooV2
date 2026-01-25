@@ -36,10 +36,14 @@ export function useTransactionsMonthNavigation(): UseTransactionsMonthNavigation
   // Generate months dynamically for month navigation
   const months = useMemo(() => generateMonthsArray(), []);
 
-  const [monthIndex, setMonthIndex] = useState(0);
+  // Calculate the index of the current month
+  // The array has 6 future months, then current month, then past months
+  const FUTURE_MONTHS = 6;
+  const [monthIndex, setMonthIndex] = useState(FUTURE_MONTHS);
 
   const activeMonth = months[monthIndex];
-  const activeReference = new Date(activeMonth?.currentDate ?? Date.now());
+  // Always use today's date as reference for "Today" labels, not the month's reference date
+  const activeReference = new Date();
   const activeMonthKey = activeMonth?.key ?? months[0].key;
 
   const goPrevious = useCallback(() => {

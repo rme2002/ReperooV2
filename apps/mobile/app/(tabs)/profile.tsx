@@ -78,8 +78,8 @@ export default function ProfileScreen() {
 
   const email = session.user.email;
   const selectedCurrencyLabel =
-    CURRENCY_OPTIONS.find((option) => option.code === selectedCurrency)?.label ??
-    selectedCurrency;
+    CURRENCY_OPTIONS.find((option) => option.code === selectedCurrency)
+      ?.label ?? selectedCurrency;
 
   return (
     <SafeAreaView style={styles.safeArea}>

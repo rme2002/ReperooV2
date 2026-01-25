@@ -87,12 +87,18 @@ function RootLayoutNav() {
               <InsightsProvider>
                 <Stack>
                   <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ headerShown: false }}
+                  />
                   <Stack.Screen
                     name="(tabs)"
                     options={{ headerShown: false, gestureEnabled: false }}
                   />
-                  <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+                  <Stack.Screen
+                    name="modal"
+                    options={{ presentation: "modal" }}
+                  />
                 </Stack>
               </InsightsProvider>
             </TransactionSummaryProvider>

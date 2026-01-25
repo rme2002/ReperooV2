@@ -72,10 +72,7 @@ export function SavingsProgressSection({
               <View style={styles.progressLabelBlock}>
                 <View style={styles.savingsLegendRow}>
                   <View
-                    style={[
-                      styles.savingsLegendDot,
-                      styles.savingsLegendSaved,
-                    ]}
+                    style={[styles.savingsLegendDot, styles.savingsLegendSaved]}
                   />
                   <Text style={styles.progressLabel}>Savings goal</Text>
                 </View>

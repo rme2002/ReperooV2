@@ -31,7 +31,7 @@ export function MilestoneProgressCard({
       duration: 800,
       easing: Easing.out(Easing.cubic),
     });
-  }, [progress]);
+  }, [progress, progressWidth]);
 
   const animatedProgressStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
@@ -46,7 +46,7 @@ export function MilestoneProgressCard({
           <View style={styles.completedText}>
             <Text style={styles.completedTitle}>All milestones achieved!</Text>
             <Text style={styles.completedSubtitle}>
-              You're a true legend with {currentStreak} days
+              You{"'"}re a true legend with {currentStreak} days
             </Text>
           </View>
         </View>

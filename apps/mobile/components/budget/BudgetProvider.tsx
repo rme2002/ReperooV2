@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 import {
   getBudgetPlan,
@@ -15,90 +21,144 @@ type BudgetContextValue = {
   budgetPlan: BudgetPlan | null;
   isLoading: boolean;
   error: string | null;
-  createBudgetPlan: (payload: CreateBudgetPlanPayload) => Promise<void>;
-  updateBudgetPlan: (payload: UpdateBudgetPlanPayload) => Promise<void>;
-  refetch: () => Promise<void>;
+  createBudgetPlan: (
+    payload: CreateBudgetPlanPayload,
+    params?: BudgetPlanMonthParams,
+  ) => Promise<void>;
+  updateBudgetPlan: (
+    payload: UpdateBudgetPlanPayload,
+    params?: BudgetPlanMonthParams,
+  ) => Promise<void>;
+  refetch: (params?: BudgetPlanMonthParams) => Promise<void>;
 };
 
 const BudgetContext = createContext<BudgetContextValue | null>(null);
+
+type BudgetPlanMonthParams = {
+  year: number;
+  month: number;
+};
+
+const getDefaultMonthParams = (): BudgetPlanMonthParams => {
+  const now = new Date();
+  return {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+  };
+};
 
 export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const [budgetPlan, setBudgetPlan] = useState<BudgetPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBudgetPlan = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const resolveMonthParams = useCallback(
+    (params?: BudgetPlanMonthParams) => params ?? getDefaultMonthParams(),
+    [],
+  );
 
-      const response = await getBudgetPlan();
+  const fetchBudgetPlan = useCallback(
+    async (params?: BudgetPlanMonthParams) => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-      if (response.status === 200 && response.data) {
-        setBudgetPlan(response.data);
-      } else if (response.status === 404) {
-        // No budget plan exists yet - this is fine
-        setBudgetPlan(null);
-      } else {
-        setError("Failed to fetch budget plan");
+        const response = await getBudgetPlan(resolveMonthParams(params));
+
+        if (response.status === 200 && response.data) {
+          setBudgetPlan(response.data);
+        } else if (response.status === 404) {
+          // No budget plan exists yet - this is fine
+          setBudgetPlan(null);
+        } else {
+          setError("Failed to fetch budget plan");
+        }
+      } catch (err) {
+        // Check if it's a 404 error (no plan exists)
+        if (
+          err &&
+          typeof err === "object" &&
+          "status" in err &&
+          err.status === 404
+        ) {
+          setBudgetPlan(null);
+        } else {
+          console.error("Error fetching budget plan:", err);
+          setError(
+            err instanceof Error ? err.message : "Failed to fetch budget plan",
+          );
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      // Check if it's a 404 error (no plan exists)
-      if (err && typeof err === 'object' && 'status' in err && err.status === 404) {
-        setBudgetPlan(null);
-      } else {
-        console.error("Error fetching budget plan:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch budget plan");
+    },
+    [resolveMonthParams],
+  );
+
+  const createBudgetPlan = useCallback(
+    async (
+      payload: CreateBudgetPlanPayload,
+      params?: BudgetPlanMonthParams,
+    ) => {
+      try {
+        setError(null);
+
+        const response = await createBudgetPlanApi(
+          payload,
+          resolveMonthParams(params),
+        );
+
+        if (response.status === 201 && response.data) {
+          setBudgetPlan(response.data);
+        } else {
+          setError("Failed to create budget plan");
+          throw new Error("Failed to create budget plan");
+        }
+      } catch (err) {
+        console.error("Error creating budget plan:", err);
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to create budget plan";
+        setError(errorMessage);
+        throw err;
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [resolveMonthParams],
+  );
 
-  const createBudgetPlan = async (payload: CreateBudgetPlanPayload) => {
-    try {
-      setError(null);
+  const updateBudgetPlan = useCallback(
+    async (
+      payload: UpdateBudgetPlanPayload,
+      params?: BudgetPlanMonthParams,
+    ) => {
+      try {
+        setError(null);
 
-      const response = await createBudgetPlanApi(payload);
+        const response = await updateBudgetPlanApi(
+          payload,
+          resolveMonthParams(params),
+        );
 
-      if (response.status === 201 && response.data) {
-        setBudgetPlan(response.data);
-      } else {
-        setError("Failed to create budget plan");
-        throw new Error("Failed to create budget plan");
+        if (response.status === 200 && response.data) {
+          setBudgetPlan(response.data);
+        } else {
+          setError("Failed to update budget plan");
+          throw new Error("Failed to update budget plan");
+        }
+      } catch (err) {
+        console.error("Error updating budget plan:", err);
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to update budget plan";
+        setError(errorMessage);
+        throw err;
       }
-    } catch (err) {
-      console.error("Error creating budget plan:", err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to create budget plan";
-      setError(errorMessage);
-      throw err;
-    }
-  };
-
-  const updateBudgetPlan = async (payload: UpdateBudgetPlanPayload) => {
-    try {
-      setError(null);
-
-      const response = await updateBudgetPlanApi(payload);
-
-      if (response.status === 200 && response.data) {
-        setBudgetPlan(response.data);
-      } else {
-        setError("Failed to update budget plan");
-        throw new Error("Failed to update budget plan");
-      }
-    } catch (err) {
-      console.error("Error updating budget plan:", err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to update budget plan";
-      setError(errorMessage);
-      throw err;
-    }
-  };
+    },
+    [resolveMonthParams],
+  );
 
   // Fetch budget plan on mount
   useEffect(() => {
     fetchBudgetPlan();
-  }, []);
+  }, [fetchBudgetPlan]);
 
   const value: BudgetContextValue = {
     budgetPlan,
@@ -109,7 +169,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     refetch: fetchBudgetPlan,
   };
 
-  return <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>;
+  return (
+    <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>
+  );
 }
 
 export function useBudgetContext() {

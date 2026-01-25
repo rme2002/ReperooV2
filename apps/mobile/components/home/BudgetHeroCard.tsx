@@ -58,28 +58,29 @@ export function BudgetHeroCard({
     : 100;
 
   // Calculate budget progress (remaining / total)
-  const budgetProgress = totalBudget > 0
-    ? Math.min(Math.max((remainingBudget / totalBudget) * 100, 0), 100)
-    : 0;
+  const budgetProgress =
+    totalBudget > 0
+      ? Math.min(Math.max((remainingBudget / totalBudget) * 100, 0), 100)
+      : 0;
 
   useEffect(() => {
     mascotY.value = withRepeat(
       withSequence(
         withTiming(-6, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+        withTiming(0, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
       ),
       -1,
-      true
+      true,
     );
 
     // Flame pulsing animation
     flameScale.value = withRepeat(
       withSequence(
         withTiming(1.15, { duration: 500 }),
-        withTiming(1, { duration: 500 })
+        withTiming(1, { duration: 500 }),
       ),
       -1,
-      true
+      true,
     );
 
     // Milestone progress animation
@@ -93,7 +94,14 @@ export function BudgetHeroCard({
       duration: 800,
       easing: Easing.out(Easing.cubic),
     });
-  }, [milestoneProgress, budgetProgress]);
+  }, [
+    budgetProgress,
+    budgetProgressWidth,
+    flameScale,
+    mascotY,
+    milestoneProgress,
+    progressWidth,
+  ]);
 
   const mascotAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: mascotY.value }],
@@ -155,11 +163,15 @@ export function BudgetHeroCard({
         {/* Financial info */}
         <View style={styles.leftSection}>
           <Text style={styles.subLabel}>Left this month</Text>
-          <Text style={styles.budgetAmount}>{formatCurrency(remainingBudget)}</Text>
+          <Text style={styles.budgetAmount}>
+            {formatCurrency(remainingBudget)}
+          </Text>
 
           {/* Budget Progress Bar */}
           <View style={styles.budgetProgressTrack}>
-            <Animated.View style={[styles.budgetProgressFill, animatedBudgetProgressStyle]} />
+            <Animated.View
+              style={[styles.budgetProgressFill, animatedBudgetProgressStyle]}
+            />
           </View>
 
           {/* Metric boxes */}
@@ -177,29 +189,35 @@ export function BudgetHeroCard({
           </View>
         </View>
 
-      {/* Streak section - gradient banner (full width) */}
-      <LinearGradient
-        colors={[...gradients.streak]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.streakBanner}
-      >
-        <Animated.View style={[styles.streakFlameContainer, flameAnimatedStyle]}>
-          <Text style={styles.streakFlame}>🔥</Text>
-        </Animated.View>
-        <Text style={styles.streakNumber}>{streakDays}</Text>
-        <Text style={styles.streakLabel}>day streak</Text>
-      </LinearGradient>
+        {/* Streak section - gradient banner (full width) */}
+        <LinearGradient
+          colors={[...gradients.streak]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.streakBanner}
+        >
+          <Animated.View
+            style={[styles.streakFlameContainer, flameAnimatedStyle]}
+          >
+            <Text style={styles.streakFlame}>🔥</Text>
+          </Animated.View>
+          <Text style={styles.streakNumber}>{streakDays}</Text>
+          <Text style={styles.streakLabel}>day streak</Text>
+        </LinearGradient>
 
         {/* Milestone progress (full width) */}
         {nextMilestone ? (
           <View style={styles.milestoneSection}>
             <View style={styles.milestoneHeader}>
               <Text style={styles.milestoneLabel}>Next: {milestoneName}</Text>
-              <Text style={styles.milestoneXp}>+{nextMilestone.xp_reward} XP</Text>
+              <Text style={styles.milestoneXp}>
+                +{nextMilestone.xp_reward} XP
+              </Text>
             </View>
             <View style={styles.progressTrack}>
-              <Animated.View style={[styles.progressFill, animatedProgressStyle]} />
+              <Animated.View
+                style={[styles.progressFill, animatedProgressStyle]}
+              />
             </View>
             <Text style={styles.milestoneDays}>
               {daysRemaining} {daysRemaining === 1 ? "day" : "days"} to go
@@ -207,7 +225,9 @@ export function BudgetHeroCard({
           </View>
         ) : (
           <View style={styles.milestoneCompleted}>
-            <Text style={styles.milestoneCompletedText}>🏆 All milestones achieved!</Text>
+            <Text style={styles.milestoneCompletedText}>
+              🏆 All milestones achieved!
+            </Text>
           </View>
         )}
       </View>

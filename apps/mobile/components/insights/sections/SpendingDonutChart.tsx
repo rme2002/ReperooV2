@@ -61,9 +61,7 @@ export function SpendingDonutChart({
     <View style={styles.surface}>
       <View style={styles.sectionHeaderCentered}>
         <Text style={styles.sectionTitle}>Where your money went</Text>
-        <Text style={styles.subText}>
-          Spending by category for this month
-        </Text>
+        <Text style={styles.subText}>Spending by category for this month</Text>
       </View>
       <View style={styles.donutRow}>
         <View style={[styles.donut, { width: chartSize, height: chartSize }]}>
@@ -116,10 +114,7 @@ export function SpendingDonutChart({
                 <View key={`legend-left-${cat.id}`} style={styles.legendRow}>
                   <View style={styles.legendLeft}>
                     <View
-                      style={[
-                        styles.legendDot,
-                        { backgroundColor: cat.color },
-                      ]}
+                      style={[styles.legendDot, { backgroundColor: cat.color }]}
                     />
                     <Text style={styles.legendLabel}>{label}</Text>
                   </View>
@@ -135,10 +130,7 @@ export function SpendingDonutChart({
                 <View key={`legend-right-${cat.id}`} style={styles.legendRow}>
                   <View style={styles.legendLeft}>
                     <View
-                      style={[
-                        styles.legendDot,
-                        { backgroundColor: cat.color },
-                      ]}
+                      style={[styles.legendDot, { backgroundColor: cat.color }]}
                     />
                     <Text style={styles.legendLabel}>{label}</Text>
                   </View>

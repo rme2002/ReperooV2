@@ -1,7 +1,16 @@
-import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import type { SectionList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/constants/theme";
+import { getUTCDateKey } from "@/utils/dateHelpers";
 
 // Modals
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
@@ -23,6 +32,7 @@ import { SearchBar } from "@/components/transactions/widgets/SearchBar";
 import { RecurringFilterToggle } from "@/components/transactions/widgets/RecurringFilterToggle";
 import { CategoryFilterChips } from "@/components/transactions/widgets/CategoryFilterChips";
 import { AddTransactionMenu } from "@/components/transactions/widgets/AddTransactionMenu";
+import { JumpToTodayButton } from "@/components/transactions/widgets/JumpToTodayButton";
 
 // Sections
 import { TransactionListSection } from "@/components/transactions/sections/TransactionListSection";
@@ -34,15 +44,17 @@ import { useTransactionsFiltering } from "@/hooks/useTransactionsFiltering";
 import { useTransactionsSections } from "@/hooks/useTransactionsSections";
 import { useTransactionsModals } from "@/hooks/useTransactionsModals";
 import { useTransactionActions } from "@/hooks/useTransactionActions";
+import { useTransactionRefresh } from "@/hooks/useTransactionRefresh";
 
 export default function TransactionsScreen() {
   const { height } = useWindowDimensions();
   const { session } = useSupabaseAuthSync();
   const { formatCurrency } = useCurrencyFormatter();
+  const sectionListRef = useRef<SectionList>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Month navigation
   const {
-    monthIndex,
     activeMonth,
     activeReference,
     activeMonthKey,
@@ -60,22 +72,27 @@ export default function TransactionsScreen() {
     loading,
     error,
     refetch,
-  } = useTransactionsData(activeMonth?.currentDate ?? new Date().toISOString(), session?.user?.id);
+  } = useTransactionsData(
+    activeMonth?.currentDate ?? new Date().toISOString(),
+    session?.user?.id,
+  );
+
+  const refreshTransactionData = useTransactionRefresh();
 
   // Category helpers
   const categoryLookup = useMemo(
     () => new Map(expenseCategories.map((cat) => [cat.id, cat])),
-    [expenseCategories]
+    [expenseCategories],
   );
 
   const categoryOrder = useMemo(
     () => expenseCategories.map((cat) => cat.id),
-    [expenseCategories]
+    [expenseCategories],
   );
 
   const incomeCategoryLookup = useMemo(
     () => new Map(incomeCategories.map((cat) => [cat.id, cat])),
-    [incomeCategories]
+    [incomeCategories],
   );
 
   const getCategoryLabel = (categoryId: string) =>
@@ -84,7 +101,9 @@ export default function TransactionsScreen() {
   const getSubcategoryLabel = (categoryId: string, subId?: string) => {
     if (!subId) return null;
     const category = categoryLookup.get(categoryId);
-    return category?.subcategories?.find((sub) => sub.id === subId)?.label ?? subId;
+    return (
+      category?.subcategories?.find((sub) => sub.id === subId)?.label ?? subId
+    );
   };
 
   const getIncomeCategoryLabel = (categoryId: string) =>
@@ -104,7 +123,7 @@ export default function TransactionsScreen() {
     apiTransactions,
     getCategoryLabel,
     getSubcategoryLabel,
-    getIncomeCategoryLabel
+    getIncomeCategoryLabel,
   );
 
   // Sections
@@ -112,7 +131,7 @@ export default function TransactionsScreen() {
     filteredTransactions,
     apiTransactions,
     activeReference,
-    loading
+    loading,
   );
 
   // Modals
@@ -139,14 +158,71 @@ export default function TransactionsScreen() {
     modalMode,
     editingTx,
     session?.user?.id,
-    refetch
+    refetch,
   );
+
+  const handleTransactionSuccess = useCallback(
+    async (date: Date) => {
+      await Promise.allSettled([refetch(), refreshTransactionData({ date })]);
+    },
+    [refetch, refreshTransactionData],
+  );
+
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return; // Prevent concurrent refreshes
+
+    setRefreshing(true);
+    try {
+      await Promise.allSettled([
+        refetch(), // Fetches transactions + recurring templates
+        refreshTransactionData({ date: activeMonth?.currentDate }),
+      ]);
+    } catch (error) {
+      console.error("[Transactions] Refresh error:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshing, refetch, refreshTransactionData, activeMonth]);
 
   // Format helpers
   const formatMoney = (value: number) =>
-    formatCurrency(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    formatCurrency(value, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   const chipBottomSpacing = Math.max(12, Math.min(height * 0.035, 40));
+
+  // Jump to Today functionality
+  const todaySectionIndex = useMemo(() => {
+    const todayKey = getUTCDateKey(new Date());
+    return sections.findIndex((section) => section.dateKey === todayKey);
+  }, [sections]);
+
+  const handleJumpToToday = useCallback(() => {
+    if (todaySectionIndex !== -1 && sectionListRef.current) {
+      sectionListRef.current.scrollToLocation({
+        sectionIndex: todaySectionIndex,
+        itemIndex: 0,
+        animated: true,
+        viewPosition: 0,
+      });
+    }
+  }, [todaySectionIndex]);
+
+  const showJumpButton = todaySectionIndex !== -1;
+
+  const refreshControl = useMemo(
+    () => (
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        tintColor={colors.primary}
+        colors={[colors.primary]}
+      />
+    ),
+    [refreshing, handleRefresh],
+  );
 
   return (
     <>
@@ -203,17 +279,25 @@ export default function TransactionsScreen() {
           ) : showNoMatches ? (
             <NoMatchesState onClearFilters={clearFilters} />
           ) : (
-            <TransactionListSection
-              sections={sections}
-              categoryOrder={categoryOrder}
-              getCategoryLabel={getCategoryLabel}
-              getSubcategoryLabel={getSubcategoryLabel}
-              getIncomeCategoryLabel={getIncomeCategoryLabel}
-              formatMoney={formatMoney}
-              onEdit={openEditModal}
-              onDelete={confirmDelete}
-              onPress={openOverviewModal}
-            />
+            <>
+              <TransactionListSection
+                ref={sectionListRef}
+                sections={sections}
+                categoryOrder={categoryOrder}
+                getCategoryLabel={getCategoryLabel}
+                getSubcategoryLabel={getSubcategoryLabel}
+                getIncomeCategoryLabel={getIncomeCategoryLabel}
+                formatMoney={formatMoney}
+                onEdit={openEditModal}
+                onDelete={confirmDelete}
+                onPress={openOverviewModal}
+                refreshControl={refreshControl}
+              />
+              <JumpToTodayButton
+                visible={showJumpButton}
+                onPress={handleJumpToToday}
+              />
+            </>
           )}
         </View>
       </SafeAreaView>
@@ -236,6 +320,7 @@ export default function TransactionsScreen() {
         }
         onClose={handleModalClose}
         onSubmit={handleSubmit}
+        onSuccess={handleTransactionSuccess}
         onEditRequest={modalMode === "view" ? handleOverviewEdit : undefined}
         isSaving={savingExpense}
       />
@@ -246,11 +331,15 @@ export default function TransactionsScreen() {
         currentDate={activeReference.toISOString()}
         onClose={() => {
           closeIncomeModal();
-          refetch();
         }}
+        onSuccess={handleTransactionSuccess}
         mode={incomeModalMode}
         initialIncome={null}
-        onEditRequest={incomeModalMode === "view" ? () => setIncomeModalMode("edit") : undefined}
+        onEditRequest={
+          incomeModalMode === "view"
+            ? () => setIncomeModalMode("edit")
+            : undefined
+        }
       />
     </>
   );

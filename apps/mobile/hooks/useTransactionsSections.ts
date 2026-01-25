@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import type { TransactionEntry } from "@/components/dummy_data/transactions";
+import type { ListTransactions200Item } from "@/lib/gen/model";
 import { formatRelativeDate } from "@/utils/transactionsFormatters";
+import { getUTCDateKey } from "@/utils/dateHelpers";
 
 /**
  * Transaction section structure
@@ -10,7 +11,7 @@ export interface TransactionSection {
   dateKey: string;
   total: number;
   categoryTotals: Record<string, number>;
-  data: TransactionEntry[];
+  data: ListTransactions200Item[];
 }
 
 /**
@@ -33,17 +34,16 @@ export interface UseTransactionsSectionsReturn {
  * @returns Object containing sections and empty state flags
  */
 export function useTransactionsSections(
-  filteredTransactions: TransactionEntry[],
-  allTransactions: TransactionEntry[],
+  filteredTransactions: ListTransactions200Item[],
+  allTransactions: ListTransactions200Item[],
   activeReference: Date,
   loading: boolean
 ): UseTransactionsSectionsReturn {
   const sections: TransactionSection[] = useMemo(() => {
     const map = new Map<string, TransactionSection>();
     filteredTransactions.forEach((tx) => {
-      const txDate = new Date(tx.timestamp);
-      txDate.setHours(0, 0, 0, 0);
-      const key = txDate.toISOString();
+      const txDate = new Date(tx.occurred_at);
+      const key = getUTCDateKey(tx.occurred_at);
       if (!map.has(key)) {
         map.set(key, {
           title: formatRelativeDate(txDate, activeReference),
@@ -57,16 +57,13 @@ export function useTransactionsSections(
       section.data.push(tx);
       section.total += tx.amount;
       // Only track category totals for expenses
-      if (tx.kind === "expense") {
-        section.categoryTotals[tx.categoryId] =
-          (section.categoryTotals[tx.categoryId] ?? 0) + tx.amount;
+      if (tx.type === "expense") {
+        section.categoryTotals[tx.expense_category_id] =
+          (section.categoryTotals[tx.expense_category_id] ?? 0) + tx.amount;
       }
     });
     const list = Array.from(map.values());
-    list.sort(
-      (a, b) =>
-        new Date(b.dateKey).getTime() - new Date(a.dateKey).getTime()
-    );
+    list.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
     return list;
   }, [filteredTransactions, activeReference]);
 

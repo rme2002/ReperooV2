@@ -49,7 +49,7 @@ export function GoalSlider({
         : sanitizeGoalValue(rawValue, maxValue);
       onChange(nextValue);
     },
-    [trackWidth, maxValue, onChange]
+    [trackWidth, maxValue, onChange],
   );
 
   const panResponder = useMemo(
@@ -66,7 +66,7 @@ export function GoalSlider({
         onPanResponderTerminate: (event) =>
           updateFromLocation(event.nativeEvent.locationX, true),
       }),
-    [updateFromLocation]
+    [updateFromLocation],
   );
 
   return (
@@ -107,9 +107,7 @@ export function GoalSlider({
         {...panResponder.panHandlers}
       >
         <View style={[styles.goalSliderFill, { width: `${percent * 100}%` }]} />
-        <View
-          style={[styles.goalSliderThumb, { left: `${percent * 100}%` }]}
-        />
+        <View style={[styles.goalSliderThumb, { left: `${percent * 100}%` }]} />
       </View>
     </View>
   );

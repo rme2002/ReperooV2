@@ -20,7 +20,7 @@ import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter"
 import {
   createIncomeTransaction,
   updateTransaction,
-  deleteTransaction
+  deleteTransaction,
 } from "@/lib/gen/transactions/transactions";
 import { createRecurringIncomeTemplate } from "@/lib/gen/recurring-templates/recurring-templates";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
@@ -34,11 +34,17 @@ type Props = {
   mode?: "add" | "edit" | "view";
   initialIncome?: IncomeEvent | null;
   onEditRequest?: () => void;
+  onSuccess?: (date: Date) => void | Promise<void>;
 };
 
 const MAX_NOTE_LENGTH = 120;
 
-const formatDate = (date: Date) => date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+const formatDate = (date: Date) =>
+  date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
 const getMonthStart = (date: Date) => {
   const d = new Date(date);
@@ -80,12 +86,16 @@ export function AddIncomeModal({
   mode = "add",
   initialIncome,
   onEditRequest,
+  onSuccess,
 }: Props) {
   const { session } = useSupabaseAuthSync();
   const [savingIncome, setSavingIncome] = useState(false);
 
   useEffect(() => {
-    if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+    if (
+      Platform.OS === "android" &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
       UIManager.setLayoutAnimationEnabledExperimental(true);
     }
   }, []);
@@ -97,7 +107,9 @@ export function AddIncomeModal({
     parsed.setHours(0, 0, 0, 0);
     return parsed;
   }, [currentDate]);
-  const [amountText, setAmountText] = useState(initialIncome ? String(initialIncome.amount) : "");
+  const [amountText, setAmountText] = useState(
+    initialIncome ? String(initialIncome.amount) : "",
+  );
   const [type, setType] = useState(initialIncome?.type ?? null);
   const [note, setNote] = useState(initialIncome?.note ?? "");
   const defaultDate = useMemo(() => {
@@ -109,18 +121,32 @@ export function AddIncomeModal({
     return today;
   }, [initialIncome, today]);
   const [selectedDate, setSelectedDate] = useState<Date>(defaultDate);
-  const [monthCursor, setMonthCursor] = useState<Date>(getMonthStart(defaultDate));
+  const [monthCursor, setMonthCursor] = useState<Date>(
+    getMonthStart(defaultDate),
+  );
   const [showCalendar, setShowCalendar] = useState(false);
-  const [isRecurring, setIsRecurring] = useState(Boolean(initialIncome?.isRecurring));
+  const [isRecurring, setIsRecurring] = useState(
+    Boolean(initialIncome?.isRecurring),
+  );
   const [recurringDayOfMonth, setRecurringDayOfMonth] = useState<number>(
     initialIncome?.recurringDayOfMonth ?? defaultDate.getDate(),
   );
   const [recurringDayDirty, setRecurringDayDirty] = useState(false);
-  const [recurringFrequency, setRecurringFrequency] = useState<"monthly" | "weekly" | "biweekly">("monthly");
+  const [recurringFrequency, setRecurringFrequency] = useState<
+    "monthly" | "weekly" | "biweekly"
+  >("monthly");
   const isViewMode = mode === "view";
   const { currencySymbol } = useCurrencyFormatter();
 
-  const dayOfWeekNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const dayOfWeekNames = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
   const recurringDayOfWeek = useMemo(() => {
     const day = selectedDate.getDay();
     return day === 0 ? 6 : day - 1;
@@ -165,7 +191,9 @@ export function AddIncomeModal({
       setMonthCursor(getMonthStart(existing));
       setShowCalendar(false);
       setIsRecurring(Boolean(initialIncome.isRecurring));
-      setRecurringDayOfMonth(initialIncome.recurringDayOfMonth ?? existing.getDate());
+      setRecurringDayOfMonth(
+        initialIncome.recurringDayOfMonth ?? existing.getDate(),
+      );
       setRecurringDayDirty(false);
     } else if (mode === "add") {
       clearState();
@@ -207,6 +235,7 @@ export function AddIncomeModal({
 
         if (response.status === 200) {
           showToast("Income updated successfully!");
+          await onSuccess?.(selectedDate);
         } else {
           Alert.alert("Error", "Failed to update income transaction");
         }
@@ -220,8 +249,10 @@ export function AddIncomeModal({
             type: "income",
             income_category_id: type,
             frequency: recurringFrequency,
-            day_of_week: recurringFrequency !== "monthly" ? recurringDayOfWeek : null,
-            day_of_month: recurringFrequency === "monthly" ? recurringDayOfMonth : null,
+            day_of_week:
+              recurringFrequency !== "monthly" ? recurringDayOfWeek : null,
+            day_of_month:
+              recurringFrequency === "monthly" ? recurringDayOfMonth : null,
             start_date: selectedDate.toISOString(),
             end_date: null,
             total_occurrences: null,
@@ -229,6 +260,7 @@ export function AddIncomeModal({
 
           if (response.status === 201) {
             showToast("Recurring income template created!");
+            await onSuccess?.(selectedDate);
           } else {
             Alert.alert("Error", "Failed to create recurring income template");
           }
@@ -245,6 +277,7 @@ export function AddIncomeModal({
 
           if (response.status === 201) {
             showToast("Income created successfully!");
+            await onSuccess?.(selectedDate);
           } else {
             Alert.alert("Error", "Failed to create income transaction");
           }
@@ -252,7 +285,12 @@ export function AddIncomeModal({
       }
     } catch (error) {
       console.error("Error saving income:", error);
-      Alert.alert("Error", mode === "edit" ? "Failed to update income transaction" : "Failed to create income transaction");
+      Alert.alert(
+        "Error",
+        mode === "edit"
+          ? "Failed to update income transaction"
+          : "Failed to create income transaction",
+      );
     } finally {
       setSavingIncome(false);
     }
@@ -272,6 +310,7 @@ export function AddIncomeModal({
             const response = await deleteTransaction(initialIncome.id);
             if (response.status === 204) {
               showToast("Income deleted");
+              await onSuccess?.(new Date(initialIncome.date));
               handleClose();
             } else {
               Alert.alert("Error", "Failed to delete income transaction");
@@ -306,7 +345,12 @@ export function AddIncomeModal({
   };
 
   return (
-    <Modal animationType="slide" transparent visible={visible} onRequestClose={handleClose}>
+    <Modal
+      animationType="slide"
+      transparent
+      visible={visible}
+      onRequestClose={handleClose}
+    >
       <View style={styles.overlay}>
         <Pressable
           style={styles.backdrop}
@@ -317,7 +361,11 @@ export function AddIncomeModal({
         <View style={styles.sheet}>
           <View style={styles.sheetHeader}>
             <Text style={styles.title}>
-              {mode === "edit" ? "Edit income" : mode === "view" ? "Income overview" : "Add income"}
+              {mode === "edit"
+                ? "Edit income"
+                : mode === "view"
+                  ? "Income overview"
+                  : "Add income"}
             </Text>
             <Pressable onPress={handleClose} hitSlop={8}>
               <Text style={styles.close}>×</Text>
@@ -362,7 +410,12 @@ export function AddIncomeModal({
                         dimmed && styles.typeChipDimmed,
                       ]}
                     >
-                      <Text style={[styles.typeChipLabel, isActive && styles.typeChipLabelActive]}>
+                      <Text
+                        style={[
+                          styles.typeChipLabel,
+                          isActive && styles.typeChipLabelActive,
+                        ]}
+                      >
                         {option.label}
                       </Text>
                     </Pressable>
@@ -376,7 +429,9 @@ export function AddIncomeModal({
               <View
                 style={[
                   styles.amountField,
-                  !isAmountValid && amountText.length > 0 && styles.amountFieldError,
+                  !isAmountValid &&
+                    amountText.length > 0 &&
+                    styles.amountFieldError,
                 ]}
               >
                 <Text style={styles.currency}>{currencySymbol}</Text>
@@ -393,7 +448,9 @@ export function AddIncomeModal({
                 />
               </View>
               {!isAmountValid && amountText.length > 0 ? (
-                <Text style={styles.helperText}>Enter an amount greater than zero.</Text>
+                <Text style={styles.helperText}>
+                  Enter an amount greater than zero.
+                </Text>
               ) : null}
             </View>
 
@@ -423,13 +480,15 @@ export function AddIncomeModal({
                   }}
                   style={[
                     styles.dateChip,
-                    selectedDate.getTime() === today.getTime() && styles.dateChipSelected,
+                    selectedDate.getTime() === today.getTime() &&
+                      styles.dateChipSelected,
                   ]}
                 >
                   <Text
                     style={[
                       styles.dateText,
-                      selectedDate.getTime() === today.getTime() && styles.dateTextSelected,
+                      selectedDate.getTime() === today.getTime() &&
+                        styles.dateTextSelected,
                     ]}
                   >
                     Today
@@ -441,156 +500,180 @@ export function AddIncomeModal({
                   style={[
                     styles.dateChip,
                     styles.calendarChip,
-                    selectedDate.getTime() !== today.getTime() && styles.dateChipSelected,
+                    selectedDate.getTime() !== today.getTime() &&
+                      styles.dateChipSelected,
                   ]}
                 >
                   <Text style={styles.calendarIcon}>📅</Text>
                   <Text
                     style={[
                       styles.dateText,
-                      selectedDate.getTime() !== today.getTime() && styles.dateTextSelected,
+                      selectedDate.getTime() !== today.getTime() &&
+                        styles.dateTextSelected,
                     ]}
                   >
                     {formatDate(selectedDate)}
                   </Text>
                 </Pressable>
-            </View>
-          </View>
-
-          <View style={styles.recurringSurface}>
-            <View style={styles.recurringHeader}>
-              <Text style={styles.sectionTitle}>Recurring income</Text>
-              <Switch
-                value={isRecurring}
-                disabled={isViewMode}
-                onValueChange={(value) => {
-                  setIsRecurring(value);
-                  if (value) {
-                    setRecurringDayOfMonth(selectedDate.getDate());
-                    setRecurringDayDirty(false);
-                  }
-                }}
-                trackColor={{ false: palette.slate260, true: palette.slate900 }}
-                thumbColor={palette.white}
-              />
-            </View>
-            {isRecurring ? (
-              <View style={styles.frequencyContainer}>
-                <Text style={styles.recurringSubtitle}>Frequency</Text>
-                <View style={styles.frequencyPicker}>
-                  <Pressable
-                    disabled={isViewMode}
-                    onPress={() => setRecurringFrequency("monthly")}
-                    style={[
-                      styles.frequencyButton,
-                      recurringFrequency === "monthly" && styles.frequencyButtonActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.frequencyButtonText,
-                        recurringFrequency === "monthly" && styles.frequencyButtonTextActive,
-                      ]}
-                    >
-                      Monthly
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    disabled={isViewMode}
-                    onPress={() => setRecurringFrequency("weekly")}
-                    style={[
-                      styles.frequencyButton,
-                      recurringFrequency === "weekly" && styles.frequencyButtonActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.frequencyButtonText,
-                        recurringFrequency === "weekly" && styles.frequencyButtonTextActive,
-                      ]}
-                    >
-                      Weekly
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    disabled={isViewMode}
-                    onPress={() => setRecurringFrequency("biweekly")}
-                    style={[
-                      styles.frequencyButton,
-                      recurringFrequency === "biweekly" && styles.frequencyButtonActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.frequencyButtonText,
-                        recurringFrequency === "biweekly" && styles.frequencyButtonTextActive,
-                      ]}
-                    >
-                      Biweekly
-                    </Text>
-                  </Pressable>
-                </View>
-
-                {recurringFrequency === "monthly" ? (
-                  <View style={styles.recurringDayBlock}>
-                    <Text style={styles.recurringSubtitle}>Day of month</Text>
-                    <View style={styles.recurringDayControls}>
-                      <Pressable
-                        disabled={isViewMode || recurringDayOfMonth <= 1}
-                        style={[
-                          styles.dayButton,
-                          (isViewMode || recurringDayOfMonth <= 1) && styles.dayButtonDisabled,
-                        ]}
-                        onPress={() => {
-                          setRecurringDayOfMonth((current) => Math.max(1, current - 1));
-                          setRecurringDayDirty(true);
-                        }}
-                      >
-                        <Text style={styles.dayButtonText}>−</Text>
-                      </Pressable>
-                      <Text style={styles.dayValue}>Day {recurringDayOfMonth}</Text>
-                      <Pressable
-                        disabled={isViewMode || recurringDayOfMonth >= 31}
-                        style={[
-                          styles.dayButton,
-                          (isViewMode || recurringDayOfMonth >= 31) && styles.dayButtonDisabled,
-                        ]}
-                        onPress={() => {
-                          setRecurringDayOfMonth((current) => Math.min(31, current + 1));
-                          setRecurringDayDirty(true);
-                        }}
-                      >
-                        <Text style={styles.dayButtonText}>+</Text>
-                      </Pressable>
-                    </View>
-                    <Text style={styles.recurringHelper}>
-                      This income will repeat on the {recurringDayOfMonth}
-                      {recurringDayOfMonth === 1
-                        ? "st"
-                        : recurringDayOfMonth === 2
-                          ? "nd"
-                          : recurringDayOfMonth === 3
-                            ? "rd"
-                            : "th"}{" "}
-                      of every month
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={styles.recurringDayBlock}>
-                    <Text style={styles.recurringSubtitle}>Day of week</Text>
-                    <Text style={styles.dayValue}>{dayOfWeekNames[recurringDayOfWeek]}</Text>
-                    <Text style={styles.recurringHelper}>
-                      This income will repeat every {recurringFrequency === "weekly" ? "week" : "two weeks"} on{" "}
-                      {dayOfWeekNames[recurringDayOfWeek]}
-                    </Text>
-                  </View>
-                )}
               </View>
-            ) : (
-              <Text style={styles.recurringCopy}>Enable to make this a recurring income.</Text>
-            )}
-          </View>
-        </ScrollView>
+            </View>
+
+            <View style={styles.recurringSurface}>
+              <View style={styles.recurringHeader}>
+                <Text style={styles.sectionTitle}>Recurring income</Text>
+                <Switch
+                  value={isRecurring}
+                  disabled={isViewMode}
+                  onValueChange={(value) => {
+                    setIsRecurring(value);
+                    if (value) {
+                      setRecurringDayOfMonth(selectedDate.getDate());
+                      setRecurringDayDirty(false);
+                    }
+                  }}
+                  trackColor={{
+                    false: palette.slate260,
+                    true: palette.slate900,
+                  }}
+                  thumbColor={palette.white}
+                />
+              </View>
+              {isRecurring ? (
+                <View style={styles.frequencyContainer}>
+                  <Text style={styles.recurringSubtitle}>Frequency</Text>
+                  <View style={styles.frequencyPicker}>
+                    <Pressable
+                      disabled={isViewMode}
+                      onPress={() => setRecurringFrequency("monthly")}
+                      style={[
+                        styles.frequencyButton,
+                        recurringFrequency === "monthly" &&
+                          styles.frequencyButtonActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.frequencyButtonText,
+                          recurringFrequency === "monthly" &&
+                            styles.frequencyButtonTextActive,
+                        ]}
+                      >
+                        Monthly
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      disabled={isViewMode}
+                      onPress={() => setRecurringFrequency("weekly")}
+                      style={[
+                        styles.frequencyButton,
+                        recurringFrequency === "weekly" &&
+                          styles.frequencyButtonActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.frequencyButtonText,
+                          recurringFrequency === "weekly" &&
+                            styles.frequencyButtonTextActive,
+                        ]}
+                      >
+                        Weekly
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      disabled={isViewMode}
+                      onPress={() => setRecurringFrequency("biweekly")}
+                      style={[
+                        styles.frequencyButton,
+                        recurringFrequency === "biweekly" &&
+                          styles.frequencyButtonActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.frequencyButtonText,
+                          recurringFrequency === "biweekly" &&
+                            styles.frequencyButtonTextActive,
+                        ]}
+                      >
+                        Biweekly
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  {recurringFrequency === "monthly" ? (
+                    <View style={styles.recurringDayBlock}>
+                      <Text style={styles.recurringSubtitle}>Day of month</Text>
+                      <View style={styles.recurringDayControls}>
+                        <Pressable
+                          disabled={isViewMode || recurringDayOfMonth <= 1}
+                          style={[
+                            styles.dayButton,
+                            (isViewMode || recurringDayOfMonth <= 1) &&
+                              styles.dayButtonDisabled,
+                          ]}
+                          onPress={() => {
+                            setRecurringDayOfMonth((current) =>
+                              Math.max(1, current - 1),
+                            );
+                            setRecurringDayDirty(true);
+                          }}
+                        >
+                          <Text style={styles.dayButtonText}>−</Text>
+                        </Pressable>
+                        <Text style={styles.dayValue}>
+                          Day {recurringDayOfMonth}
+                        </Text>
+                        <Pressable
+                          disabled={isViewMode || recurringDayOfMonth >= 31}
+                          style={[
+                            styles.dayButton,
+                            (isViewMode || recurringDayOfMonth >= 31) &&
+                              styles.dayButtonDisabled,
+                          ]}
+                          onPress={() => {
+                            setRecurringDayOfMonth((current) =>
+                              Math.min(31, current + 1),
+                            );
+                            setRecurringDayDirty(true);
+                          }}
+                        >
+                          <Text style={styles.dayButtonText}>+</Text>
+                        </Pressable>
+                      </View>
+                      <Text style={styles.recurringHelper}>
+                        This income will repeat on the {recurringDayOfMonth}
+                        {recurringDayOfMonth === 1
+                          ? "st"
+                          : recurringDayOfMonth === 2
+                            ? "nd"
+                            : recurringDayOfMonth === 3
+                              ? "rd"
+                              : "th"}{" "}
+                        of every month
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={styles.recurringDayBlock}>
+                      <Text style={styles.recurringSubtitle}>Day of week</Text>
+                      <Text style={styles.dayValue}>
+                        {dayOfWeekNames[recurringDayOfWeek]}
+                      </Text>
+                      <Text style={styles.recurringHelper}>
+                        This income will repeat every{" "}
+                        {recurringFrequency === "weekly" ? "week" : "two weeks"}{" "}
+                        on {dayOfWeekNames[recurringDayOfWeek]}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <Text style={styles.recurringCopy}>
+                  Enable to make this a recurring income.
+                </Text>
+              )}
+            </View>
+          </ScrollView>
 
           {mode === "edit" && initialIncome ? (
             <Pressable style={styles.deleteLink} onPress={handleDelete}>
@@ -615,20 +698,33 @@ export function AddIncomeModal({
               style={({ pressed }) => [
                 styles.saveButton,
                 (!isFormValid || savingIncome) && styles.saveButtonDisabled,
-                pressed && isFormValid && !savingIncome && styles.saveButtonPressed,
+                pressed &&
+                  isFormValid &&
+                  !savingIncome &&
+                  styles.saveButtonPressed,
               ]}
               disabled={!isFormValid || savingIncome}
               onPress={handleSubmit}
             >
               <Text style={styles.saveText}>
-                {savingIncome ? "Saving..." : mode === "edit" ? "Save changes" : "Save income"}
+                {savingIncome
+                  ? "Saving..."
+                  : mode === "edit"
+                    ? "Save changes"
+                    : "Save income"}
               </Text>
             </Pressable>
           )}
         </View>
         {!isViewMode && showCalendar ? (
-          <Pressable style={styles.calendarOverlay} onPress={() => setShowCalendar(false)}>
-            <Pressable style={styles.calendarModal} onPress={(e) => e.stopPropagation()}>
+          <Pressable
+            style={styles.calendarOverlay}
+            onPress={() => setShowCalendar(false)}
+          >
+            <Pressable
+              style={styles.calendarModal}
+              onPress={(e) => e.stopPropagation()}
+            >
               <View style={styles.calendarHeader}>
                 <Pressable onPress={goPrevMonth} style={styles.calendarNav}>
                   <Text style={styles.calendarNavText}>‹</Text>
@@ -639,13 +735,8 @@ export function AddIncomeModal({
                     year: "numeric",
                   })}
                 </Text>
-                <Pressable
-                  onPress={goNextMonth}
-                  style={styles.calendarNav}
-                >
-                  <Text style={styles.calendarNavText}>
-                    ›
-                  </Text>
+                <Pressable onPress={goNextMonth} style={styles.calendarNav}>
+                  <Text style={styles.calendarNavText}>›</Text>
                 </Pressable>
               </View>
               <View style={styles.calendarGrid}>
@@ -656,7 +747,12 @@ export function AddIncomeModal({
                 ))}
                 {monthDays.map((day, index) => {
                   if (!day) {
-                    return <View key={`empty-${index}`} style={styles.calendarCell} />;
+                    return (
+                      <View
+                        key={`empty-${index}`}
+                        style={styles.calendarCell}
+                      />
+                    );
                   }
                   const isSelected = day.getTime() === selectedDate.getTime();
                   return (

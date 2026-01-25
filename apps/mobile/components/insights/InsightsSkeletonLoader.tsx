@@ -18,10 +18,27 @@ export function InsightsSkeletonLoader() {
         </View>
 
         {/* Budget summary card skeleton */}
-        <View style={[styles.card, { padding: cardPadding, marginBottom: cardGap }]}>
-          <View style={[styles.skeletonBox, { width: 120, height: 48, marginBottom: 8 }]} />
-          <View style={[styles.skeletonBox, { width: 180, height: 20, marginBottom: 16 }]} />
-          <View style={[styles.skeletonBox, { width: "100%", height: 8, marginBottom: 12 }]} />
+        <View
+          style={[styles.card, { padding: cardPadding, marginBottom: cardGap }]}
+        >
+          <View
+            style={[
+              styles.skeletonBox,
+              { width: 120, height: 48, marginBottom: 8 },
+            ]}
+          />
+          <View
+            style={[
+              styles.skeletonBox,
+              { width: 180, height: 20, marginBottom: 16 },
+            ]}
+          />
+          <View
+            style={[
+              styles.skeletonBox,
+              { width: "100%", height: 8, marginBottom: 12 },
+            ]}
+          />
           <View style={styles.row}>
             <View style={[styles.skeletonBox, { width: 100, height: 16 }]} />
             <View style={[styles.skeletonBox, { width: 80, height: 16 }]} />
@@ -29,8 +46,15 @@ export function InsightsSkeletonLoader() {
         </View>
 
         {/* Budget plan card skeleton */}
-        <View style={[styles.card, { padding: cardPadding, marginBottom: cardGap }]}>
-          <View style={[styles.skeletonBox, { width: 140, height: 24, marginBottom: 16 }]} />
+        <View
+          style={[styles.card, { padding: cardPadding, marginBottom: cardGap }]}
+        >
+          <View
+            style={[
+              styles.skeletonBox,
+              { width: 140, height: 24, marginBottom: 16 },
+            ]}
+          />
           <View style={styles.row}>
             <View style={[styles.skeletonBox, { width: 100, height: 40 }]} />
             <View style={[styles.skeletonBox, { width: 100, height: 40 }]} />
@@ -38,21 +62,50 @@ export function InsightsSkeletonLoader() {
         </View>
 
         {/* Chart skeleton */}
-        <View style={[styles.card, { padding: cardPadding, marginBottom: cardGap }]}>
-          <View style={[styles.skeletonBox, { width: 160, height: 24, marginBottom: 16 }]} />
-          <View style={[styles.skeletonCircle, { alignSelf: "center", marginBottom: 16 }]} />
+        <View
+          style={[styles.card, { padding: cardPadding, marginBottom: cardGap }]}
+        >
+          <View
+            style={[
+              styles.skeletonBox,
+              { width: 160, height: 24, marginBottom: 16 },
+            ]}
+          />
+          <View
+            style={[
+              styles.skeletonCircle,
+              { alignSelf: "center", marginBottom: 16 },
+            ]}
+          />
           <View style={[styles.skeletonBox, { width: "100%", height: 100 }]} />
         </View>
 
         {/* Category list skeleton */}
         <View style={[styles.card, { padding: cardPadding }]}>
-          <View style={[styles.skeletonBox, { width: 180, height: 24, marginBottom: 16 }]} />
+          <View
+            style={[
+              styles.skeletonBox,
+              { width: 180, height: 24, marginBottom: 16 },
+            ]}
+          />
           {[0, 1, 2, 3].map((i) => (
             <View key={i} style={[styles.categoryRow, { marginBottom: 12 }]}>
-              <View style={[styles.skeletonBox, { width: 40, height: 40, borderRadius: 8 }]} />
+              <View
+                style={[
+                  styles.skeletonBox,
+                  { width: 40, height: 40, borderRadius: 8 },
+                ]}
+              />
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <View style={[styles.skeletonBox, { width: "60%", height: 18, marginBottom: 6 }]} />
-                <View style={[styles.skeletonBox, { width: "40%", height: 14 }]} />
+                <View
+                  style={[
+                    styles.skeletonBox,
+                    { width: "60%", height: 18, marginBottom: 6 },
+                  ]}
+                />
+                <View
+                  style={[styles.skeletonBox, { width: "40%", height: 14 }]}
+                />
               </View>
               <View style={[styles.skeletonBox, { width: 60, height: 18 }]} />
             </View>

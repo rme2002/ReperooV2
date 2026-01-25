@@ -48,7 +48,9 @@ export function HomeFAB({
                 onAddIncome();
               }}
             >
-              <Text style={[styles.fabActionLabel, styles.fabActionLabelSecondary]}>
+              <Text
+                style={[styles.fabActionLabel, styles.fabActionLabelSecondary]}
+              >
                 Add income
               </Text>
             </Pressable>

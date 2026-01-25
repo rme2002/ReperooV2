@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import type { TransactionEntry } from "@/components/dummy_data/transactions";
-import type { ExpenseCategory } from "@/lib/gen/model";
+import type { ListTransactions200Item } from "@/lib/gen/model";
 
 /**
  * Return type for useTransactionsFiltering hook
@@ -12,7 +11,7 @@ export interface UseTransactionsFilteringReturn {
   setActiveCategory: (categoryId: string | null) => void;
   showRecurringOnly: boolean;
   setShowRecurringOnly: (show: boolean) => void;
-  filteredTransactions: TransactionEntry[];
+  filteredTransactions: ListTransactions200Item[];
   clearFilters: () => void;
 }
 
@@ -27,7 +26,7 @@ export interface UseTransactionsFilteringReturn {
  * @returns Object containing filter states and filtered transactions
  */
 export function useTransactionsFiltering(
-  transactions: TransactionEntry[],
+  transactions: ListTransactions200Item[],
   getCategoryLabel: (id: string) => string,
   getSubcategoryLabel: (catId: string, subId?: string) => string | null,
   getIncomeCategoryLabel: (id: string) => string
@@ -41,37 +40,37 @@ export function useTransactionsFiltering(
     const query = searchQuery.trim().toLowerCase();
     const filtered = base.filter((tx) => {
       // Apply recurring filter first
-      if (showRecurringOnly && !tx.isRecurringInstance) {
+      if (showRecurringOnly && !tx.recurring_template_id) {
         return false;
       }
 
       // For expense transactions, filter by category
-      if (tx.kind === "expense") {
-        if (activeCategory && tx.categoryId !== activeCategory) {
+      if (tx.type === "expense") {
+        if (activeCategory && tx.expense_category_id !== activeCategory) {
           return false;
         }
         if (!query) {
           return true;
         }
-        const searchTarget = `${getCategoryLabel(tx.categoryId).toLowerCase()} ${(getSubcategoryLabel(tx.categoryId, tx.subcategoryId) ?? "").toLowerCase()} ${(tx.note ?? "").toLowerCase()}`;
+        const searchTarget = `${getCategoryLabel(tx.expense_category_id).toLowerCase()} ${(getSubcategoryLabel(tx.expense_category_id, tx.expense_subcategory_id ?? undefined) ?? "").toLowerCase()} ${(tx.notes ?? "").toLowerCase()}`;
         return searchTarget.includes(query);
       }
       // For income transactions, skip category filter and just search notes
-      if (tx.kind === "income") {
+      if (tx.type === "income") {
         if (activeCategory) {
           return false; // Income doesn't match expense categories
         }
         if (!query) {
           return true;
         }
-        const searchTarget = `income ${getIncomeCategoryLabel(tx.incomeCategoryId).toLowerCase()} ${(tx.note ?? "").toLowerCase()}`;
+        const searchTarget = `income ${getIncomeCategoryLabel(tx.income_category_id).toLowerCase()} ${(tx.notes ?? "").toLowerCase()}`;
         return searchTarget.includes(query);
       }
       return true;
     });
     filtered.sort(
       (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime()
     );
     return filtered;
   }, [

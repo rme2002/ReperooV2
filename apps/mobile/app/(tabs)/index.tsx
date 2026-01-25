@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useCallback, useState } from "react";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors } from "@/constants/theme";
@@ -25,18 +25,21 @@ import { AchievementBadgesSection } from "@/components/home/AchievementBadgesSec
 // Custom hooks
 import { useHomeBudget } from "@/hooks/useHomeBudget";
 import { useHomeGamification } from "@/hooks/useHomeGamification";
+import { useTransactionRefresh } from "@/hooks/useTransactionRefresh";
 
 export default function OverviewScreen() {
   const router = useRouter();
   const [showAdd, setShowAdd] = useState(false);
   const [showIncome, setShowIncome] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const { formatCurrency } = useCurrencyFormatter();
 
   // Context data
-  const { currentSnapshot } = useInsightsContext();
-  const { budgetPlan } = useBudgetContext();
+  const { currentSnapshot, fetchSnapshot } = useInsightsContext();
+  const { budgetPlan, refetch } = useBudgetContext();
   const { experience, milestones } = useExperience();
+  const refreshTransactionData = useTransactionRefresh();
 
   // Budget metrics
   const {
@@ -50,12 +53,48 @@ export default function OverviewScreen() {
   // Gamification metrics
   const { streakDays, evolutionStage, nextMilestone } = useHomeGamification(
     experience,
-    milestones
+    milestones,
   );
 
   const handleSetPlanPress = () => {
     router.push("/(tabs)/insights");
   };
+
+  const handleTransactionSuccess = useCallback(
+    async (date: Date) => {
+      await refreshTransactionData({ date });
+    },
+    [refreshTransactionData],
+  );
+
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return; // Prevent concurrent refreshes
+
+    setRefreshing(true);
+    try {
+      const currentMonth = currentSnapshot?.currentDate
+        ? new Date(currentSnapshot.currentDate)
+        : new Date();
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth() + 1;
+
+      await Promise.allSettled([
+        refreshTransactionData({ date: currentMonth }),
+        refetch(), // BudgetProvider
+        fetchSnapshot(year, month), // InsightsProvider
+      ]);
+    } catch (error) {
+      console.error("[Home] Refresh error:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [
+    refreshing,
+    currentSnapshot,
+    refreshTransactionData,
+    refetch,
+    fetchSnapshot,
+  ]);
 
   return (
     <View style={styles.screenContainer}>
@@ -64,6 +103,14 @@ export default function OverviewScreen() {
           style={styles.container}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
         >
           <HomeHeader />
 
@@ -93,12 +140,17 @@ export default function OverviewScreen() {
           onAddIncome={() => setShowIncome(true)}
         />
 
-        <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
+        <AddExpenseModal
+          visible={showAdd}
+          onClose={() => setShowAdd(false)}
+          onSuccess={handleTransactionSuccess}
+        />
         <AddIncomeModal
           visible={showIncome}
           onClose={() => setShowIncome(false)}
           monthKey={currentSnapshot?.key ?? ""}
           currentDate={currentSnapshot?.currentDate ?? new Date().toISOString()}
+          onSuccess={handleTransactionSuccess}
         />
       </SafeAreaView>
     </View>

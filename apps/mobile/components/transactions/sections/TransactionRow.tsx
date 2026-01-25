@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "@/constants/theme";
-import type { TransactionEntry } from "@/components/dummy_data/transactions";
+import type { ListTransactions200Item } from "@/lib/gen/model";
 import { getCategoryIcon, getCategoryAccent } from "@/utils/categoryHelpers";
 
 type TransactionRowProps = {
-  transaction: TransactionEntry;
+  transaction: ListTransactions200Item;
   getCategoryLabel: (id: string) => string;
   getSubcategoryLabel: (catId: string, subId?: string) => string | null;
   getIncomeCategoryLabel: (id: string) => string;
@@ -20,12 +20,12 @@ export function TransactionRow({
   formatMoney,
   onPress,
 }: TransactionRowProps) {
-  const showRecurringBadge = Boolean(transaction.isRecurringInstance);
+  const showRecurringBadge = Boolean(transaction.recurring_template_id);
 
-  if (transaction.kind === "income") {
+  if (transaction.type === "income") {
     const displayAmount = formatMoney(transaction.amount);
     const subtitleParts: string[] = [];
-    if (transaction.note) subtitleParts.push(transaction.note);
+    if (transaction.notes) subtitleParts.push(transaction.notes);
     const subtitle = subtitleParts.join(" · ");
 
     return (
@@ -36,9 +36,11 @@ export function TransactionRow({
           </View>
           <View style={styles.txInfo}>
             <Text style={[styles.txTitle, styles.txIncomeTitle]}>
-              {getIncomeCategoryLabel(transaction.incomeCategoryId)}
+              {getIncomeCategoryLabel(transaction.income_category_id)}
             </Text>
-            {subtitle ? <Text style={styles.txSubtitle}>{subtitle}</Text> : null}
+            {subtitle ? (
+              <Text style={styles.txSubtitle}>{subtitle}</Text>
+            ) : null}
             {showRecurringBadge ? (
               <Text style={styles.recurringBadge}>Recurring</Text>
             ) : null}
@@ -54,15 +56,15 @@ export function TransactionRow({
   }
 
   // Render expense transaction
-  const categoryMeta = getCategoryAccent(transaction.categoryId);
+  const categoryMeta = getCategoryAccent(transaction.expense_category_id);
   const subcategoryLabel = getSubcategoryLabel(
-    transaction.categoryId,
-    transaction.subcategoryId
+    transaction.expense_category_id,
+    transaction.expense_subcategory_id ?? undefined,
   );
-  const categoryLabel = getCategoryLabel(transaction.categoryId);
+  const categoryLabel = getCategoryLabel(transaction.expense_category_id);
   const subtitleParts: string[] = [];
   if (subcategoryLabel) subtitleParts.push(subcategoryLabel);
-  if (transaction.note) subtitleParts.push(transaction.note);
+  if (transaction.notes) subtitleParts.push(transaction.notes);
   const subtitle = subtitleParts.join(" · ");
   const displayAmount = formatMoney(transaction.amount);
 
@@ -71,7 +73,7 @@ export function TransactionRow({
       <View style={styles.txLeft}>
         <View style={[styles.txIcon, { backgroundColor: categoryMeta.bg }]}>
           <Text style={styles.txIconText}>
-            {getCategoryIcon(transaction.categoryId)}
+            {getCategoryIcon(transaction.expense_category_id)}
           </Text>
         </View>
         <View style={styles.txInfo}>

@@ -57,20 +57,34 @@ const getUrl = (contextUrl: string): string => {
   // For iOS simulator, localhost won't work - use your machine's IP or the env variable
   const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || getDefaultBaseUrl();
 
-  console.log('[customFetch] Environment variable EXPO_PUBLIC_API_BASE_URL:', process.env.EXPO_PUBLIC_API_BASE_URL);
-  console.log('[customFetch] Using baseUrl:', baseUrl);
-  console.log('[customFetch] Original contextUrl:', contextUrl);
-  console.log('[customFetch] Original pathname:', pathname);
+  const isFetchDebug =
+    __DEV__ && process.env.EXPO_PUBLIC_DEBUG_FETCH === "true";
+  if (isFetchDebug) {
+    console.log(
+      "[customFetch] Environment variable EXPO_PUBLIC_API_BASE_URL:",
+      process.env.EXPO_PUBLIC_API_BASE_URL,
+    );
+    console.log("[customFetch] Using baseUrl:", baseUrl);
+    console.log("[customFetch] Original contextUrl:", contextUrl);
+    console.log("[customFetch] Original pathname:", pathname);
+  }
 
   // Remove leading /api/v1 if it exists in the pathname since baseUrl already includes it
   // This prevents duplication when the generated client already includes /api/v1
-  if (pathname.startsWith('/api/v1')) {
+  if (pathname.startsWith("/api/v1")) {
     pathname = pathname.substring(7); // Remove /api/v1 prefix
-    console.log('[customFetch] Removed /api/v1 prefix, new pathname:', pathname);
+    if (isFetchDebug) {
+      console.log(
+        "[customFetch] Removed /api/v1 prefix, new pathname:",
+        pathname,
+      );
+    }
   }
 
   const requestUrl = new URL(`${baseUrl}${pathname}${search}`);
-  console.log('[customFetch] Final request URL:', requestUrl.toString());
+  if (isFetchDebug) {
+    console.log("[customFetch] Final request URL:", requestUrl.toString());
+  }
 
   return requestUrl.toString();
 };

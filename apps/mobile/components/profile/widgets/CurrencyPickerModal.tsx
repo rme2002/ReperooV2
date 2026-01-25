@@ -19,7 +19,12 @@ export function CurrencyPickerModal({
   onClose,
 }: CurrencyPickerModalProps) {
   return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
+    <Modal
+      transparent
+      animationType="fade"
+      visible={visible}
+      onRequestClose={onClose}
+    >
       <View style={styles.pickerOverlay}>
         <Pressable style={styles.pickerBackdrop} onPress={onClose} />
         <View style={styles.pickerSheet}>

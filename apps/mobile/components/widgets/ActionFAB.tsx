@@ -47,10 +47,7 @@ export function ActionFAB({
               onPress={onAddIncome}
             >
               <Text
-                style={[
-                  styles.fabActionLabel,
-                  styles.fabActionLabelSecondary,
-                ]}
+                style={[styles.fabActionLabel, styles.fabActionLabelSecondary]}
               >
                 Add income
               </Text>

@@ -5,7 +5,13 @@ export type {
   UpdateBudgetPlanPayload,
 } from "@/lib/gen/model";
 
-export type IncomeType = "salary" | "freelance_business" | "government_benefits" | "investment_income" | "refunds_reimbursements" | "income_other";
+export type IncomeType =
+  | "salary"
+  | "freelance_business"
+  | "government_benefits"
+  | "investment_income"
+  | "refunds_reimbursements"
+  | "income_other";
 
 export type IncomeEvent = {
   id: string;

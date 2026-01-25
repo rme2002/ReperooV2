@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import type { TransactionEntry } from "@/components/dummy_data/transactions";
 import type { IncomeEvent } from "@/components/budget/types";
+import type { ListTransactions200Item } from "@/lib/gen/model";
 
 /**
  * Modal mode type
@@ -14,10 +14,10 @@ export interface UseTransactionsModalsReturn {
   // Expense modal
   modalVisible: boolean;
   modalMode: ModalMode;
-  editingTx: TransactionEntry | null;
+  editingTx: ListTransactions200Item | null;
   openAddExpenseModal: () => void;
-  openEditModal: (tx: TransactionEntry) => void;
-  openOverviewModal: (tx: TransactionEntry) => void;
+  openEditModal: (tx: ListTransactions200Item) => void;
+  openOverviewModal: (tx: ListTransactions200Item) => void;
   handleModalClose: () => void;
   handleOverviewEdit: () => void;
 
@@ -44,7 +44,9 @@ export function useTransactionsModals(): UseTransactionsModalsReturn {
   // Expense modal states
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>("add");
-  const [editingTx, setEditingTx] = useState<TransactionEntry | null>(null);
+  const [editingTx, setEditingTx] = useState<ListTransactions200Item | null>(
+    null
+  );
 
   // Income modal states
   const [incomeModalVisible, setIncomeModalVisible] = useState(false);
@@ -62,13 +64,13 @@ export function useTransactionsModals(): UseTransactionsModalsReturn {
     setModalVisible(true);
   }, []);
 
-  const openEditModal = useCallback((tx: TransactionEntry) => {
+  const openEditModal = useCallback((tx: ListTransactions200Item) => {
     setModalMode("edit");
     setEditingTx(tx);
     setModalVisible(true);
   }, []);
 
-  const openOverviewModal = useCallback((tx: TransactionEntry) => {
+  const openOverviewModal = useCallback((tx: ListTransactions200Item) => {
     setModalMode("view");
     setEditingTx(tx);
     setModalVisible(true);

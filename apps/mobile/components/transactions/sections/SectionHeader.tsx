@@ -9,6 +9,7 @@ type SectionHeaderProps = {
   categoryOrder: string[];
   formatMoney: (value: number) => string;
   sectionKey: string;
+  isToday?: boolean;
 };
 
 export function SectionHeader({
@@ -18,6 +19,7 @@ export function SectionHeader({
   categoryOrder,
   formatMoney,
   sectionKey,
+  isToday = false,
 }: SectionHeaderProps) {
   const segments =
     total > 0
@@ -42,10 +44,23 @@ export function SectionHeader({
       : [];
 
   return (
-    <View style={styles.sectionHeader}>
+    <View style={[styles.sectionHeader, isToday && styles.todayHeader]}>
       <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionHeaderTitle}>{title}</Text>
-        <Text style={styles.sectionHeaderValue}>{formatMoney(total)}</Text>
+        <View style={styles.titleRow}>
+          <Text
+            style={[styles.sectionHeaderTitle, isToday && styles.todayTitle]}
+          >
+            {title}
+          </Text>
+          {isToday && (
+            <View style={styles.todayBadge}>
+              <Text style={styles.todayBadgeText}>•</Text>
+            </View>
+          )}
+        </View>
+        <Text style={[styles.sectionHeaderValue, isToday && styles.todayValue]}>
+          {formatMoney(total)}
+        </Text>
       </View>
       {total > 0 ? (
         <View style={styles.sectionBarTrack}>
@@ -85,5 +100,36 @@ const styles = StyleSheet.create({
   },
   sectionBarSegment: {
     height: "100%",
+  },
+  todayHeader: {
+    backgroundColor: "rgba(31, 138, 91, 0.05)",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginHorizontal: -12,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  todayTitle: {
+    color: colors.primary,
+  },
+  todayValue: {
+    color: colors.primary,
+  },
+  todayBadge: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+  },
+  todayBadgeText: {
+    fontSize: 18,
+    lineHeight: 18,
+    color: colors.primary,
+    fontWeight: "700",
   },
 });

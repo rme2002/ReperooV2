@@ -27,7 +27,11 @@ export function AuthButton({
       onPress={onPress}
       disabled={loading || disabled}
     >
-      <Text style={isPrimary ? styles.primaryButtonText : styles.secondaryButtonText}>
+      <Text
+        style={
+          isPrimary ? styles.primaryButtonText : styles.secondaryButtonText
+        }
+      >
         {title}
       </Text>
     </Pressable>

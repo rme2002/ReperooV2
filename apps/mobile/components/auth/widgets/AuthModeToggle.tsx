@@ -15,9 +15,17 @@ export function AuthModeToggle({ mode, onChangeMode }: AuthModeToggleProps) {
         <Pressable
           key={key}
           onPress={() => onChangeMode(key)}
-          style={[styles.segmentButton, mode === key && styles.segmentButtonActive]}
+          style={[
+            styles.segmentButton,
+            mode === key && styles.segmentButtonActive,
+          ]}
         >
-          <Text style={[styles.segmentText, mode === key && styles.segmentTextActive]}>
+          <Text
+            style={[
+              styles.segmentText,
+              mode === key && styles.segmentTextActive,
+            ]}
+          >
             {key === "login" ? "Log in" : "Create account"}
           </Text>
         </Pressable>

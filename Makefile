@@ -9,7 +9,7 @@ DEV_WEB ?= true
 DEV_MOBILE ?= true
 
 # ===== targets =====
-.PHONY: setup clean setup-clean lint lint-fix test test-integration dev dev-web dev-mobile dev-run api-up api-down api-logs web mobile-ios mobile-android stop generate-api release release-mobile
+.PHONY: setup clean setup-clean lint lint-fix test test-integration dev dev-web dev-mobile dev-mobile-remote dev-run api-up api-down api-logs web mobile-ios mobile-android stop generate-api release release-mobile
 
 ## Bootstrap dependencies (uv + npm installs)
 setup:
@@ -43,6 +43,13 @@ dev-web:
 ## Start API (Docker) + Mobile only
 dev-mobile:
 	@$(MAKE) DEV_WEB=false DEV_MOBILE=true dev-run
+
+## Start Mobile only (uses remote API from apps/mobile/.env.local)
+dev-mobile-remote:
+	@DEV_API=false DEV_WEB=false DEV_MOBILE=true \
+	WEB_DIR=$(WEB_DIR) MOBILE_DIR=$(MOBILE_DIR) WEB_PORT=$(WEB_PORT) \
+	API_SERVICE=$(API_SERVICE) \
+	bash scripts/dev-run.sh
 
 ## Shared launcher (respects DEV_WEB/DEV_MOBILE flags)
 dev-run: api-up

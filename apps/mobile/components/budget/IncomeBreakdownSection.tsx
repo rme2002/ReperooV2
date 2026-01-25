@@ -31,13 +31,13 @@ const recurringFrequencyLabels: Record<string, string> = {
 
 const isRecurringIncome = (
   transaction: TransactionIncome,
-  templates: RecurringTemplateIncome[]
+  templates: RecurringTemplateIncome[],
 ): RecurringTemplateIncome | null => {
   // Check if transaction matches a recurring template
   const match = templates.find(
     (template) =>
       template.amount === transaction.amount &&
-      template.income_category_id === transaction.income_category_id
+      template.income_category_id === transaction.income_category_id,
   );
   return match || null;
 };
@@ -54,9 +54,14 @@ const formatTransactionDate = (dateString: string): string => {
     return d;
   };
 
-  if (resetTime(new Date(date)).getTime() === resetTime(new Date(today)).getTime()) {
+  if (
+    resetTime(new Date(date)).getTime() === resetTime(new Date(today)).getTime()
+  ) {
     return "Today";
-  } else if (resetTime(new Date(date)).getTime() === resetTime(new Date(yesterday)).getTime()) {
+  } else if (
+    resetTime(new Date(date)).getTime() ===
+    resetTime(new Date(yesterday)).getTime()
+  ) {
     return "Yesterday";
   } else {
     // Format as "Mon, Jan 12"
@@ -278,7 +283,9 @@ export function IncomeBreakdownSection({
       <View style={scaledStyles.incomeBreakdownSection}>
         <View style={scaledStyles.incomeSectionHeader}>
           <Text style={scaledStyles.incomeSectionTitle}>Income Breakdown</Text>
-          <Text style={scaledStyles.incomeSectionSubtitle}>Actual income received this month</Text>
+          <Text style={scaledStyles.incomeSectionSubtitle}>
+            Actual income received this month
+          </Text>
         </View>
         <View style={scaledStyles.incomeLoadingContainer}>
           {[1, 2].map((i) => (
@@ -302,11 +309,15 @@ export function IncomeBreakdownSection({
       <View style={scaledStyles.incomeBreakdownSection}>
         <View style={scaledStyles.incomeSectionHeader}>
           <Text style={scaledStyles.incomeSectionTitle}>Income Breakdown</Text>
-          <Text style={scaledStyles.incomeSectionSubtitle}>Actual income received this month</Text>
+          <Text style={scaledStyles.incomeSectionSubtitle}>
+            Actual income received this month
+          </Text>
         </View>
         <View style={scaledStyles.incomeErrorState}>
           <Text style={scaledStyles.incomeErrorIcon}>⚠️</Text>
-          <Text style={scaledStyles.incomeErrorTitle}>Failed to load income</Text>
+          <Text style={scaledStyles.incomeErrorTitle}>
+            Failed to load income
+          </Text>
           <Text style={scaledStyles.incomeErrorText}>{error}</Text>
           <Pressable style={scaledStyles.incomeRetryButton} onPress={onRetry}>
             <Text style={scaledStyles.incomeRetryButtonText}>Retry</Text>
@@ -322,11 +333,15 @@ export function IncomeBreakdownSection({
       <View style={scaledStyles.incomeBreakdownSection}>
         <View style={scaledStyles.incomeSectionHeader}>
           <Text style={scaledStyles.incomeSectionTitle}>Income Breakdown</Text>
-          <Text style={scaledStyles.incomeSectionSubtitle}>Actual income received this month</Text>
+          <Text style={scaledStyles.incomeSectionSubtitle}>
+            Actual income received this month
+          </Text>
         </View>
         <View style={scaledStyles.incomeEmptyState}>
           <Text style={scaledStyles.incomeEmptyIcon}>💰</Text>
-          <Text style={scaledStyles.incomeEmptyTitle}>No income received yet</Text>
+          <Text style={scaledStyles.incomeEmptyTitle}>
+            No income received yet
+          </Text>
           <Text style={scaledStyles.incomeEmptyText}>
             Income transactions you log will appear here
           </Text>
@@ -343,25 +358,38 @@ export function IncomeBreakdownSection({
     <View style={scaledStyles.incomeBreakdownSection}>
       <View style={scaledStyles.incomeSectionHeader}>
         <Text style={scaledStyles.incomeSectionTitle}>Income Breakdown</Text>
-        <Text style={scaledStyles.incomeSectionSubtitle}>Actual income received this month</Text>
+        <Text style={scaledStyles.incomeSectionSubtitle}>
+          Actual income received this month
+        </Text>
       </View>
       <View style={styles.incomeList}>
         {transactions.map((transaction) => {
-          const recurringTemplate = isRecurringIncome(transaction, recurringTemplates);
+          const recurringTemplate = isRecurringIncome(
+            transaction,
+            recurringTemplates,
+          );
           const isRecurring = !!recurringTemplate;
           const categoryLabel =
             incomeCategoryLabels[transaction.income_category_id] || "Income";
           const dateLabel = formatTransactionDate(transaction.occurred_at);
           const frequencyLabel = recurringTemplate
-            ? recurringFrequencyLabels[recurringTemplate.frequency] || recurringTemplate.frequency
+            ? recurringFrequencyLabels[recurringTemplate.frequency] ||
+              recurringTemplate.frequency
             : null;
 
           return (
             <View key={transaction.id} style={scaledStyles.incomeRow}>
               {/* Icon Container */}
               <View style={styles.incomeIconContainer}>
-                <View style={[scaledStyles.incomeIcon, !isRecurring && scaledStyles.incomeIconOneTime]}>
-                  <Text style={scaledStyles.incomeIconText}>{isRecurring ? "💰" : "💵"}</Text>
+                <View
+                  style={[
+                    scaledStyles.incomeIcon,
+                    !isRecurring && scaledStyles.incomeIconOneTime,
+                  ]}
+                >
+                  <Text style={scaledStyles.incomeIconText}>
+                    {isRecurring ? "💰" : "💵"}
+                  </Text>
                 </View>
                 {isRecurring && (
                   <View style={scaledStyles.incomeRecurringBadge}>
@@ -391,7 +419,9 @@ export function IncomeBreakdownSection({
         {/* Total Row */}
         <View style={scaledStyles.incomeTotalRow}>
           <Text style={scaledStyles.incomeTotalLabel}>Total Income</Text>
-          <Text style={scaledStyles.incomeTotalAmount}>+{formatCurrency(totalIncome)}</Text>
+          <Text style={scaledStyles.incomeTotalAmount}>
+            +{formatCurrency(totalIncome)}
+          </Text>
         </View>
       </View>
     </View>

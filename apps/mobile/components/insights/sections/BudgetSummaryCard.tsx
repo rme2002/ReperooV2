@@ -192,9 +192,7 @@ export function BudgetSummaryCard({
           </>
         ) : isLoading ? (
           <View style={styles.summaryEmpty}>
-            <Text style={styles.summaryEmptyTitle}>
-              Loading budget plan...
-            </Text>
+            <Text style={styles.summaryEmptyTitle}>Loading budget plan...</Text>
           </View>
         ) : (
           <View style={styles.summaryEmpty}>

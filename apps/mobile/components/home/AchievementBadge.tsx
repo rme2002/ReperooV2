@@ -1,13 +1,14 @@
 import { useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withSequence,
   withTiming,
+  withRepeat,
 } from "react-native-reanimated";
-import Svg, { Path, Circle, Defs, LinearGradient, Stop } from "react-native-svg";
+import { Ionicons } from "@expo/vector-icons";
 import { alpha, colors, palette } from "@/constants/theme";
 
 type BadgeTier = "bronze" | "silver" | "gold" | "platinum" | "diamond";
@@ -21,8 +22,23 @@ type AchievementBadgeProps = {
   compact?: boolean;
 };
 
+// Badge image mapping
+const BADGE_IMAGES: Record<number, any> = {
+  7: require("@/assets/images/achievementBadges/achievementBadge1.png"),
+  14: require("@/assets/images/achievementBadges/achievementBadge2.png"),
+  30: require("@/assets/images/achievementBadges/achievementBadge3.png"),
+  60: require("@/assets/images/achievementBadges/achievementBadge4.png"),
+  100: require("@/assets/images/achievementBadges/achievementBadge5.png"),
+  150: require("@/assets/images/achievementBadges/achievementBadge6.png"),
+  200: require("@/assets/images/achievementBadges/achievementBadge7.png"),
+  365: require("@/assets/images/achievementBadges/achievementBadge8.png"),
+};
+
 // Badge tier colors
-const TIER_COLORS: Record<BadgeTier, { primary: string; secondary: string; glow: string }> = {
+const TIER_COLORS: Record<
+  BadgeTier,
+  { primary: string; secondary: string; glow: string }
+> = {
   bronze: {
     primary: palette.metalBronze,
     secondary: palette.metalBronzeDark,
@@ -62,77 +78,248 @@ export function getBadgeTier(days: number): BadgeTier {
 // Get badge name based on days
 export function getBadgeName(days: number): string {
   switch (days) {
-    case 7: return "Week Warrior";
-    case 14: return "Fortnight Champion";
-    case 30: return "Monthly Master";
-    case 60: return "Consistent Tracker";
-    case 100: return "Century Club";
-    case 150: return "Elite Saver";
-    case 200: return "Financial Guru";
-    case 365: return "Year Legend";
-    default: return `${days} Day Streak`;
+    case 7:
+      return "Week Warrior";
+    case 14:
+      return "Habit Hunter";
+    case 30:
+      return "Month Master";
+    case 60:
+      return "Knight of the Budget";
+    case 100:
+      return "Wealth Crafter";
+    case 150:
+      return "Capital Keeper";
+    case 200:
+      return "Finance Architect";
+    case 365:
+      return "Reperoo Legend";
+    default:
+      return `${days} Day Streak`;
   }
 }
 
-// Badge Shield SVG Component
-function BadgeShield({
-  tier,
+// Badge Image Component
+function BadgeImage({
+  days,
   achieved,
   size = 60,
 }: {
-  tier: BadgeTier;
+  days: number;
   achieved: boolean;
   size?: number;
 }) {
-  const colors = TIER_COLORS[tier];
-  const fillColor = achieved ? colors.primary : palette.gray400;
-  const strokeColor = achieved ? colors.secondary : palette.gray500;
+  const badgeImage = BADGE_IMAGES[days];
+
+  if (!badgeImage) {
+    return null;
+  }
+
+  if (!achieved) {
+    // For locked badges, render with a strong grey effect and lock icon
+    return (
+      <View
+        style={{
+          position: "relative",
+          width: size,
+          height: size,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Image
+          source={badgeImage}
+          style={{
+            width: size,
+            height: size,
+            tintColor: palette.gray700,
+            opacity: 0.25,
+          }}
+          resizeMode="contain"
+        />
+        {/* Lock icon overlay */}
+        <Ionicons
+          name="lock-closed"
+          size={size * 0.25}
+          color={palette.gray500}
+          style={{ position: "absolute" }}
+        />
+      </View>
+    );
+  }
 
   return (
-    <Svg width={size} height={size} viewBox="0 0 64 64">
-      <Defs>
-        <LinearGradient id={`grad-${tier}`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <Stop
-            offset="0%"
-            stopColor={achieved ? colors.primary : palette.slate260}
-          />
-          <Stop
-            offset="100%"
-            stopColor={achieved ? colors.secondary : palette.gray400}
-          />
-        </LinearGradient>
-      </Defs>
-
-      {/* Shield shape */}
-      <Path
-        d="M32 4 L56 12 L56 32 C56 48 32 60 32 60 C32 60 8 48 8 32 L8 12 Z"
-        fill={`url(#grad-${tier})`}
-        stroke={strokeColor}
-        strokeWidth="2"
-      />
-
-      {/* Star in center */}
-      <Path
-        d="M32 18 L34.5 26 L43 26 L36.5 31 L39 39 L32 34 L25 39 L27.5 31 L21 26 L29.5 26 Z"
-        fill={achieved ? palette.white : palette.slate220}
-        opacity={achieved ? 1 : 0.5}
-      />
-
-      {/* Lock overlay for locked badges */}
-      {!achieved && (
-        <>
-          <Circle cx="32" cy="44" r="8" fill={palette.gray500} />
-          <Path
-            d="M28 44 L28 40 C28 38 30 36 32 36 C34 36 36 38 36 40 L36 44"
-            stroke={palette.gray400}
-            strokeWidth="2"
-            fill="none"
-          />
-          <Circle cx="32" cy="45" r="2" fill={palette.gray400} />
-        </>
-      )}
-    </Svg>
+    <Image
+      source={badgeImage}
+      style={{
+        width: size,
+        height: size,
+      }}
+      resizeMode="contain"
+    />
   );
+}
+
+// Sparkle component with quick shine effect at random locations
+function SparkleEffect({
+  size,
+  delay = 0,
+  duration = 800,
+  containerSize = 100,
+}: {
+  size: number;
+  delay?: number;
+  duration?: number;
+  containerSize?: number;
+}) {
+  const opacity = useSharedValue(0);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+
+  useEffect(() => {
+    // Start after delay
+    const timeout = setTimeout(() => {
+      const totalCycleDuration = duration + 1500; // shine duration + wait time
+
+      opacity.value = withRepeat(
+        withSequence(
+          withTiming(0, { duration: 0 }),
+          withTiming(0.9, { duration: duration * 0.3 }),
+          withTiming(0, { duration: duration * 0.7 }),
+          withTiming(0, { duration: 1500 }), // wait before next shine
+        ),
+        -1,
+        false,
+      );
+
+      // Jump to new random position at the start of each cycle
+      const animatePosition = () => {
+        translateX.value = withRepeat(
+          withSequence(
+            withTiming((Math.random() - 0.5) * containerSize * 0.6, {
+              duration: 0,
+            }),
+            withTiming((Math.random() - 0.5) * containerSize * 0.6, {
+              duration: totalCycleDuration,
+            }),
+          ),
+          -1,
+          false,
+        );
+
+        translateY.value = withRepeat(
+          withSequence(
+            withTiming((Math.random() - 0.5) * containerSize * 0.6, {
+              duration: 0,
+            }),
+            withTiming((Math.random() - 0.5) * containerSize * 0.6, {
+              duration: totalCycleDuration,
+            }),
+          ),
+          -1,
+          false,
+        );
+      };
+
+      animatePosition();
+    }, delay);
+
+    return () => clearTimeout(timeout);
+  }, [containerSize, delay, duration, opacity, translateX, translateY]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+    ],
+  }));
+
+  return (
+    <Animated.Image
+      source={require("@/assets/images/sparkles.png")}
+      style={[
+        {
+          position: "absolute",
+          width: size * 0.35,
+          height: size * 0.35,
+        },
+        animatedStyle,
+      ]}
+      resizeMode="contain"
+    />
+  );
+}
+
+// Generate random sparkle positions based on badge days (consistent per badge)
+function getRandomSparkles(days: number, count: number, containerSize: number) {
+  const sparkles: {
+    top?: number;
+    bottom?: number;
+    left?: number;
+    right?: number;
+    delay: number;
+    duration: number;
+  }[] = [];
+
+  // Use days as seed for consistent randomness per badge
+  const random = (index: number, max: number) => {
+    const seed = (days * 9301 + index * 49297) % 233280;
+    return (seed / 233280) * max;
+  };
+
+  for (let i = 0; i < count; i++) {
+    const positionType = Math.floor(random(i, 4));
+    const delay = random(i + 100, 2000);
+    const duration = 600 + random(i + 200, 400);
+
+    let position: {
+      top?: number;
+      bottom?: number;
+      left?: number;
+      right?: number;
+      delay: number;
+      duration: number;
+    };
+
+    switch (positionType) {
+      case 0: // Top area
+        position = {
+          top: random(i + 10, containerSize * 0.3),
+          left: random(i + 20, containerSize * 0.8),
+          delay,
+          duration,
+        };
+        break;
+      case 1: // Right area
+        position = {
+          top: random(i + 30, containerSize * 0.6),
+          right: random(i + 40, containerSize * 0.3),
+          delay,
+          duration,
+        };
+        break;
+      case 2: // Bottom area
+        position = {
+          bottom: random(i + 50, containerSize * 0.4),
+          left: random(i + 60, containerSize * 0.8),
+          delay,
+          duration,
+        };
+        break;
+      default: // Left area
+        position = {
+          top: random(i + 70, containerSize * 0.6),
+          left: random(i + 80, containerSize * 0.3),
+          delay,
+          duration,
+        };
+    }
+
+    sparkles.push(position);
+  }
+
+  return sparkles;
 }
 
 export function AchievementBadge({
@@ -148,14 +335,14 @@ export function AchievementBadge({
 
   useEffect(() => {
     if (achieved) {
-      // Entrance animation for unlocked badges
+      // Faster, less dramatic entrance animation
       scale.value = withSequence(
-        withSpring(1.1, { damping: 8, stiffness: 200 }),
-        withSpring(1, { damping: 12, stiffness: 200 })
+        withSpring(1.05, { damping: 10, stiffness: 300 }),
+        withSpring(1, { damping: 15, stiffness: 300 }),
       );
-      glowOpacity.value = withTiming(1, { duration: 500 });
+      glowOpacity.value = withTiming(1, { duration: 300 });
     }
-  }, [achieved]);
+  }, [achieved, glowOpacity, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -166,6 +353,8 @@ export function AchievementBadge({
   }));
 
   const colors = TIER_COLORS[tier];
+  const compactSparkles = getRandomSparkles(days, 5, 100);
+  const fullSparkles = getRandomSparkles(days, 6, 120);
 
   if (compact) {
     return (
@@ -179,7 +368,31 @@ export function AchievementBadge({
             ]}
           />
         )}
-        <BadgeShield tier={tier} achieved={achieved} size={44} />
+        <BadgeImage days={days} achieved={achieved} size={100} />
+        {achieved && (
+          <>
+            {/* Random sparkles at different positions */}
+            {compactSparkles.map((sparkle, index) => (
+              <View
+                key={index}
+                style={{
+                  position: "absolute",
+                  top: sparkle.top,
+                  bottom: sparkle.bottom,
+                  left: sparkle.left,
+                  right: sparkle.right,
+                }}
+              >
+                <SparkleEffect
+                  size={100}
+                  delay={sparkle.delay}
+                  duration={sparkle.duration}
+                  containerSize={100}
+                />
+              </View>
+            ))}
+          </>
+        )}
         <Text style={[styles.compactDays, !achieved && styles.lockedText]}>
           {days}d
         </Text>
@@ -199,7 +412,31 @@ export function AchievementBadge({
           ]}
         />
       )}
-      <BadgeShield tier={tier} achieved={achieved} size={60} />
+      <BadgeImage days={days} achieved={achieved} size={110} />
+      {achieved && (
+        <>
+          {/* Random sparkles at different positions */}
+          {fullSparkles.map((sparkle, index) => (
+            <View
+              key={index}
+              style={{
+                position: "absolute",
+                top: sparkle.top,
+                bottom: sparkle.bottom,
+                left: sparkle.left,
+                right: sparkle.right,
+              }}
+            >
+              <SparkleEffect
+                size={110}
+                delay={sparkle.delay}
+                duration={sparkle.duration}
+                containerSize={120}
+              />
+            </View>
+          ))}
+        </>
+      )}
       <View style={styles.info}>
         <Text
           style={[styles.name, !achieved && styles.lockedText]}
@@ -222,7 +459,7 @@ export function AchievementBadge({
 
 const styles = StyleSheet.create({
   container: {
-    width: 100,
+    width: 120,
     alignItems: "center",
     padding: 12,
     backgroundColor: `${colors.surface}CC`,
@@ -234,8 +471,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   compactContainer: {
-    width: 64,
-    height: 80,
+    width: 72,
+    height: 92,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: `${colors.surface}CC`,
