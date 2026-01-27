@@ -181,4 +181,50 @@ export const listRecurringTemplates = async (params?: ListRecurringTemplatesPara
   }
 );}
 
+/**
+ * Delete a recurring transaction template
+ * @summary Delete recurring template
+ * NOTE: Manually added; regenerate client after OpenAPI spec includes this endpoint.
+ */
+export type deleteRecurringTemplateResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteRecurringTemplateResponse401 = {
+  data: ErrorResponse401Response
+  status: 401
+}
+
+export type deleteRecurringTemplateResponse404 = {
+  data: { detail: string }
+  status: 404
+}
+
+export type deleteRecurringTemplateResponse500 = {
+  data: ErrorResponse500Response
+  status: 500
+}
+
+export type deleteRecurringTemplateResponseSuccess = (deleteRecurringTemplateResponse204) & {
+  headers: Headers;
+};
+export type deleteRecurringTemplateResponseError = (deleteRecurringTemplateResponse401 | deleteRecurringTemplateResponse404 | deleteRecurringTemplateResponse500) & {
+  headers: Headers;
+};
+
+export type deleteRecurringTemplateResponse = (deleteRecurringTemplateResponseSuccess | deleteRecurringTemplateResponseError)
+
+export const getDeleteRecurringTemplateUrl = (templateId: string) => {
+  return `http://example.com/api/v1/transactions/recurring/${templateId}/delete`
+}
+
+export const deleteRecurringTemplate = async (templateId: string, options?: RequestInit): Promise<deleteRecurringTemplateResponse> => {
+  
+  return customFetch<deleteRecurringTemplateResponse>(getDeleteRecurringTemplateUrl(templateId),
+  {      
+    ...options,
+    method: 'DELETE'
+  }
+);}
 

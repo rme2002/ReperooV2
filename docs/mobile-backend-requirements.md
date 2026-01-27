@@ -834,7 +834,7 @@ All endpoints require:
 - Recurring start_date can be future
 
 #### Category Validation
-- Must reference valid category from `spending-categories.json`
+- Must reference valid category from the `expense_categories` table
 - Subcategory must belong to parent category
 
 ---
@@ -902,18 +902,7 @@ All endpoints require:
 
 ### Category Configuration
 
-Categories are currently stored in static config:
-[shared/config/spending-categories.json](../shared/config/spending-categories.json)
-
-**Categories:**
-- Essentials (housing, groceries, utilities, transportation, healthcare, insurance)
-- Lifestyle (dining, entertainment, shopping, hobbies, subscriptions, travel)
-- Personal (education, fitness, pets, gifts, personal-care)
-- Savings
-- Investments
-- Other
-
-**Future:** Allow users to customize categories via API.
+Categories are stored in the database (`expense_categories` / `expense_subcategories`) and exposed via the expense categories API.
 
 ### Income Categories
 

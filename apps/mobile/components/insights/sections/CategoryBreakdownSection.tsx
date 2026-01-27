@@ -2,11 +2,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Circle, Svg } from "react-native-svg";
 import { alpha, colors } from "@/constants/theme";
 import { GlassCard } from "@/components/shared/GlassCard";
-import {
-  categoryLookup,
-  getCategoryLabel,
-  getSubcategoryLabel,
-} from "@/utils/categoryLookup";
+import type { ExpenseCategory } from "@/lib/gen/model";
+import { getCategoryLabel, getSubcategoryLabel } from "@/utils/categoryLookup";
 import { fallbackSubcategoryColors } from "@/utils/insightsConstants";
 
 interface SubcategoryData {
@@ -31,6 +28,7 @@ type CategoryBreakdownSectionProps = {
   onCategoryPress: (categoryId: string) => void;
   formatCurrency: (value: number) => string;
   width: number;
+  categoryLookup: Map<string, ExpenseCategory>;
 };
 
 export function CategoryBreakdownSection({
@@ -39,6 +37,7 @@ export function CategoryBreakdownSection({
   onCategoryPress,
   formatCurrency,
   width,
+  categoryLookup,
 }: CategoryBreakdownSectionProps) {
   return (
     <GlassCard>
@@ -53,7 +52,7 @@ export function CategoryBreakdownSection({
         <Text style={[styles.tableCell, styles.tableNumeric]}>Items</Text>
       </View>
       {categories.map((cat) => {
-        const catLabel = getCategoryLabel(cat.id);
+        const catLabel = getCategoryLabel(categoryLookup, cat.id);
         const isActive = activeCategoryId === cat.id;
         const rawSubcategories = cat.subcategories ?? [];
         const configCategory = categoryLookup.get(cat.id);
@@ -234,7 +233,11 @@ export function CategoryBreakdownSection({
                     ]}
                   >
                     {subcategories.map((sub, index) => {
-                      const subLabel = getSubcategoryLabel(cat.id, sub.id);
+                      const subLabel = getSubcategoryLabel(
+                        categoryLookup,
+                        cat.id,
+                        sub.id,
+                      );
                       return (
                         <View
                           key={`${sub.id}-${index}`}

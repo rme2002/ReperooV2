@@ -13,11 +13,12 @@ import {
   Platform,
   UIManager,
 } from "react-native";
-import spendingCategories from "../../../../shared/config/spending-categories.json";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
 import { createExpenseTransaction } from "@/lib/gen/transactions/transactions";
 import { createRecurringExpenseTemplate } from "@/lib/gen/recurring-templates/recurring-templates";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
+import { useExpenseCategories } from "@/hooks/useExpenseCategories";
+import type { ExpenseCategory } from "@/lib/gen/model";
 import { alpha, colors, palette } from "@/constants/theme";
 
 type TransactionFormValues = {
@@ -37,6 +38,7 @@ type Props = {
   mode?: "add" | "edit" | "view";
   initialValues?: TransactionFormValues | null;
   onSuccess?: (date: Date) => void | Promise<void>;
+  expenseCategories?: ExpenseCategory[];
   onSubmit?: (payload: {
     amount: number;
     categoryId: string;
@@ -51,20 +53,6 @@ type Props = {
   isSaving?: boolean;
 };
 
-type SubCategoryOption = { id: string; label: string };
-type CategoryOption = {
-  id: string;
-  label: string;
-  icon: string;
-  subcategories?: SubCategoryOption[];
-};
-
-type SpendingCategoriesConfig = {
-  categories: CategoryOption[];
-};
-
-const categoryConfig: SpendingCategoriesConfig = spendingCategories;
-const categories: CategoryOption[] = categoryConfig.categories;
 const MAX_VISIBLE_SUBCATEGORIES = 6;
 
 const formatDate = (date: Date) =>
@@ -104,11 +92,17 @@ export function AddExpenseModal({
   mode = "add",
   initialValues,
   onSuccess,
+  expenseCategories,
   onSubmit,
   onEditRequest,
   isSaving = false,
 }: Props) {
   const { session } = useSupabaseAuthSync();
+  const {
+    expenseCategories: fetchedCategories,
+    loading: categoriesLoading,
+    error: categoriesError,
+  } = useExpenseCategories();
 
   useEffect(() => {
     if (
@@ -178,12 +172,22 @@ export function AddExpenseModal({
   }, [amountText]);
 
   const isAmountValid = amountValue > 0;
+  const usingProvidedCategories = expenseCategories !== undefined;
+  const categories = useMemo(() => {
+    const source = usingProvidedCategories
+      ? expenseCategories ?? []
+      : fetchedCategories;
+    return [...source].sort((a, b) => a.sort_order - b.sort_order);
+  }, [expenseCategories, fetchedCategories, usingProvidedCategories]);
   const currentCategory = useMemo(
     () =>
       categories.find((category) => category.id === selectedCategory) ?? null,
-    [selectedCategory],
+    [categories, selectedCategory],
   );
-  const subcategoryOptions = currentCategory?.subcategories ?? [];
+  const subcategoryOptions = useMemo(() => {
+    const subcategories = currentCategory?.subcategories ?? [];
+    return [...subcategories].sort((a, b) => a.sort_order - b.sort_order);
+  }, [currentCategory]);
   const isCategoryValid = Boolean(selectedCategory);
   const isTagValid = Boolean(transactionTag);
   const formValid = isAmountValid && isCategoryValid && isTagValid;
@@ -523,7 +527,18 @@ export function AddExpenseModal({
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.categoryRow}
               >
-                {categories.map((category) => {
+                {!usingProvidedCategories && categoriesLoading ? (
+                  <Text style={styles.emptyCategoriesText}>
+                    Loading categories…
+                  </Text>
+                ) : categories.length === 0 ? (
+                  <Text style={styles.emptyCategoriesText}>
+                    {!usingProvidedCategories && categoriesError
+                      ? "Failed to load categories."
+                      : "No categories available."}
+                  </Text>
+                ) : (
+                  categories.map((category) => {
                   const selected = selectedCategory === category.id;
                   const dimmed = Boolean(
                     selectedCategory && selectedCategory !== category.id,
@@ -539,7 +554,12 @@ export function AddExpenseModal({
                         dimmed && styles.categoryChipDimmed,
                       ]}
                     >
-                      <Text style={styles.categoryIcon}>{category.icon}</Text>
+                      <View
+                        style={[
+                          styles.categoryIcon,
+                          { backgroundColor: category.color },
+                        ]}
+                      />
                       <Text
                         style={[
                           styles.categoryLabel,
@@ -550,7 +570,8 @@ export function AddExpenseModal({
                       </Text>
                     </Pressable>
                   );
-                })}
+                })
+                )}
               </ScrollView>
               {selectedCategory ? (
                 <View style={styles.subcategoryPanel}>
@@ -1202,7 +1223,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   categoryIcon: {
-    fontSize: 18,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
   },
   categoryLabel: {
     fontSize: 14,
@@ -1252,6 +1275,12 @@ const styles = StyleSheet.create({
   },
   moreChipLabel: {
     color: palette.slate600,
+  },
+  emptyCategoriesText: {
+    color: palette.gray500,
+    fontSize: 13,
+    fontWeight: "600",
+    paddingVertical: 6,
   },
   summaryChip: {
     marginTop: 12,

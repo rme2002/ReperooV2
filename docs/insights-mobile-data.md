@@ -44,7 +44,7 @@ The screen renders one month snapshot at a time and a list of available months f
 - `snapshot.transactions[]` with `amount`, `categoryId`, `subcategoryId`, `date`
 
 Notes:
-- Category/subcategory labels are resolved client-side from `shared/config/spending-categories.json`.
+- Category/subcategory labels are resolved client-side from the expense categories API (DB is source of truth).
 - Category/subcategory colors come from the API (persisted in DB) and are used directly in charts.
 
 ## Endpoints

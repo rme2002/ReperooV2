@@ -128,6 +128,13 @@ export const customFetch = async <T>(
   try {
     const response = await fetch(requestUrl, requestInit);
     const duration = Date.now() - startTime;
+    if (response.status === 204 || response.status === 205) {
+      console.log(
+        `[API Response] ${method} ${requestUrl} - Status: ${response.status} - Duration: ${duration}ms`
+      );
+      return { status: response.status, data: undefined, headers: response.headers } as T;
+    }
+
     const data = await getBody<T>(response);
 
     // Log the API response

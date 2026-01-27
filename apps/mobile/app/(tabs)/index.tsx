@@ -40,7 +40,8 @@ export default function OverviewScreen() {
   // Context data
   const { currentSnapshot, fetchSnapshot } = useInsightsContext();
   const { budgetPlan, refetch } = useBudgetContext();
-  const { experience, milestones } = useExperience();
+  const { experience, milestones, refreshExperience, refreshMilestones } =
+    useExperience();
   const refreshTransactionData = useTransactionRefresh();
 
   // Budget metrics
@@ -103,6 +104,8 @@ export default function OverviewScreen() {
         refreshTransactionData({ date: currentMonth }),
         refetch(), // BudgetProvider
         fetchSnapshot(year, month), // InsightsProvider
+        refreshExperience(),
+        refreshMilestones(),
       ]);
     } catch (error) {
       console.error("[Home] Refresh error:", error);

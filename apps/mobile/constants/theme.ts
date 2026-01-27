@@ -282,7 +282,7 @@ export const badgeTiers = {
   },
 } as const;
 
-// Spending category colors (from spending-categories.json)
+// Spending category colors (legacy fallback; DB colors are source of truth)
 export const categoryColors = {
   food: '#FF6B6B',
   transportation: '#4ECDC4',

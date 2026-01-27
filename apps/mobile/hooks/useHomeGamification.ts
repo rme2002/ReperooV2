@@ -5,6 +5,7 @@ import type {
   StreakMilestone,
 } from "@/lib/gen/model";
 import { EvolutionStage } from "@/lib/gen/model";
+import { DEFAULT_MILESTONES } from "@/constants/milestones";
 
 /**
  * Return type for useHomeGamification hook
@@ -30,11 +31,24 @@ export function useHomeGamification(
   const streakDays = experience?.current_streak ?? 0;
   const evolutionStage = experience?.evolution_stage ?? EvolutionStage.Baby;
 
+  const milestoneList = useMemo<StreakMilestone[]>(() => {
+    if (milestones?.milestones?.length) {
+      return milestones.milestones;
+    }
+
+    return DEFAULT_MILESTONES.map((milestone) => ({
+      ...milestone,
+      achieved: streakDays >= milestone.days,
+      achieved_at: null,
+      days_remaining: Math.max(0, milestone.days - streakDays),
+    }));
+  }, [milestones, streakDays]);
+
   // Get next milestone (first unachieved)
   const nextMilestone = useMemo(() => {
-    if (!milestones?.milestones) return null;
-    return milestones.milestones.find((milestone) => !milestone.achieved) ?? null;
-  }, [milestones]);
+    if (!milestoneList.length) return null;
+    return milestoneList.find((milestone) => !milestone.achieved) ?? null;
+  }, [milestoneList]);
 
   return {
     streakDays,

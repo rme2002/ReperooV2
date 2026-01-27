@@ -34,10 +34,11 @@ const baseSettings: SettingsItem[] = [
 export default function SettingsScreen() {
   const [signingOut, setSigningOut] = useState(false);
   const [authSheetOpen, setAuthSheetOpen] = useState(false);
-  const { session } = useSupabaseAuthSync();
+  const { session, isMockSession } = useSupabaseAuthSync();
+  const isAuthenticated = Boolean(session) && !isMockSession;
 
   const settingsItems = useMemo(() => {
-    if (session) {
+    if (isAuthenticated) {
       return [
         ...baseSettings,
         {
@@ -58,7 +59,7 @@ export default function SettingsScreen() {
         accent: true,
       },
     ];
-  }, [session]);
+  }, [isAuthenticated]);
 
   const handleItemPress = async (itemKey: string) => {
     if (itemKey === "logout") {

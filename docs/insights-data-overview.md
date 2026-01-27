@@ -18,7 +18,7 @@ This document captures every widget on `apps/mobile/src/features/insights/screen
 ### 3. Spending donut chart ("Where your money went")
 - **UI:** Donut showing share per high-level category, legend split into two columns.
 - **Required fields:** Array of `{ id, label, total, percent, color }` ordered by percent, plus the month `snapshot.totalSpent`.
-- **Backend notes:** Percent values should already sum to ~100 (client trusts backend). Colors default to the category config but can be overridden per user/plan.
+- **Backend notes:** Percent values should already sum to ~100 (client trusts backend). Colors default to `expense_categories` / `expense_subcategories` but can be overridden per user/plan.
 
 ### 4. Savings & investments bar
 - **UI:** Two line items (Saved, Invested) plus a stacked progress bar reflecting their share of money allocated to future goals.
@@ -28,7 +28,7 @@ This document captures every widget on `apps/mobile/src/features/insights/screen
 ### 5. Category breakdown table + subcategory donut
 - **UI:** Table with category totals (`total`, `%`, `items`) and, when tapped, an inline panel with a per-category donut + legend for subcategories.
 - **Required fields:** Same category array as the donut, but each category also needs `items` (transaction count) and `subcategories?: { id, total, percent, color }[]`.
-- **Backend notes:** Maintain consistent ordering with the category config (see `shared/config/spending-categories.json`) so subtotals align with icons/labels. Percentages within each category should sum to 100.
+- **Backend notes:** Maintain consistent ordering with `expense_categories.sort_order` / `expense_subcategories.sort_order` so subtotals align with labels. Percentages within each category should sum to 100.
 
 ### 6. Weekly spending chart
 - **UI:** Bar chart with touch tooltips, axis labels, and a summary total.
@@ -43,7 +43,7 @@ This document captures every widget on `apps/mobile/src/features/insights/screen
 
 ### 8. FAB + Add spending modal
 - **UI:** Floating button that opens quick actions; `AddSpendingModal` (see `apps/mobile/src/components/AddSpendingModal.tsx`) needs category/subcategory metadata.
-- **Required fields:** Authoritative category dictionary (id, label, icon, default color, available subcategories). This can be bundled in the same API response or cached client-side with ETags.
+- **Required fields:** Authoritative category dictionary (id, label, default color, available subcategories). This can be bundled in the same API response or cached client-side with ETags.
 - **Backend notes:** Transactions posted from the modal must include `plan_id`, `category_id`, `subcategory_id`, `amount`, `occurred_at`, and optional notes.
 
 ## Derived Data Responsibilities
@@ -53,23 +53,23 @@ To keep the mobile/web clients thin, the backend should emit a complete `MonthSn
 1. Selecting the active `budget_plan` for the requested user + month (`budget`, `currency`, `goal_days`, `logged_days`).
 2. Summing `transactions.amount` for that month to produce `totalSpent`, `weekly` buckets, and `lastMonthDelta` (by also querying the prior month).
 3. Aggregating transactions by `category_id` and `subcategory_id` to compute `total`, `percent`, `items`, and sorted subtitle arrays.
-4. Applying category metadata (label, icon, default color) from configuration tables before serializing the response.
+4. Applying category metadata (label, default color) from category tables before serializing the response.
 5. Tagging savings/investment categories or dedicated transaction types to compute `snapshot.savings`.
 6. Selecting the latest `n` transactions (limit 5) for the transaction feed.
 
 ## Database Structure Proposal
 
-The insight features can run on two core fact tables (budget plans + transactions) supplemented by lightweight dimension tables that mirror the existing JSON category config. Supabase/Postgres friendly typing is assumed.
+The insight features can run on two core fact tables (budget plans + transactions) supplemented by lightweight category dimension tables. Supabase/Postgres friendly typing is assumed.
 
-### `spending_categories`
+### `expense_categories`
 | column | type | description |
 | --- | --- | --- |
-| `id` | `text` (PK) | Matches the IDs used in the mobile config (`essentials`, `lifestyle`, …). |
+| `id` | `text` (PK) | Matches the IDs exposed by the expense category API (`essentials`, `lifestyle`, …). |
 | `label` | `text` | Human-readable name. |
-| `icon` | `text` | Optional icon identifier for UI surfaces. |
+| `color` | `text` | Default category color for charts. |
 | `sort_order` | `int` | Controls rendering order. |
 
-### `spending_subcategories`
+### `expense_subcategories`
 | column | type | description |
 | --- | --- | --- |
 | `id` | `text` (PK) | Unique within the table (`groceries`, `housing`, …). |
@@ -102,4 +102,3 @@ The insight features can run on two core fact tables (budget plans + transaction
 | `created_at` | `timestamptz` | Audit column. |
 | `transaction_tag` | `text`, nullable | `want`, `need` |
 | `category_check` | `CHECK` | `type = 'expense'` => `expense_category_id` NOT NULL and `income_category_id` NULL; `type = 'income'` => `income_category_id` NOT NULL and `expense_category_id` NULL. |
-

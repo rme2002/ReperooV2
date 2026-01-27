@@ -6,30 +6,28 @@ import {
   getBadgeName,
 } from "./AchievementBadge";
 import { colors } from "@/constants/theme";
+import { DEFAULT_MILESTONES } from "@/constants/milestones";
 
 type AchievementBadgesSectionProps = {
   milestones: StreakMilestone[];
   currentStreak: number;
 };
 
-// Default milestones if none from API
-const DEFAULT_MILESTONES: StreakMilestone[] = [
-  { days: 7, xp_reward: 50, achieved: false },
-  { days: 14, xp_reward: 75, achieved: false },
-  { days: 30, xp_reward: 150, achieved: false },
-  { days: 60, xp_reward: 250, achieved: false },
-  { days: 100, xp_reward: 400, achieved: false },
-  { days: 150, xp_reward: 500, achieved: false },
-  { days: 200, xp_reward: 600, achieved: false },
-  { days: 365, xp_reward: 1000, achieved: false },
-];
-
 export function AchievementBadgesSection({
   milestones,
   currentStreak,
 }: AchievementBadgesSectionProps) {
+  const fallbackMilestones: StreakMilestone[] = DEFAULT_MILESTONES.map(
+    (milestone) => ({
+      ...milestone,
+      achieved: currentStreak >= milestone.days,
+      achieved_at: null,
+      days_remaining: Math.max(0, milestone.days - currentStreak),
+    }),
+  );
+
   const displayMilestones =
-    milestones.length > 0 ? milestones : DEFAULT_MILESTONES;
+    milestones.length > 0 ? milestones : fallbackMilestones;
 
   const unlockedCount = displayMilestones.filter((m) => m.achieved).length;
 

@@ -57,7 +57,16 @@ export function useTransactionsData(
     try {
       const response = await listExpenseCategories();
       if (response.status === 200) {
-        setExpenseCategories(response.data);
+        const sorted = (response.data ?? [])
+          .slice()
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((category) => ({
+            ...category,
+            subcategories: (category.subcategories ?? [])
+              .slice()
+              .sort((a, b) => a.sort_order - b.sort_order),
+          }));
+        setExpenseCategories(sorted);
       } else {
         console.error("Failed to load expense categories");
         setExpenseCategories([]);

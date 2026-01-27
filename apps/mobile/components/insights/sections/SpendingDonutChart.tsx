@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Circle, Svg } from "react-native-svg";
 import { alpha, colors } from "@/constants/theme";
 import { GlassCard } from "@/components/shared/GlassCard";
+import type { ExpenseCategory } from "@/lib/gen/model";
 import { getCategoryLabel } from "@/utils/categoryLookup";
 
 interface CategoryData {
@@ -16,6 +17,7 @@ type SpendingDonutChartProps = {
   totalSpent: number;
   formatCurrency: (value: number) => string;
   width: number;
+  categoryLookup: Map<string, ExpenseCategory>;
 };
 
 export function SpendingDonutChart({
@@ -23,6 +25,7 @@ export function SpendingDonutChart({
   totalSpent,
   formatCurrency,
   width,
+  categoryLookup,
 }: SpendingDonutChartProps) {
   const chartSize = Math.max(200, Math.min(width - 48, 260));
   const pieStroke = Math.max(14, chartSize * 0.12);
@@ -49,7 +52,7 @@ export function SpendingDonutChart({
         offset,
         color: cat.color,
         id: cat.id,
-        label: getCategoryLabel(cat.id),
+        label: getCategoryLabel(categoryLookup, cat.id),
       },
     ];
   }, []);
@@ -110,7 +113,7 @@ export function SpendingDonutChart({
         <View style={styles.legendColumns}>
           <View style={styles.legendColumn}>
             {left.map((cat) => {
-              const label = getCategoryLabel(cat.id);
+              const label = getCategoryLabel(categoryLookup, cat.id);
               return (
                 <View key={`legend-left-${cat.id}`} style={styles.legendRow}>
                   <View style={styles.legendLeft}>
@@ -126,7 +129,7 @@ export function SpendingDonutChart({
           </View>
           <View style={styles.legendColumn}>
             {right.map((cat) => {
-              const label = getCategoryLabel(cat.id);
+              const label = getCategoryLabel(categoryLookup, cat.id);
               return (
                 <View key={`legend-right-${cat.id}`} style={styles.legendRow}>
                   <View style={styles.legendLeft}>

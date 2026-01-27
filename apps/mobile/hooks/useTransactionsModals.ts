@@ -26,6 +26,8 @@ export interface UseTransactionsModalsReturn {
   incomeModalMode: ModalMode;
   editingIncome: IncomeEvent | null;
   openAddIncomeModal: () => void;
+  openEditIncomeModal: (income: IncomeEvent) => void;
+  openIncomeOverviewModal: (income: IncomeEvent) => void;
   closeIncomeModal: () => void;
   setIncomeModalMode: (mode: ModalMode) => void;
 
@@ -97,6 +99,19 @@ export function useTransactionsModals(): UseTransactionsModalsReturn {
     setIncomeModalVisible(true);
   }, []);
 
+  const openEditIncomeModal = useCallback((income: IncomeEvent) => {
+    setShowAddMenu(false);
+    setIncomeModalMode("edit");
+    setEditingIncome(income);
+    setIncomeModalVisible(true);
+  }, []);
+
+  const openIncomeOverviewModal = useCallback((income: IncomeEvent) => {
+    setIncomeModalMode("view");
+    setEditingIncome(income);
+    setIncomeModalVisible(true);
+  }, []);
+
   const closeIncomeModal = useCallback(() => {
     setIncomeModalVisible(false);
     setEditingIncome(null);
@@ -116,6 +131,8 @@ export function useTransactionsModals(): UseTransactionsModalsReturn {
     incomeModalMode,
     editingIncome,
     openAddIncomeModal,
+    openEditIncomeModal,
+    openIncomeOverviewModal,
     closeIncomeModal,
     setIncomeModalMode,
     showAddMenu,

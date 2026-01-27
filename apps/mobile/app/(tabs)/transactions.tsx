@@ -19,6 +19,7 @@ import { AddIncomeModal } from "@/components/modals/AddIncomeModal";
 // Contexts
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
+import type { ListTransactions200Item } from "@/lib/gen/model";
 
 // State components
 import { LoadingState } from "@/components/transactions/states/LoadingState";
@@ -161,6 +162,9 @@ export default function TransactionsScreen() {
     handleOverviewEdit,
     incomeModalVisible,
     incomeModalMode,
+    editingIncome,
+    openEditIncomeModal,
+    openIncomeOverviewModal,
     closeIncomeModal,
     setIncomeModalMode,
     showAddMenu,
@@ -224,6 +228,51 @@ export default function TransactionsScreen() {
   }, [todaySectionIndex]);
 
   const showJumpButton = todaySectionIndex !== -1;
+
+  const mapIncomeTransaction = useCallback(
+    (tx: ListTransactions200Item) => {
+      if (tx.type !== "income") {
+        return null;
+      }
+      return {
+        id: String(tx.id),
+        amount: tx.amount,
+        type: tx.income_category_id,
+        note: tx.notes ?? undefined,
+        date: tx.occurred_at,
+        isRecurring: Boolean(tx.recurring_template_id),
+      };
+    },
+    [],
+  );
+
+  const handleTransactionPress = useCallback(
+    (tx: ListTransactions200Item) => {
+      if (tx.type === "income") {
+        const income = mapIncomeTransaction(tx);
+        if (income) {
+          openIncomeOverviewModal(income);
+        }
+        return;
+      }
+      openOverviewModal(tx);
+    },
+    [mapIncomeTransaction, openIncomeOverviewModal, openOverviewModal],
+  );
+
+  const handleTransactionEdit = useCallback(
+    (tx: ListTransactions200Item) => {
+      if (tx.type === "income") {
+        const income = mapIncomeTransaction(tx);
+        if (income) {
+          openEditIncomeModal(income);
+        }
+        return;
+      }
+      openEditModal(tx);
+    },
+    [mapIncomeTransaction, openEditIncomeModal, openEditModal],
+  );
 
   const styles = StyleSheet.create({
     safeArea: {
@@ -351,9 +400,9 @@ export default function TransactionsScreen() {
                 getSubcategoryLabel={getSubcategoryLabel}
                 getIncomeCategoryLabel={getIncomeCategoryLabel}
                 formatMoney={formatMoney}
-                onEdit={openEditModal}
+                onEdit={handleTransactionEdit}
                 onDelete={confirmDelete}
-                onPress={openOverviewModal}
+                onPress={handleTransactionPress}
                 refreshControl={refreshControl}
               />
               <JumpToTodayButton
@@ -390,6 +439,7 @@ export default function TransactionsScreen() {
         onSuccess={handleTransactionSuccess}
         onEditRequest={modalMode === "view" ? handleOverviewEdit : undefined}
         isSaving={savingExpense}
+        expenseCategories={expenseCategories}
       />
 
       <AddIncomeModal
@@ -401,7 +451,7 @@ export default function TransactionsScreen() {
         }}
         onSuccess={handleTransactionSuccess}
         mode={incomeModalMode}
-        initialIncome={null}
+        initialIncome={editingIncome}
         onEditRequest={
           incomeModalMode === "view"
             ? () => setIncomeModalMode("edit")

@@ -1,6 +1,11 @@
 import { useState, useCallback } from "react";
 import { Alert } from "react-native";
-import { createExpenseTransaction } from "@/lib/gen/transactions/transactions";
+import {
+  createExpenseTransaction,
+  deleteTransaction,
+  updateTransaction,
+} from "@/lib/gen/transactions/transactions";
+import { deleteRecurringTemplate } from "@/lib/gen/recurring-templates/recurring-templates";
 import type { ModalMode } from "./useTransactionsModals";
 import type { ListTransactions200Item } from "@/lib/gen/model";
 
@@ -23,7 +28,7 @@ export interface TransactionSubmitPayload {
 export interface UseTransactionActionsReturn {
   savingExpense: boolean;
   handleSubmit: (payload: TransactionSubmitPayload) => Promise<void>;
-  confirmDelete: (txId: string) => void;
+  confirmDelete: (txId: string, transaction?: ListTransactions200Item) => void;
 }
 
 /**
@@ -49,8 +54,34 @@ export function useTransactionActions(
       const isoDate = payload.date.toISOString();
 
       if (modalMode === "edit" && editingTx) {
-        // TODO: Implement edit transaction API endpoint
-        Alert.alert("Info", "Edit functionality coming soon!");
+        if (editingTx.type !== "expense") {
+          Alert.alert("Error", "Only expense edits are supported here.");
+          return;
+        }
+        setSavingExpense(true);
+        try {
+          const response = await updateTransaction(editingTx.id, {
+            type: "expense",
+            occurred_at: isoDate,
+            amount: payload.amount,
+            notes: payload.note || null,
+            transaction_tag: payload.transactionTag || "want",
+            expense_category_id: payload.categoryId,
+            expense_subcategory_id: payload.subcategoryId ?? null,
+          });
+
+          if (response.status === 200) {
+            Alert.alert("Success", "Expense updated successfully!");
+            await refetchTransactions();
+          } else {
+            Alert.alert("Error", "Failed to update expense transaction");
+          }
+        } catch (error) {
+          console.error("Error updating expense:", error);
+          Alert.alert("Error", "Failed to update expense transaction");
+        } finally {
+          setSavingExpense(false);
+        }
         return;
       }
 
@@ -86,23 +117,58 @@ export function useTransactionActions(
     [modalMode, editingTx, userId, refetchTransactions]
   );
 
-  const confirmDelete = useCallback((txId: string) => {
-    Alert.alert(
-      "Delete transaction",
-      "Are you sure you want to delete this entry?",
-      [
+  const confirmDelete = useCallback(
+    (txId: string, transaction?: ListTransactions200Item) => {
+      const isRecurring = Boolean(transaction?.recurring_template_id);
+      const title = isRecurring
+        ? "Delete Recurring Transaction"
+        : "Delete Transaction";
+      const message = isRecurring
+        ? "This will delete this transaction and stop all future occurrences. Are you sure?"
+        : "Are you sure you want to delete this transaction?";
+
+      Alert.alert(title, message, [
         { text: "Cancel", style: "cancel" },
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => {
-            // TODO: Implement delete transaction API endpoint
-            Alert.alert("Info", "Delete functionality coming soon!");
+          onPress: async () => {
+            try {
+              const response = await deleteTransaction(txId);
+
+              if (response.status === 204) {
+                if (isRecurring && transaction?.recurring_template_id) {
+                  try {
+                    await deleteRecurringTemplate(
+                      transaction.recurring_template_id
+                    );
+                  } catch (templateError) {
+                    console.error(
+                      "Failed to delete recurring template:",
+                      templateError
+                    );
+                  }
+                }
+
+                Alert.alert("Success", "Transaction deleted successfully");
+                await refetchTransactions();
+                return;
+              }
+
+              throw new Error(`Unexpected response status: ${response.status}`);
+            } catch (error) {
+              console.error("Delete error:", error);
+              Alert.alert(
+                "Error",
+                "Failed to delete transaction. Please try again."
+              );
+            }
           },
         },
-      ]
-    );
-  }, []);
+      ]);
+    },
+    [refetchTransactions]
+  );
 
   return {
     savingExpense,

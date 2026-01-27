@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -11,31 +11,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Circle, Svg } from "react-native-svg";
 
-import spendingCategories from "../../../../../shared/config/spending-categories.json";
 import { AddExpenseModal } from "@/components/modals/AddExpenseModal";
 import { useInsightsContext } from "@/components/insights/InsightsProvider";
 import { colors, palette } from "@/constants/theme";
-
-type SpendingCategoriesConfig = {
-  categories: {
-    id: string;
-    label: string;
-    icon: string;
-    subcategories?: { id: string; label: string }[];
-  }[];
-};
-
-const categoryConfig: SpendingCategoriesConfig = spendingCategories;
-const categoryLookup = new Map(
-  categoryConfig.categories.map((category) => [category.id, category]),
-);
-const getCategoryLabel = (categoryId: string) =>
-  categoryLookup.get(categoryId)?.label ?? categoryId;
-const getSubcategoryLabel = (categoryId: string, subcategoryId: string) =>
-  categoryLookup
-    .get(categoryId)
-    ?.subcategories?.find((sub) => sub.id === subcategoryId)?.label ??
-  subcategoryId;
+import { useExpenseCategories } from "@/hooks/useExpenseCategories";
+import {
+  buildCategoryLookup,
+  getCategoryLabel,
+  getSubcategoryLabel,
+} from "@/utils/categoryLookup";
 
 const fallbackSubcategoryColors = [
   palette.green200,
@@ -106,6 +90,11 @@ export default function InsightsScreen() {
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [activeWeekIndex, setActiveWeekIndex] = useState<number | null>(null);
   const [isWeeklyLoading, setIsWeeklyLoading] = useState(true);
+  const { expenseCategories } = useExpenseCategories();
+  const categoryLookup = useMemo(
+    () => buildCategoryLookup(expenseCategories),
+    [expenseCategories],
+  );
 
   // Fetch snapshot when monthIndex changes
   useEffect(() => {
@@ -286,7 +275,7 @@ export default function InsightsScreen() {
         offset,
         color: cat.color,
         id: cat.id,
-        label: getCategoryLabel(cat.id),
+        label: getCategoryLabel(categoryLookup, cat.id),
       },
     ];
   }, []);
@@ -467,7 +456,7 @@ export default function InsightsScreen() {
                   <>
                     <View style={styles.legendColumn}>
                       {left.map((cat) => {
-                        const label = getCategoryLabel(cat.id);
+                        const label = getCategoryLabel(categoryLookup, cat.id);
                         return (
                           <View
                             key={`legend-left-${cat.id}`}
@@ -491,7 +480,7 @@ export default function InsightsScreen() {
                     </View>
                     <View style={styles.legendColumn}>
                       {right.map((cat) => {
-                        const label = getCategoryLabel(cat.id);
+                        const label = getCategoryLabel(categoryLookup, cat.id);
                         return (
                           <View
                             key={`legend-right-${cat.id}`}
@@ -603,7 +592,7 @@ export default function InsightsScreen() {
             <Text style={[styles.tableCell, styles.tableNumeric]}>Items</Text>
           </View>
           {snapshot.categories.map((cat) => {
-            const catLabel = getCategoryLabel(cat.id);
+            const catLabel = getCategoryLabel(categoryLookup, cat.id);
             const isActive = activeCategoryId === cat.id;
             const rawSubcategories = cat.subcategories ?? [];
             const configCategory = categoryLookup.get(cat.id);
@@ -763,7 +752,11 @@ export default function InsightsScreen() {
                         ]}
                       >
                         {subcategories.map((sub, index) => {
-                          const subLabel = getSubcategoryLabel(cat.id, sub.id);
+                          const subLabel = getSubcategoryLabel(
+                            categoryLookup,
+                            cat.id,
+                            sub.id,
+                          );
                           return (
                             <View
                               key={`${sub.id}-${index}`}
@@ -937,9 +930,16 @@ export default function InsightsScreen() {
           </View>
           <View style={styles.transactions}>
             {snapshot.transactions.map((tx, idx) => {
-              const categoryLabel = getCategoryLabel(tx.categoryId);
+              const categoryLabel = getCategoryLabel(
+                categoryLookup,
+                tx.categoryId,
+              );
               const subcategoryLabel = tx.subcategoryId
-                ? getSubcategoryLabel(tx.categoryId, tx.subcategoryId)
+                ? getSubcategoryLabel(
+                    categoryLookup,
+                    tx.categoryId,
+                    tx.subcategoryId,
+                  )
                 : null;
               return (
                 <View key={`${tx.date}-${idx}`} style={styles.txRow}>
@@ -1018,7 +1018,11 @@ export default function InsightsScreen() {
           </Pressable>
         )}
       </View>
-      <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
+      <AddExpenseModal
+        visible={showAdd}
+        onClose={() => setShowAdd(false)}
+        expenseCategories={expenseCategories}
+      />
     </SafeAreaView>
   );
 }

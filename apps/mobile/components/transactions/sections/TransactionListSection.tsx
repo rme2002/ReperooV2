@@ -22,7 +22,7 @@ type TransactionListSectionProps = {
   getIncomeCategoryLabel: (id: string) => string;
   formatMoney: (value: number) => string;
   onEdit: (tx: ListTransactions200Item) => void;
-  onDelete: (txId: string) => void;
+  onDelete: (txId: string, transaction: ListTransactions200Item) => void;
   onPress: (tx: ListTransactions200Item) => void;
   refreshControl?: React.ReactElement<RefreshControlProps>;
 };
@@ -57,10 +57,10 @@ export const TransactionListSection = forwardRef<
         stickySectionHeadersEnabled={false}
         refreshControl={refreshControl}
         renderItem={({ item }) => (
-          <TransactionSwipeRow
-            onEdit={() => onEdit(item)}
-            onDelete={() => onDelete(String(item.id))}
-          >
+            <TransactionSwipeRow
+              onEdit={() => onEdit(item)}
+              onDelete={() => onDelete(String(item.id), item)}
+            >
             <TransactionRow
               transaction={item}
               getCategoryLabel={getCategoryLabel}

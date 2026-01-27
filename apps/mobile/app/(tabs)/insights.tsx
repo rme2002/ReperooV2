@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   RefreshControl,
@@ -45,6 +45,8 @@ import { useInsightsIncome } from "@/hooks/useInsightsIncome";
 import { useInsightsWeekly } from "@/hooks/useInsightsWeekly";
 import { useTransactionRefresh } from "@/hooks/useTransactionRefresh";
 import { useTabSafePadding } from "@/hooks/useTabSafePadding";
+import { useExpenseCategories } from "@/hooks/useExpenseCategories";
+import { buildCategoryLookup } from "@/utils/categoryLookup";
 
 export default function InsightsScreen() {
   // Modal states
@@ -79,6 +81,7 @@ export default function InsightsScreen() {
   const { formatCurrency, currencySymbol } = useCurrencyFormatter();
   const refreshTransactionData = useTransactionRefresh();
   const { bottomPadding } = useTabSafePadding();
+  const { expenseCategories } = useExpenseCategories();
 
   // Custom hooks
   const { selectedMonth, goPrevious, goNext } = useInsightsMonthNavigation();
@@ -108,6 +111,10 @@ export default function InsightsScreen() {
   // Responsive
   const { width } = useWindowDimensions();
   const scale = Math.min(Math.max(width / 375, 0.85), 1.25);
+  const categoryLookup = useMemo(
+    () => buildCategoryLookup(expenseCategories),
+    [expenseCategories],
+  );
 
   const styles = StyleSheet.create({
     safeArea: {
@@ -376,6 +383,7 @@ export default function InsightsScreen() {
           totalSpent={currentSnapshot.totalSpent ?? 0}
           formatCurrency={formatCurrency}
           width={width}
+          categoryLookup={categoryLookup}
         />
 
         <SavingsProgressSection
@@ -408,6 +416,7 @@ export default function InsightsScreen() {
           onCategoryPress={handleCategoryPress}
           formatCurrency={formatCurrency}
           width={width}
+          categoryLookup={categoryLookup}
         />
 
         <WeeklySpendingChart
@@ -441,6 +450,7 @@ export default function InsightsScreen() {
         visible={showAdd}
         onClose={() => setShowAdd(false)}
         onSuccess={handleTransactionSuccess}
+        expenseCategories={expenseCategories}
       />
       <AddIncomeModal
         visible={showIncome}

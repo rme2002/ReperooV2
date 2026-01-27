@@ -33,10 +33,11 @@ const MOCK_SESSION: Session = {
 export function useSupabaseAuthSync() {
   const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const useMockSession = process.env.EXPO_PUBLIC_USE_MOCK_SESSION === "true";
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
-      setSession(MOCK_SESSION);
+      setSession(useMockSession ? MOCK_SESSION : null);
       setInitializing(false);
       return;
     }
@@ -74,5 +75,9 @@ export function useSupabaseAuthSync() {
     };
   }, []);
 
-  return { session, initializing, isMockSession: !isSupabaseConfigured };
+  return {
+    session,
+    initializing,
+    isMockSession: !isSupabaseConfigured && useMockSession,
+  };
 }
