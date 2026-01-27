@@ -44,6 +44,7 @@ import { useInsightsSavings } from "@/hooks/useInsightsSavings";
 import { useInsightsIncome } from "@/hooks/useInsightsIncome";
 import { useInsightsWeekly } from "@/hooks/useInsightsWeekly";
 import { useTransactionRefresh } from "@/hooks/useTransactionRefresh";
+import { useTabSafePadding } from "@/hooks/useTabSafePadding";
 
 export default function InsightsScreen() {
   // Modal states
@@ -77,6 +78,7 @@ export default function InsightsScreen() {
   } = useBudgetContext();
   const { formatCurrency, currencySymbol } = useCurrencyFormatter();
   const refreshTransactionData = useTransactionRefresh();
+  const { bottomPadding } = useTabSafePadding();
 
   // Custom hooks
   const { selectedMonth, goPrevious, goNext } = useInsightsMonthNavigation();
@@ -106,6 +108,22 @@ export default function InsightsScreen() {
   // Responsive
   const { width } = useWindowDimensions();
   const scale = Math.min(Math.max(width / 375, 0.85), 1.25);
+
+  const styles = StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    container: {
+      flex: 1,
+    },
+    content: {
+      paddingHorizontal: 20,
+      paddingTop: 22,
+      paddingBottom: bottomPadding,
+      gap: 14,
+    },
+  });
 
   // Fetch snapshot when month changes
   useEffect(() => {
@@ -278,7 +296,7 @@ export default function InsightsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
@@ -440,18 +458,3 @@ export default function InsightsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  container: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingVertical: 22,
-    gap: 14,
-  },
-});

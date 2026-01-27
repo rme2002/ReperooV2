@@ -8,12 +8,11 @@ import Animated, {
   withTiming,
   Easing,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 import { EvolutionStage, StreakMilestone } from "@/lib/gen/model";
 import { getEvolutionImage } from "@/utils/evolutionHelpers";
 import { GlassCard } from "@/components/shared/GlassCard";
 import { getBadgeName } from "./AchievementBadge";
-import { alpha, colors, gradients, palette } from "@/constants/theme";
+import { colors } from "@/constants/theme";
 
 type BudgetHeroCardProps = {
   // Budget data
@@ -73,11 +72,11 @@ export function BudgetHeroCard({
       true,
     );
 
-    // Flame pulsing animation
+    // Subtle flame animation
     flameScale.value = withRepeat(
       withSequence(
-        withTiming(1.15, { duration: 500 }),
-        withTiming(1, { duration: 500 }),
+        withTiming(1.08, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
       ),
       -1,
       true,
@@ -189,21 +188,23 @@ export function BudgetHeroCard({
           </View>
         </View>
 
-        {/* Streak section - gradient banner (full width) */}
-        <LinearGradient
-          colors={[...gradients.streak]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.streakBanner}
-        >
-          <Animated.View
-            style={[styles.streakFlameContainer, flameAnimatedStyle]}
-          >
-            <Text style={styles.streakFlame}>🔥</Text>
-          </Animated.View>
-          <Text style={styles.streakNumber}>{streakDays}</Text>
-          <Text style={styles.streakLabel}>day streak</Text>
-        </LinearGradient>
+        {/* Streak section - modern minimalist */}
+        <View style={styles.streakContainer}>
+          <View style={styles.streakContent}>
+            <View style={styles.streakIconBadge}>
+              <Animated.Text style={[styles.streakIcon, flameAnimatedStyle]}>
+                🔥
+              </Animated.Text>
+            </View>
+            <View style={styles.streakTextGroup}>
+              <View style={styles.streakMainRow}>
+                <Text style={styles.streakNumber}>{streakDays}</Text>
+                <Text style={styles.streakLabel}>day streak</Text>
+              </View>
+              <Text style={styles.streakSubtext}>Keep it going!</Text>
+            </View>
+          </View>
+        </View>
 
         {/* Milestone progress (full width) */}
         {nextMilestone ? (
@@ -274,20 +275,21 @@ const styles = StyleSheet.create({
   },
   metricsRow: {
     flexDirection: "row",
-    gap: 12,
-    marginTop: 12,
+    gap: 8,
+    marginTop: 10,
+    maxWidth: "60%",
   },
   metricBox: {
     flex: 1,
     backgroundColor: `${colors.background}F2`,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     shadowColor: colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   metricLabel: {
     fontSize: 11,
@@ -300,30 +302,61 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.text,
   },
-  streakBanner: {
+  streakContainer: {
+    marginTop: 16,
+    backgroundColor: `${colors.background}F5`,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: `${colors.border}80`,
+    overflow: "hidden",
+  },
+  streakContent: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    marginTop: 16,
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 18,
-    borderRadius: 20,
+    gap: 14,
   },
-  streakFlameContainer: {
-    zIndex: 1,
+  streakIconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: `${colors.primary}15`,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  streakFlame: {
-    fontSize: 32,
+  streakIcon: {
+    fontSize: 24,
+  },
+  streakTextGroup: {
+    flex: 1,
+    gap: 2,
+  },
+  streakMainRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 6,
   },
   streakNumber: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "800",
-    color: palette.white,
+    color: colors.text,
+    letterSpacing: -0.5,
   },
   streakLabel: {
     fontSize: 15,
     fontWeight: "600",
-    color: alpha.offWhite90,
+    color: colors.textSecondary,
+  },
+  streakSubtext: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: colors.textTertiary,
   },
   milestoneSection: {
     gap: 6,

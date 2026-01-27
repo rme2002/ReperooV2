@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "@/constants/theme";
+import { GlassCard } from "@/components/shared/GlassCard";
 import type { WeeklySpendingPoint } from "@/lib/gen/model";
 
 type WeeklySpendingChartProps = {
@@ -32,7 +33,7 @@ export function WeeklySpendingChart({
   const weeklyTooltipWidth = Math.min(160, Math.max(110, width * 0.32));
 
   return (
-    <View style={styles.surface}>
+    <GlassCard>
       <View style={styles.sectionHeader}>
         <View>
           <Text style={styles.sectionTitle}>Last 7 days</Text>
@@ -153,20 +154,11 @@ export function WeeklySpendingChart({
           </Text>
         </View>
       )}
-    </View>
+    </GlassCard>
   );
 }
 
 const styles = StyleSheet.create({
-  surface: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 12,
-    marginBottom: 6,
-  },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",

@@ -7,8 +7,9 @@ import type { ListTransactions200Item } from "@/lib/gen/model";
 export interface UseTransactionsFilteringReturn {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  activeCategory: string | null;
-  setActiveCategory: (categoryId: string | null) => void;
+  activeCategories: string[];
+  setActiveCategories: (categoryIds: string[]) => void;
+  toggleCategory: (categoryId: string) => void;
   showRecurringOnly: boolean;
   setShowRecurringOnly: (show: boolean) => void;
   filteredTransactions: ListTransactions200Item[];
@@ -32,8 +33,17 @@ export function useTransactionsFiltering(
   getIncomeCategoryLabel: (id: string) => string
 ): UseTransactionsFilteringReturn {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeCategories, setActiveCategories] = useState<string[]>([]);
   const [showRecurringOnly, setShowRecurringOnly] = useState(false);
+
+  const toggleCategory = useCallback((categoryId: string) => {
+    setActiveCategories((prev) => {
+      if (prev.includes(categoryId)) {
+        return prev.filter((id) => id !== categoryId);
+      }
+      return [...prev, categoryId];
+    });
+  }, []);
 
   const filteredTransactions = useMemo(() => {
     const base = transactions.slice();
@@ -46,7 +56,7 @@ export function useTransactionsFiltering(
 
       // For expense transactions, filter by category
       if (tx.type === "expense") {
-        if (activeCategory && tx.expense_category_id !== activeCategory) {
+        if (activeCategories.length > 0 && !activeCategories.includes(tx.expense_category_id)) {
           return false;
         }
         if (!query) {
@@ -57,7 +67,7 @@ export function useTransactionsFiltering(
       }
       // For income transactions, skip category filter and just search notes
       if (tx.type === "income") {
-        if (activeCategory) {
+        if (activeCategories.length > 0) {
           return false; // Income doesn't match expense categories
         }
         if (!query) {
@@ -75,7 +85,7 @@ export function useTransactionsFiltering(
     return filtered;
   }, [
     transactions,
-    activeCategory,
+    activeCategories,
     searchQuery,
     showRecurringOnly,
     getCategoryLabel,
@@ -84,7 +94,7 @@ export function useTransactionsFiltering(
   ]);
 
   const clearFilters = useCallback(() => {
-    setActiveCategory(null);
+    setActiveCategories([]);
     setSearchQuery("");
     setShowRecurringOnly(false);
   }, []);
@@ -92,8 +102,9 @@ export function useTransactionsFiltering(
   return {
     searchQuery,
     setSearchQuery,
-    activeCategory,
-    setActiveCategory,
+    activeCategories,
+    setActiveCategories,
+    toggleCategory,
     showRecurringOnly,
     setShowRecurringOnly,
     filteredTransactions,

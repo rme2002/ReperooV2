@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "@/constants/theme";
+import { GlassCard } from "@/components/shared/GlassCard";
 
 type SavingsProgressSectionProps = {
   // Goals
@@ -58,7 +59,7 @@ export function SavingsProgressSection({
   onCreatePlan,
 }: SavingsProgressSectionProps) {
   return (
-    <View style={styles.surface}>
+    <GlassCard>
       <View style={styles.sectionHeaderStacked}>
         <Text style={styles.sectionTitle}>Savings & investments</Text>
         <Text style={styles.subText}>
@@ -219,20 +220,11 @@ export function SavingsProgressSection({
           </Pressable>
         </View>
       )}
-    </View>
+    </GlassCard>
   );
 }
 
 const styles = StyleSheet.create({
-  surface: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 12,
-    marginBottom: 6,
-  },
   sectionHeaderStacked: {
     gap: 4,
   },

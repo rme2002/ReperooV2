@@ -3,7 +3,6 @@ import { colors } from "@/constants/theme";
 
 type TransactionsMonthNavigatorProps = {
   monthLabel: string;
-  entryCount: number;
   onPrevious: () => void;
   onNext: () => void;
   canGoPrevious: boolean;
@@ -12,36 +11,32 @@ type TransactionsMonthNavigatorProps = {
 
 export function TransactionsMonthNavigator({
   monthLabel,
-  entryCount,
   onPrevious,
   onNext,
   canGoPrevious,
   canGoNext,
 }: TransactionsMonthNavigatorProps) {
   return (
-    <>
-      <View style={styles.monthSelector}>
-        <Pressable
-          onPress={onPrevious}
-          disabled={!canGoPrevious}
-          style={[
-            styles.monthArrow,
-            !canGoPrevious && styles.monthArrowDisabled,
-          ]}
-        >
-          <Text style={styles.monthArrowText}>‹</Text>
-        </Pressable>
-        <Text style={styles.monthLabel}>{monthLabel}</Text>
-        <Pressable
-          onPress={onNext}
-          disabled={!canGoNext}
-          style={[styles.monthArrow, !canGoNext && styles.monthArrowDisabled]}
-        >
-          <Text style={styles.monthArrowText}>›</Text>
-        </Pressable>
-      </View>
-      <Text style={styles.entryCount}>{entryCount} entries</Text>
-    </>
+    <View style={styles.monthSelector}>
+      <Pressable
+        onPress={onPrevious}
+        disabled={!canGoPrevious}
+        style={[
+          styles.monthArrow,
+          !canGoPrevious && styles.monthArrowDisabled,
+        ]}
+      >
+        <Text style={styles.monthArrowText}>‹</Text>
+      </Pressable>
+      <Text style={styles.monthLabel}>{monthLabel}</Text>
+      <Pressable
+        onPress={onNext}
+        disabled={!canGoNext}
+        style={[styles.monthArrow, !canGoNext && styles.monthArrowDisabled]}
+      >
+        <Text style={styles.monthArrowText}>›</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -50,14 +45,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 16,
+    gap: 12,
   },
   monthArrow: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.surface,
@@ -73,10 +68,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: colors.text,
-  },
-  entryCount: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    textAlign: "center",
   },
 });

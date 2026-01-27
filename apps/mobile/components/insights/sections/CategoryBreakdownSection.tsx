@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Circle, Svg } from "react-native-svg";
-import { colors } from "@/constants/theme";
+import { alpha, colors } from "@/constants/theme";
+import { GlassCard } from "@/components/shared/GlassCard";
 import {
   categoryLookup,
   getCategoryLabel,
@@ -40,7 +41,7 @@ export function CategoryBreakdownSection({
   width,
 }: CategoryBreakdownSectionProps) {
   return (
-    <View style={styles.surface}>
+    <GlassCard>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Category breakdown</Text>
         <Text style={styles.subText}>Totals, share, and items</Text>
@@ -265,20 +266,11 @@ export function CategoryBreakdownSection({
           </View>
         );
       })}
-    </View>
+    </GlassCard>
   );
 }
 
 const styles = StyleSheet.create({
-  surface: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 12,
-    marginBottom: 6,
-  },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -308,7 +300,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderLight,
   },
   tableRowPressable: {
-    backgroundColor: colors.surface,
+    backgroundColor: "transparent",
   },
   tableRowActive: {
     backgroundColor: colors.borderLight,
@@ -343,7 +335,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   subCategoryPanel: {
-    backgroundColor: colors.surface,
+    backgroundColor: alpha.offWhite50,
     padding: 16,
     gap: 16,
     borderRadius: 16,
@@ -380,7 +372,7 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   subCategoryCenter: {
-    backgroundColor: colors.surface,
+    backgroundColor: alpha.offWhite90,
     justifyContent: "center",
     alignItems: "center",
     gap: 4,

@@ -27,12 +27,14 @@ import { DangerZoneSection } from "@/components/profile/sections/DangerZoneSecti
 // Custom hooks
 import { useProfileForm } from "@/hooks/useProfileForm";
 import { useProfileActions } from "@/hooks/useProfileActions";
+import { useTabSafePadding } from "@/hooks/useTabSafePadding";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { session, initializing, isMockSession } = useSupabaseAuthSync();
   const { currency, setCurrencyFromProfile } = useUserPreferences();
   const [pickerVisible, setPickerVisible] = useState(false);
+  const { bottomPadding } = useTabSafePadding();
 
   // Form management
   const {
@@ -50,10 +52,35 @@ export default function ProfileScreen() {
   const { handleLogout, handleResetPassword, handleContactSupport } =
     useProfileActions(session, isMockSession);
 
+  const styles = StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      paddingHorizontal: 20,
+      paddingTop: 24,
+      paddingBottom: bottomPadding,
+      gap: 24,
+    },
+    header: {
+      gap: 6,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "800",
+      color: colors.text,
+    },
+    subtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+  });
+
   // Loading state
   if (initializing) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <LoadingState />
       </SafeAreaView>
     );
@@ -62,7 +89,7 @@ export default function ProfileScreen() {
   // Signed out state
   if (!session) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.content}>
           <View style={styles.header}>
             <Text style={styles.title}>Profile</Text>
@@ -82,8 +109,9 @@ export default function ProfileScreen() {
       ?.label ?? selectedCurrency;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
@@ -124,28 +152,3 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    paddingBottom: 40,
-    gap: 24,
-  },
-  header: {
-    gap: 6,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-});

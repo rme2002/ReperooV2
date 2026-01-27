@@ -5,8 +5,10 @@ Set your streak for testing gamification features.
 This script automatically:
 1. Clears all existing streak milestone achievements
 2. Sets your new current and longest streak
-3. Awards achievements based on your new longest streak
+3. Awards milestone achievements based on your new longest streak
 4. Updates your XP and level accordingly
+
+Use set_level.py to manually set specific level/XP combinations for edge case testing.
 
 Run from apps/api directory:
     uv run --env-file .env.local python set_streak.py <streak>
@@ -165,9 +167,9 @@ async def set_streak(current_streak: int, longest_streak: int | None = None, ema
 
                 # Display new state
                 print("\n6. ✅ Streak Updated Successfully!")
-                print(f"   Old Current Streak: {old_current_streak} days → New: {current_streak} days")
-                print(f"   Old Longest Streak: {old_longest_streak} days → New: {longest_streak} days")
-                print(f"   Old Level: {old_level} ({old_xp} XP) → New: {new_level} ({profile.current_xp} XP)")
+                print(f"   Current Streak: {old_current_streak} days → {current_streak} days")
+                print(f"   Longest Streak: {old_longest_streak} days → {longest_streak} days")
+                print(f"   Level: {old_level} ({old_xp} XP) → {new_level} ({profile.current_xp} XP)")
 
                 if len(milestones_awarded) > 0:
                     print(f"\n   🎉 Achievements Unlocked: {len(milestones_awarded)}")

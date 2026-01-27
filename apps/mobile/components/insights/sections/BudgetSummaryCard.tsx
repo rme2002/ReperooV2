@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "@/constants/theme";
+import { GlassCard } from "@/components/shared/GlassCard";
 import type { StatusTone } from "@/hooks/useInsightsBudget";
 
 type BudgetSummaryCardProps = {
@@ -89,9 +90,8 @@ export function BudgetSummaryCard({
           : styles.badgeTextNeutral;
 
   return (
-    <View
+    <GlassCard
       style={[
-        styles.surface,
         styles.summaryCard,
         {
           paddingHorizontal: Math.max(20, cardPadding + 4),
@@ -215,26 +215,16 @@ export function BudgetSummaryCard({
           </View>
         )}
       </View>
-    </View>
+    </GlassCard>
   );
 }
 
 const styles = StyleSheet.create({
-  surface: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 12,
-    marginBottom: 6,
-  },
   summaryCard: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
     paddingVertical: 22,
     paddingHorizontal: 24,
     gap: 18,
+    marginBottom: 6,
   },
   insightWidget: {
     gap: 12,

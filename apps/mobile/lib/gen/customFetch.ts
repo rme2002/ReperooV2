@@ -112,6 +112,7 @@ export const customFetch = async <T>(
   url: string,
   options: RequestInit,
 ): Promise<T> => {
+  const startTime = Date.now();
   const requestUrl = getUrl(url);
   const requestHeaders = await getHeaders(options.headers);
 
@@ -120,8 +121,30 @@ export const customFetch = async <T>(
     headers: requestHeaders,
   };
 
-  const response = await fetch(requestUrl, requestInit);
-  const data = await getBody<T>(response);
+  // Log the outgoing API call
+  const method = options.method || 'GET';
+  console.log(`[API Call] ${method} ${requestUrl}`);
 
-  return { status: response.status, data, headers: response.headers } as T;
+  try {
+    const response = await fetch(requestUrl, requestInit);
+    const duration = Date.now() - startTime;
+    const data = await getBody<T>(response);
+
+    // Log the API response
+    console.log(
+      `[API Response] ${method} ${requestUrl} - Status: ${response.status} - Duration: ${duration}ms`
+    );
+
+    return { status: response.status, data, headers: response.headers } as T;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+
+    // Log API errors
+    console.error(
+      `[API Error] ${method} ${requestUrl} - Duration: ${duration}ms - Error:`,
+      error
+    );
+
+    throw error;
+  }
 };

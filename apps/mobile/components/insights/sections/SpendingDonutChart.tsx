@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Circle, Svg } from "react-native-svg";
-import { colors } from "@/constants/theme";
+import { alpha, colors } from "@/constants/theme";
+import { GlassCard } from "@/components/shared/GlassCard";
 import { getCategoryLabel } from "@/utils/categoryLookup";
 
 interface CategoryData {
@@ -58,7 +59,7 @@ export function SpendingDonutChart({
   const right = categories.slice(mid);
 
   return (
-    <View style={styles.surface}>
+    <GlassCard>
       <View style={styles.sectionHeaderCentered}>
         <Text style={styles.sectionTitle}>Where your money went</Text>
         <Text style={styles.subText}>Spending by category for this month</Text>
@@ -141,20 +142,11 @@ export function SpendingDonutChart({
           </View>
         </View>
       </View>
-    </View>
+    </GlassCard>
   );
 }
 
 const styles = StyleSheet.create({
-  surface: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 12,
-    marginBottom: 6,
-  },
   sectionHeaderCentered: {
     alignItems: "center",
     gap: 4,
@@ -182,7 +174,7 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   donutCenter: {
-    backgroundColor: colors.background,
+    backgroundColor: alpha.offWhite90,
     justifyContent: "center",
     alignItems: "center",
     gap: 4,

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { alpha, colors } from "@/constants/theme";
+import { GlassCard } from "@/components/shared/GlassCard";
 import { GoalSlider } from "@/components/insights/widgets/GoalSlider";
 import { GoalDisplayBar } from "@/components/insights/widgets/GoalDisplayBar";
 import { IncomeBreakdownSection } from "@/components/budget/IncomeBreakdownSection";
@@ -131,7 +132,7 @@ export function BudgetPlanWidget({
   const planSummarySpendable = Math.max(expectedIncome - planSummaryGoals, 0);
 
   return (
-    <View style={styles.surface}>
+    <GlassCard>
       <View style={styles.planWidget}>
         {/* Header */}
         <View style={styles.planWidgetHeader}>
@@ -395,20 +396,11 @@ export function BudgetPlanWidget({
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
-    </View>
+    </GlassCard>
   );
 }
 
 const styles = StyleSheet.create({
-  surface: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 12,
-    marginBottom: 6,
-  },
   planWidget: {
     gap: 16,
   },
@@ -431,7 +423,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 16,
-    backgroundColor: colors.background,
+    backgroundColor: alpha.offWhite50,
   },
   emptyStateText: {
     fontSize: 14,
@@ -451,7 +443,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   planSummaryCard: {
-    backgroundColor: colors.background,
+    backgroundColor: alpha.offWhite50,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 16,
@@ -540,7 +532,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   planCancelButton: {
-    backgroundColor: colors.surface,
+    backgroundColor: alpha.offWhite50,
     borderWidth: 1,
     borderColor: colors.border,
   },

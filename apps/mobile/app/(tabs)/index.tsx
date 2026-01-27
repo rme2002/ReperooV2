@@ -26,6 +26,7 @@ import { AchievementBadgesSection } from "@/components/home/AchievementBadgesSec
 import { useHomeBudget } from "@/hooks/useHomeBudget";
 import { useHomeGamification } from "@/hooks/useHomeGamification";
 import { useTransactionRefresh } from "@/hooks/useTransactionRefresh";
+import { useTabSafePadding } from "@/hooks/useTabSafePadding";
 
 export default function OverviewScreen() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function OverviewScreen() {
   const [showActions, setShowActions] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { formatCurrency } = useCurrencyFormatter();
+  const { bottomPadding } = useTabSafePadding();
 
   // Context data
   const { currentSnapshot, fetchSnapshot } = useInsightsContext();
@@ -55,6 +57,25 @@ export default function OverviewScreen() {
     experience,
     milestones,
   );
+
+  const styles = StyleSheet.create({
+    screenContainer: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    safeArea: {
+      flex: 1,
+    },
+    container: {
+      flex: 1,
+    },
+    content: {
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: bottomPadding,
+      gap: 16,
+    },
+  });
 
   const handleSetPlanPress = () => {
     router.push("/(tabs)/insights");
@@ -98,7 +119,7 @@ export default function OverviewScreen() {
 
   return (
     <View style={styles.screenContainer}>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <ScrollView
           style={styles.container}
           contentContainerStyle={styles.content}
@@ -156,22 +177,3 @@ export default function OverviewScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  screenContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
-    gap: 16,
-  },
-});

@@ -29,8 +29,9 @@ import { NoMatchesState } from "@/components/transactions/states/NoMatchesState"
 // Widgets
 import { TransactionsMonthNavigator } from "@/components/transactions/widgets/TransactionsMonthNavigator";
 import { SearchBar } from "@/components/transactions/widgets/SearchBar";
-import { RecurringFilterToggle } from "@/components/transactions/widgets/RecurringFilterToggle";
-import { CategoryFilterChips } from "@/components/transactions/widgets/CategoryFilterChips";
+import { FilterButton } from "@/components/transactions/widgets/FilterButton";
+import { ActiveFiltersChips } from "@/components/transactions/widgets/ActiveFiltersChips";
+import { FilterBottomSheet } from "@/components/transactions/widgets/FilterBottomSheet";
 import { AddTransactionMenu } from "@/components/transactions/widgets/AddTransactionMenu";
 import { JumpToTodayButton } from "@/components/transactions/widgets/JumpToTodayButton";
 
@@ -45,6 +46,7 @@ import { useTransactionsSections } from "@/hooks/useTransactionsSections";
 import { useTransactionsModals } from "@/hooks/useTransactionsModals";
 import { useTransactionActions } from "@/hooks/useTransactionActions";
 import { useTransactionRefresh } from "@/hooks/useTransactionRefresh";
+import { useTabSafePadding } from "@/hooks/useTabSafePadding";
 
 export default function TransactionsScreen() {
   const { height } = useWindowDimensions();
@@ -52,6 +54,8 @@ export default function TransactionsScreen() {
   const { formatCurrency } = useCurrencyFormatter();
   const sectionListRef = useRef<SectionList>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [filterSheetVisible, setFilterSheetVisible] = useState(false);
+  const { bottomPadding } = useTabSafePadding();
 
   // Month navigation
   const {
@@ -95,8 +99,10 @@ export default function TransactionsScreen() {
     [incomeCategories],
   );
 
-  const getCategoryLabel = (categoryId: string) =>
-    categoryLookup.get(categoryId)?.label ?? categoryId;
+  const getCategoryLabel = useCallback(
+    (categoryId: string) => categoryLookup.get(categoryId)?.label ?? categoryId,
+    [categoryLookup],
+  );
 
   const getSubcategoryLabel = (categoryId: string, subId?: string) => {
     if (!subId) return null;
@@ -113,8 +119,9 @@ export default function TransactionsScreen() {
   const {
     searchQuery,
     setSearchQuery,
-    activeCategory,
-    setActiveCategory,
+    activeCategories,
+    setActiveCategories,
+    toggleCategory,
     showRecurringOnly,
     setShowRecurringOnly,
     filteredTransactions,
@@ -125,6 +132,14 @@ export default function TransactionsScreen() {
     getSubcategoryLabel,
     getIncomeCategoryLabel,
   );
+
+  // Compute active filter count
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    count += activeCategories.length;
+    if (showRecurringOnly) count++;
+    return count;
+  }, [activeCategories, showRecurringOnly]);
 
   // Sections
   const { sections, showEmptyMonth, showNoMatches } = useTransactionsSections(
@@ -191,8 +206,6 @@ export default function TransactionsScreen() {
       maximumFractionDigits: 2,
     });
 
-  const chipBottomSpacing = Math.max(12, Math.min(height * 0.035, 40));
-
   // Jump to Today functionality
   const todaySectionIndex = useMemo(() => {
     const todayKey = getUTCDateKey(new Date());
@@ -212,6 +225,51 @@ export default function TransactionsScreen() {
 
   const showJumpButton = todaySectionIndex !== -1;
 
+  const styles = StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      paddingHorizontal: 12,
+      paddingTop: 20,
+      gap: 8,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "800",
+      color: colors.text,
+    },
+    addButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      backgroundColor: colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    addButtonText: {
+      fontSize: 22,
+      color: colors.textLight,
+    },
+    searchFilterRow: {
+      flexDirection: "row",
+      gap: 10,
+      alignItems: "center",
+    },
+    listWrapper: {
+      flex: 1,
+    },
+  });
+
   const refreshControl = useMemo(
     () => (
       <RefreshControl
@@ -226,7 +284,7 @@ export default function TransactionsScreen() {
 
   return (
     <>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <AddTransactionMenu
           visible={showAddMenu}
           onAddExpense={openAddExpenseModal}
@@ -248,26 +306,31 @@ export default function TransactionsScreen() {
 
         <TransactionsMonthNavigator
           monthLabel={activeMonth?.label ?? "Month"}
-          entryCount={apiTransactions.length}
           onPrevious={goPrevious}
           onNext={goNext}
           canGoPrevious={canGoPrevious}
           canGoNext={canGoNext}
         />
 
-        <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+        <View style={styles.searchFilterRow}>
+          <View style={{ flex: 1 }}>
+            <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+          </View>
+          <FilterButton
+            activeFilterCount={activeFilterCount}
+            onPress={() => setFilterSheetVisible(true)}
+          />
+        </View>
 
-        <RecurringFilterToggle
-          showRecurringOnly={showRecurringOnly}
-          onToggle={() => setShowRecurringOnly(!showRecurringOnly)}
-        />
-
-        <CategoryFilterChips
-          activeCategory={activeCategory}
-          onSelect={setActiveCategory}
-          bottomSpacing={chipBottomSpacing}
-          categories={expenseCategories}
-        />
+        {(activeCategories.length > 0 || showRecurringOnly) && (
+          <ActiveFiltersChips
+            activeCategories={activeCategories}
+            showRecurringOnly={showRecurringOnly}
+            onRemoveCategory={toggleCategory}
+            onRemoveRecurring={() => setShowRecurringOnly(false)}
+            getCategoryLabel={getCategoryLabel}
+          />
+        )}
 
         <View style={styles.listWrapper}>
           {error ? (
@@ -345,46 +408,16 @@ export default function TransactionsScreen() {
             : undefined
         }
       />
+
+      <FilterBottomSheet
+        visible={filterSheetVisible}
+        onClose={() => setFilterSheetVisible(false)}
+        activeCategories={activeCategories}
+        showRecurringOnly={showRecurringOnly}
+        onCategoriesChange={setActiveCategories}
+        onRecurringChange={setShowRecurringOnly}
+        categories={expenseCategories}
+      />
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    gap: 14,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: colors.text,
-  },
-  addButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  addButtonText: {
-    fontSize: 22,
-    color: colors.textLight,
-  },
-  listWrapper: {
-    flex: 1,
-  },
-});
