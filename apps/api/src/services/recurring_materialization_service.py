@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import calendar
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from uuid import UUID, uuid4
 
 from sqlalchemy import and_, select

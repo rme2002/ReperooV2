@@ -1,16 +1,11 @@
 """Integration tests for transaction endpoints with timezone fix."""
 import pytest
 from datetime import date, timedelta
-from decimal import Decimal
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 
 from src.main import app
-from src.core.database import get_session
-from src.db.models.transaction import Transaction
-from src.db.models.profile import Profile
 
 
 @pytest.fixture

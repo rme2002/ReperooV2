@@ -1,4 +1,5 @@
 """Pytest configuration for integration tests."""
+import os
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -6,14 +7,16 @@ from sqlalchemy.orm import sessionmaker
 from uuid import uuid4
 
 from src.main import app
-from src.core.database import get_session, get_database_url
+from src.core.database import get_session
 from src.db.base import Base
 
 
 @pytest.fixture(scope="session")
 def test_engine():
     """Create a test database engine."""
-    database_url = get_database_url()
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL must be set for integration tests")
     engine = create_engine(database_url)
     return engine
 

@@ -2,10 +2,7 @@
 
 These tests verify the complete end-to-end flow of date handling.
 """
-import pytest
 from datetime import date, datetime
-from decimal import Decimal
-from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from src.utils.date_utils import get_user_today, parse_date_string
@@ -54,8 +51,6 @@ class TestTimezoneIntegration:
         Scenario: User in London selects a specific date
         Expected: That exact date is stored
         """
-        user_tz = 'Europe/London'
-
         # User selects June 15, 2024
         selected_date = date(2024, 6, 15)
         date_string = selected_date.isoformat()  # "2024-06-15"

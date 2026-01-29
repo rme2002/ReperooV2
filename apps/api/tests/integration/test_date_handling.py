@@ -1,6 +1,6 @@
 """Integration tests for date handling across all endpoints."""
 import pytest
-from datetime import date, timedelta
+from datetime import date
 from fastapi.testclient import TestClient
 from uuid import uuid4
 
