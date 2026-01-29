@@ -2,6 +2,10 @@
 
 from datetime import date
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 class TestDateFormats:
     """Test date format handling across all endpoints."""

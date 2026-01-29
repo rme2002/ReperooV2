@@ -288,7 +288,7 @@ jobs:
         run: uv sync --all-extras --dev --locked
 
       - name: Run tests
-        run: uv run pytest
+        run: uv run pytest -m "not integration"
 
   integration-api:
     name: API integration tests

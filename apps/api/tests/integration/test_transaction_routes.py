@@ -4,6 +4,8 @@ from typing import Literal
 import pytest
 from httpx import AsyncClient
 
+pytestmark = pytest.mark.integration
+
 
 def _create_transaction_payload(
     type: Literal["expense", "income"],

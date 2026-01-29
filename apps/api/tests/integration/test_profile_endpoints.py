@@ -1,5 +1,9 @@
 """Integration tests for profile/timezone endpoints."""
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 class TestTimezoneEndpoint:
     """Integration tests for PATCH /api/v1/profile/timezone."""

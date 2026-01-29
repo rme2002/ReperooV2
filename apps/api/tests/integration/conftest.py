@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import os
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
 from uuid import UUID, uuid4
 
+import jwt
 import pytest
 import pytest_asyncio
 from dotenv import load_dotenv
@@ -31,6 +33,19 @@ from src.main import app
 from src.repositories.profile_repository import ProfileRepository
 
 BASE_URL = "http://testserver"
+
+
+def _issue_test_token(user_id: str, email: str) -> str:
+    now = datetime.now(tz=timezone.utc)
+    payload = {
+        "aud": "authenticated",
+        "sub": user_id,
+        "email": email,
+        "role": "authenticated",
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(hours=1)).timestamp()),
+    }
+    return jwt.encode(payload, os.environ["SUPABASE_JWT_SECRET"], algorithm="HS256")
 
 
 def _load_env() -> None:
@@ -142,16 +157,27 @@ async def authenticated_user(
     email = f"ci+{uuid4().hex}@example.com"
     password = "IntegrationTest1!*"
 
-    admin_response = await supabase_client.auth.admin.create_user(
-        {
-            "email": email,
-            "password": password,
-            "email_confirm": True,
-        }
-    )
-    user = getattr(admin_response, "user", None)
+    user = None
+    try:
+        admin_response = await supabase_client.auth.admin.create_user(
+            {
+                "email": email,
+                "password": password,
+                "email_confirm": True,
+            }
+        )
+        user = getattr(admin_response, "user", None)
+    except Exception:
+        user = None
+
     if not user or not getattr(user, "id", None):
-        raise RuntimeError("Supabase admin user creation failed.")
+        auth_response = await supabase_client.auth.sign_up(
+            {"email": email, "password": password}
+        )
+        user = getattr(auth_response, "user", None)
+
+    if not user or not getattr(user, "id", None):
+        raise RuntimeError("Supabase user creation failed.")
 
     user_id = str(user.id)
     cleanup_manager.track_supabase_user(user_id)
@@ -161,16 +187,9 @@ async def authenticated_user(
         ProfileRepository().upsert_profile(session, id=user_id)
         session.commit()
 
-    auth_response = await supabase_client.auth.sign_in_with_password(
-        {"email": email, "password": password}
-    )
-    session_obj = getattr(auth_response, "session", None)
-    if not session_obj or not getattr(session_obj, "access_token", None):
-        raise RuntimeError("Supabase sign-in failed to return an access token.")
-
     return {
         "user_id": user_id,
-        "token": session_obj.access_token,
+        "token": _issue_test_token(user_id, email),
         "email": email,
         "password": password,
     }

@@ -1,5 +1,9 @@
 """Integration tests for transaction endpoints with timezone fix."""
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 from datetime import date, timedelta
 
 
