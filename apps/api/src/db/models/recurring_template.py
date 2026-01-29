@@ -4,7 +4,17 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Index, Integer, Numeric, Text, func
+from sqlalchemy import (
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    Text,
+    func,
+)
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -72,8 +82,12 @@ class RecurringTemplate(Base):
     transaction_tag: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Recurrence pattern
-    frequency: Mapped[str] = mapped_column(Text, nullable=False)  # 'weekly' | 'biweekly' | 'monthly'
-    day_of_week: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 0-6 (0=Monday)
+    frequency: Mapped[str] = mapped_column(
+        Text, nullable=False
+    )  # 'weekly' | 'biweekly' | 'monthly'
+    day_of_week: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )  # 0-6 (0=Monday)
     day_of_month: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1-31
 
     # Start and end conditions
@@ -82,7 +96,9 @@ class RecurringTemplate(Base):
     total_occurrences: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Control flags
-    is_paused: Mapped[bool] = mapped_column(nullable=False, default=False, server_default="false")
+    is_paused: Mapped[bool] = mapped_column(
+        nullable=False, default=False, server_default="false"
+    )
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(

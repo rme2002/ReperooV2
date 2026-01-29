@@ -29,7 +29,9 @@ from src.services.errors import (
     TransactionDeleteError,
     TransactionValidationError,
 )
-from src.services.recurring_materialization_service import RecurringMaterializationService
+from src.services.recurring_materialization_service import (
+    RecurringMaterializationService,
+)
 from src.services.transaction_service import TransactionService
 from src.services.experience_service import ExperienceService
 
@@ -88,10 +90,13 @@ async def create_expense_transaction(
         HTTPException: 400 for validation errors, 401 for auth errors, 500 for server errors
     """
     import logging
+
     logger = logging.getLogger(__name__)
     logger.info(f"[DEBUG] Received expense payload: {payload}")
     logger.info(f"[DEBUG] Payload dict: {payload.model_dump()}")
-    logger.info(f"[DEBUG] Amount type: {type(payload.amount)}, Amount value: {payload.amount}")
+    logger.info(
+        f"[DEBUG] Amount type: {type(payload.amount)}, Amount value: {payload.amount}"
+    )
 
     try:
         # Create transaction
@@ -194,7 +199,9 @@ async def list_transactions(
     end_date: str = Query(..., description="End date (YYYY-MM-DD)"),
     current_user_id: UUID = Depends(get_current_user_id),
     transaction_repo: TransactionRepository = Depends(lambda: TransactionRepository()),
-    materialization_service: RecurringMaterializationService = Depends(get_materialization_service),
+    materialization_service: RecurringMaterializationService = Depends(
+        get_materialization_service
+    ),
     session: Session = Depends(get_session),
 ) -> list[TransactionExpense | TransactionIncome]:
     """
@@ -245,7 +252,9 @@ async def list_transactions(
                         occurred_at=txn.occurred_at.isoformat(),  # date -> "YYYY-MM-DD"
                         amount=float(txn.amount),
                         notes=txn.notes,
-                        recurring_template_id=str(txn.recurring_template_id) if txn.recurring_template_id else None,
+                        recurring_template_id=str(txn.recurring_template_id)
+                        if txn.recurring_template_id
+                        else None,
                         type="expense",
                         transaction_tag=txn.transaction_tag,
                         expense_category_id=txn.expense_category_id,
@@ -261,7 +270,9 @@ async def list_transactions(
                         occurred_at=txn.occurred_at.isoformat(),  # date -> "YYYY-MM-DD"
                         amount=float(txn.amount),
                         notes=txn.notes,
-                        recurring_template_id=str(txn.recurring_template_id) if txn.recurring_template_id else None,
+                        recurring_template_id=str(txn.recurring_template_id)
+                        if txn.recurring_template_id
+                        else None,
                         type="income",
                         income_category_id=txn.income_category_id,
                         created_at=txn.created_at,
@@ -273,7 +284,7 @@ async def list_transactions(
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid date format: {str(e)}"
+            detail=f"Invalid date format: {str(e)}",
         )
     except Exception as e:
         logger = logging.getLogger(__name__)

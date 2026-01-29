@@ -57,6 +57,8 @@ class Profile(TimestampMixin, Base):
     longest_streak: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     last_login_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     total_xp_earned: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    transactions_today_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    transactions_today_count: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False
+    )
     last_transaction_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    timezone: Mapped[str] = mapped_column(Text, default='UTC', nullable=False)
+    timezone: Mapped[str] = mapped_column(Text, default="UTC", nullable=False)

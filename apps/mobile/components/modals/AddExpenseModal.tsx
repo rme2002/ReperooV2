@@ -15,10 +15,7 @@ import {
 } from "react-native";
 import { useUserPreferences } from "@/components/profile/UserPreferencesProvider";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
-import {
-  formatAmountInput,
-  parseAmountInput,
-} from "@/utils/decimalSeparator";
+import { formatAmountInput, parseAmountInput } from "@/utils/decimalSeparator";
 import { createExpenseTransaction } from "@/lib/gen/transactions/transactions";
 import { createRecurringExpenseTemplate } from "@/lib/gen/recurring-templates/recurring-templates";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
@@ -182,7 +179,7 @@ export function AddExpenseModal({
   const usingProvidedCategories = expenseCategories !== undefined;
   const categories = useMemo(() => {
     const source = usingProvidedCategories
-      ? expenseCategories ?? []
+      ? (expenseCategories ?? [])
       : fetchedCategories;
     return [...source].sort((a, b) => a.sort_order - b.sort_order);
   }, [expenseCategories, fetchedCategories, usingProvidedCategories]);
@@ -546,38 +543,38 @@ export function AddExpenseModal({
                   </Text>
                 ) : (
                   categories.map((category) => {
-                  const selected = selectedCategory === category.id;
-                  const dimmed = Boolean(
-                    selectedCategory && selectedCategory !== category.id,
-                  );
-                  return (
-                    <Pressable
-                      key={category.id}
-                      disabled={isViewMode}
-                      onPress={() => handleSelectCategory(category.id)}
-                      style={[
-                        styles.categoryChip,
-                        selected && styles.categoryChipSelected,
-                        dimmed && styles.categoryChipDimmed,
-                      ]}
-                    >
-                      <View
+                    const selected = selectedCategory === category.id;
+                    const dimmed = Boolean(
+                      selectedCategory && selectedCategory !== category.id,
+                    );
+                    return (
+                      <Pressable
+                        key={category.id}
+                        disabled={isViewMode}
+                        onPress={() => handleSelectCategory(category.id)}
                         style={[
-                          styles.categoryIcon,
-                          { backgroundColor: category.color },
-                        ]}
-                      />
-                      <Text
-                        style={[
-                          styles.categoryLabel,
-                          selected && styles.categoryLabelSelected,
+                          styles.categoryChip,
+                          selected && styles.categoryChipSelected,
+                          dimmed && styles.categoryChipDimmed,
                         ]}
                       >
-                        {category.label}
-                      </Text>
-                    </Pressable>
-                  );
-                })
+                        <View
+                          style={[
+                            styles.categoryIcon,
+                            { backgroundColor: category.color },
+                          ]}
+                        />
+                        <Text
+                          style={[
+                            styles.categoryLabel,
+                            selected && styles.categoryLabelSelected,
+                          ]}
+                        >
+                          {category.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })
                 )}
               </ScrollView>
               {selectedCategory ? (

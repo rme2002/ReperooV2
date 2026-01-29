@@ -1,4 +1,5 @@
 """API routes for income categories."""
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select

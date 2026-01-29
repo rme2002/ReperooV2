@@ -1,4 +1,5 @@
 """Pytest configuration for integration tests."""
+
 from __future__ import annotations
 
 import asyncio
@@ -97,8 +98,14 @@ class CleanupManager:
     def _cleanup_db(self) -> None:
         with session_scope() as session:
             for user_id in self.profile_ids:
-                session.execute(delete(Transaction).where(Transaction.user_id == user_id))
-                session.execute(delete(RecurringTemplate).where(RecurringTemplate.user_id == user_id))
+                session.execute(
+                    delete(Transaction).where(Transaction.user_id == user_id)
+                )
+                session.execute(
+                    delete(RecurringTemplate).where(
+                        RecurringTemplate.user_id == user_id
+                    )
+                )
                 session.execute(delete(XPEvent).where(XPEvent.user_id == user_id))
                 session.execute(delete(BudgetPlan).where(BudgetPlan.user_id == user_id))
                 session.execute(delete(ProfileDB).where(ProfileDB.id == user_id))
@@ -107,7 +114,9 @@ class CleanupManager:
                     delete(ExpenseCategory).where(ExpenseCategory.id == category_id)
                 )
             for category_id in self.income_category_ids:
-                session.execute(delete(IncomeCategory).where(IncomeCategory.id == category_id))
+                session.execute(
+                    delete(IncomeCategory).where(IncomeCategory.id == category_id)
+                )
             session.commit()
 
     async def cleanup(self) -> None:

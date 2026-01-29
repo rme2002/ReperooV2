@@ -98,7 +98,7 @@ export default function ProfileScreen() {
   // Loading state
   if (initializing) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <LoadingState />
       </SafeAreaView>
     );
@@ -107,7 +107,7 @@ export default function ProfileScreen() {
   // Signed out state
   if (!session) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <View style={styles.content}>
           <View style={styles.header}>
             <Text style={styles.title}>Profile</Text>
@@ -138,7 +138,7 @@ export default function ProfileScreen() {
         : "Comma (1,23)";
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.content}

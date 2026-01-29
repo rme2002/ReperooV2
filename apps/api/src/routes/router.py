@@ -15,11 +15,17 @@ api_v1 = APIRouter(prefix="/api/v1")
 api_v1.include_router(health_router, tags=["health"])
 api_v1.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_v1.include_router(transaction_router, prefix="/transactions", tags=["transactions"])
-api_v1.include_router(recurring_template_router, prefix="/transactions", tags=["recurring-templates"])
+api_v1.include_router(
+    recurring_template_router, prefix="/transactions", tags=["recurring-templates"]
+)
 api_v1.include_router(budget_plan_router, prefix="/budget-plans", tags=["budget-plans"])
 api_v1.include_router(insights_router, prefix="/insights", tags=["insights"])
-api_v1.include_router(expense_category_router, prefix="/expense-categories", tags=["expense-categories"])
-api_v1.include_router(income_category_router, prefix="/income-categories", tags=["income-categories"])
+api_v1.include_router(
+    expense_category_router, prefix="/expense-categories", tags=["expense-categories"]
+)
+api_v1.include_router(
+    income_category_router, prefix="/income-categories", tags=["income-categories"]
+)
 api_v1.include_router(experience_router, prefix="/experience", tags=["experience"])
 api_v1.include_router(profile_router, prefix="/profile", tags=["profile"])
 # api_v1.include_router(reservations_router, prefix="/reservations", tags=["reservations"])

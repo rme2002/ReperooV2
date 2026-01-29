@@ -103,7 +103,9 @@ class TransactionService:
             session.commit()
         except Exception as e:
             session.rollback()
-            raise TransactionCreationError("Failed to create expense transaction") from e
+            raise TransactionCreationError(
+                "Failed to create expense transaction"
+            ) from e
 
         # Convert SQLAlchemy model to Pydantic response model
         return TransactionExpense(
@@ -255,8 +257,11 @@ class TransactionService:
 
             # Validate expense subcategory if provided
             if payload.expense_subcategory_id is not None:
-                if payload.expense_subcategory_id and not self.transaction_repository.subcategory_exists(
-                    session, payload.expense_subcategory_id
+                if (
+                    payload.expense_subcategory_id
+                    and not self.transaction_repository.subcategory_exists(
+                        session, payload.expense_subcategory_id
+                    )
                 ):
                     raise CategoryNotFoundError(
                         f"Expense subcategory '{payload.expense_subcategory_id}' not found"
@@ -375,7 +380,10 @@ class TransactionService:
         template_repository = RecurringTemplateRepository()
         materialization_service = RecurringMaterializationService(template_repository)
         materialization_service.materialize_for_date_range(
-            session, user_id, today, today  # Pass date objects
+            session,
+            user_id,
+            today,
+            today,  # Pass date objects
         )
         session.commit()
 

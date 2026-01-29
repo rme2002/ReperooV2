@@ -1,4 +1,5 @@
 """API routes for expense categories."""
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -21,8 +22,7 @@ async def list_expense_categories(
 
     # Fetch all subcategories
     subcategories_stmt = select(ExpenseSubcategory).order_by(
-        ExpenseSubcategory.category_id,
-        ExpenseSubcategory.sort_order
+        ExpenseSubcategory.category_id, ExpenseSubcategory.sort_order
     )
     subcategories = session.execute(subcategories_stmt).scalars().all()
 
@@ -31,13 +31,15 @@ async def list_expense_categories(
     for subcat in subcategories:
         if subcat.category_id not in subcategories_by_category:
             subcategories_by_category[subcat.category_id] = []
-        subcategories_by_category[subcat.category_id].append({
-            "id": subcat.id,
-            "category_id": subcat.category_id,
-            "label": subcat.label,
-            "sub_color": subcat.sub_color,
-            "sort_order": subcat.sort_order,
-        })
+        subcategories_by_category[subcat.category_id].append(
+            {
+                "id": subcat.id,
+                "category_id": subcat.category_id,
+                "label": subcat.label,
+                "sub_color": subcat.sub_color,
+                "sort_order": subcat.sort_order,
+            }
+        )
 
     # Build response
     return [

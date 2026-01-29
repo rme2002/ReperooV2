@@ -1,4 +1,5 @@
 """API routes for recurring transaction templates."""
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -58,11 +59,17 @@ def _validate_expense_template(
             )
 
     # Validate categories
-    if not transaction_repo.category_exists(session, payload.expense_category_id, "expense"):
-        raise CategoryNotFoundError(f"Expense category '{payload.expense_category_id}' not found")
+    if not transaction_repo.category_exists(
+        session, payload.expense_category_id, "expense"
+    ):
+        raise CategoryNotFoundError(
+            f"Expense category '{payload.expense_category_id}' not found"
+        )
 
     if payload.expense_subcategory_id:
-        if not transaction_repo.subcategory_exists(session, payload.expense_subcategory_id):
+        if not transaction_repo.subcategory_exists(
+            session, payload.expense_subcategory_id
+        ):
             raise CategoryNotFoundError(
                 f"Expense subcategory '{payload.expense_subcategory_id}' not found"
             )
@@ -95,11 +102,17 @@ def _validate_income_template(
             )
 
     # Validate category
-    if not transaction_repo.category_exists(session, payload.income_category_id, "income"):
-        raise CategoryNotFoundError(f"Income category '{payload.income_category_id}' not found")
+    if not transaction_repo.category_exists(
+        session, payload.income_category_id, "income"
+    ):
+        raise CategoryNotFoundError(
+            f"Income category '{payload.income_category_id}' not found"
+        )
 
 
-def _template_to_expense_response(template: RecurringTemplate) -> RecurringTemplateExpense:
+def _template_to_expense_response(
+    template: RecurringTemplate,
+) -> RecurringTemplateExpense:
     """Convert RecurringTemplate DB model to response model."""
     return RecurringTemplateExpense(
         id=template.id,
@@ -122,7 +135,9 @@ def _template_to_expense_response(template: RecurringTemplate) -> RecurringTempl
     )
 
 
-def _template_to_income_response(template: RecurringTemplate) -> RecurringTemplateIncome:
+def _template_to_income_response(
+    template: RecurringTemplate,
+) -> RecurringTemplateIncome:
     """Convert RecurringTemplate DB model to response model."""
     return RecurringTemplateIncome(
         id=template.id,
@@ -147,7 +162,9 @@ def _template_to_income_response(template: RecurringTemplate) -> RecurringTempla
 async def create_recurring_template_expense(
     payload: CreateRecurringTemplateExpensePayload,
     current_user_id: UUID = Depends(get_current_user_id),
-    template_repo: RecurringTemplateRepository = Depends(get_recurring_template_repository),
+    template_repo: RecurringTemplateRepository = Depends(
+        get_recurring_template_repository
+    ),
     transaction_repo: TransactionRepository = Depends(get_transaction_repository),
     session: Session = Depends(get_session),
 ) -> RecurringTemplateExpense:
@@ -191,7 +208,9 @@ async def create_recurring_template_expense(
 async def create_recurring_template_income(
     payload: CreateRecurringTemplateIncomePayload,
     current_user_id: UUID = Depends(get_current_user_id),
-    template_repo: RecurringTemplateRepository = Depends(get_recurring_template_repository),
+    template_repo: RecurringTemplateRepository = Depends(
+        get_recurring_template_repository
+    ),
     transaction_repo: TransactionRepository = Depends(get_transaction_repository),
     session: Session = Depends(get_session),
 ) -> RecurringTemplateIncome:
@@ -233,11 +252,15 @@ async def create_recurring_template_income(
 async def list_recurring_templates(
     include_paused: bool = False,
     current_user_id: UUID = Depends(get_current_user_id),
-    template_repo: RecurringTemplateRepository = Depends(get_recurring_template_repository),
+    template_repo: RecurringTemplateRepository = Depends(
+        get_recurring_template_repository
+    ),
     session: Session = Depends(get_session),
 ) -> list[RecurringTemplateExpense | RecurringTemplateIncome]:
     """List all recurring templates for the current user."""
-    templates = template_repo.get_user_templates(session, current_user_id, include_paused)
+    templates = template_repo.get_user_templates(
+        session, current_user_id, include_paused
+    )
 
     responses = []
     for template in templates:
@@ -253,7 +276,9 @@ async def list_recurring_templates(
 async def get_recurring_template(
     template_id: UUID,
     current_user_id: UUID = Depends(get_current_user_id),
-    template_repo: RecurringTemplateRepository = Depends(get_recurring_template_repository),
+    template_repo: RecurringTemplateRepository = Depends(
+        get_recurring_template_repository
+    ),
     session: Session = Depends(get_session),
 ) -> RecurringTemplateExpense | RecurringTemplateIncome:
     """Get a single recurring template by ID."""
@@ -276,7 +301,9 @@ async def update_recurring_template(
     template_id: UUID,
     payload: UpdateRecurringTemplatePayload,
     current_user_id: UUID = Depends(get_current_user_id),
-    template_repo: RecurringTemplateRepository = Depends(get_recurring_template_repository),
+    template_repo: RecurringTemplateRepository = Depends(
+        get_recurring_template_repository
+    ),
     session: Session = Depends(get_session),
 ) -> RecurringTemplateExpense | RecurringTemplateIncome:
     """Update a recurring template."""
@@ -284,7 +311,9 @@ async def update_recurring_template(
         # Get only non-None fields from payload
         updates = {k: v for k, v in payload.model_dump().items() if v is not None}
 
-        template = template_repo.update_template(session, template_id, current_user_id, updates)
+        template = template_repo.update_template(
+            session, template_id, current_user_id, updates
+        )
 
         if not template:
             raise HTTPException(
@@ -308,11 +337,15 @@ async def update_recurring_template(
         )
 
 
-@router.delete("/recurring/{template_id}/delete", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/recurring/{template_id}/delete", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_recurring_template(
     template_id: UUID,
     current_user_id: UUID = Depends(get_current_user_id),
-    template_repo: RecurringTemplateRepository = Depends(get_recurring_template_repository),
+    template_repo: RecurringTemplateRepository = Depends(
+        get_recurring_template_repository
+    ),
     session: Session = Depends(get_session),
 ):
     """Delete a recurring template."""
@@ -341,7 +374,9 @@ async def delete_recurring_template(
 async def pause_recurring_template(
     template_id: UUID,
     current_user_id: UUID = Depends(get_current_user_id),
-    template_repo: RecurringTemplateRepository = Depends(get_recurring_template_repository),
+    template_repo: RecurringTemplateRepository = Depends(
+        get_recurring_template_repository
+    ),
     session: Session = Depends(get_session),
 ) -> RecurringTemplateExpense | RecurringTemplateIncome:
     """Pause a recurring template."""
@@ -358,7 +393,9 @@ async def pause_recurring_template(
 async def resume_recurring_template(
     template_id: UUID,
     current_user_id: UUID = Depends(get_current_user_id),
-    template_repo: RecurringTemplateRepository = Depends(get_recurring_template_repository),
+    template_repo: RecurringTemplateRepository = Depends(
+        get_recurring_template_repository
+    ),
     session: Session = Depends(get_session),
 ) -> RecurringTemplateExpense | RecurringTemplateIncome:
     """Resume a paused recurring template."""

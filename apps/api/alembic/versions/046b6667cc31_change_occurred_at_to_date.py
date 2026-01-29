@@ -5,6 +5,7 @@ Revises: 56c68f1f4c63
 Create Date: 2026-01-29 20:22:04.894788
 
 """
+
 from __future__ import annotations
 
 from typing import Sequence, Union
@@ -13,8 +14,8 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision: str = '046b6667cc31'
-down_revision: Union[str, Sequence[str], None] = '56c68f1f4c63'
+revision: str = "046b6667cc31"
+down_revision: Union[str, Sequence[str], None] = "56c68f1f4c63"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

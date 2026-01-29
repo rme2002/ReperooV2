@@ -21,10 +21,12 @@ def get_user_today(user_timezone: str) -> date:
         return datetime.now(local_tz).date()
     except Exception:
         # Fallback to UTC if timezone is invalid
-        return datetime.now(ZoneInfo('UTC')).date()
+        return datetime.now(ZoneInfo("UTC")).date()
 
 
-def parse_date_string(date_str: str | date | None, *, allow_datetime: bool = True) -> date:
+def parse_date_string(
+    date_str: str | date | None, *, allow_datetime: bool = True
+) -> date:
     """
     Parse date string to Python date object.
 
@@ -58,17 +60,19 @@ def parse_date_string(date_str: str | date | None, *, allow_datetime: bool = Tru
 
     try:
         # Handle ISO datetime format (contains 'T')
-        if 'T' in date_str:
+        if "T" in date_str:
             if not allow_datetime:
                 raise ValueError(
                     f"Invalid date format: {date_str}. Expected YYYY-MM-DD"
                 )
             # Parse as ISO datetime and extract date
-            dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+            dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
             return dt.date()
 
         # Handle simple date format YYYY-MM-DD
-        year, month, day = date_str.split('-')
+        year, month, day = date_str.split("-")
         return date(int(year), int(month), int(day))
     except (ValueError, AttributeError) as e:
-        raise ValueError(f"Invalid date format: {date_str}. Expected YYYY-MM-DD or ISO 8601 datetime") from e
+        raise ValueError(
+            f"Invalid date format: {date_str}. Expected YYYY-MM-DD or ISO 8601 datetime"
+        ) from e

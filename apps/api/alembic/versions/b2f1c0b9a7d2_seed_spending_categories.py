@@ -5,6 +5,7 @@ Revises: 8f4f2038ed89
 Create Date: 2026-01-04 15:12:00.000000
 
 """
+
 from __future__ import annotations
 
 from typing import Sequence, Union
@@ -32,11 +33,31 @@ def upgrade() -> None:
     op.bulk_insert(
         spending_categories,
         [
-            {"id": "essentials", "label": "Essentials", "color": "#f59e0b", "sort_order": 1},
-            {"id": "lifestyle", "label": "Lifestyle", "color": "#f472b6", "sort_order": 2},
-            {"id": "personal", "label": "Personal", "color": "#3b82f6", "sort_order": 3},
+            {
+                "id": "essentials",
+                "label": "Essentials",
+                "color": "#f59e0b",
+                "sort_order": 1,
+            },
+            {
+                "id": "lifestyle",
+                "label": "Lifestyle",
+                "color": "#f472b6",
+                "sort_order": 2,
+            },
+            {
+                "id": "personal",
+                "label": "Personal",
+                "color": "#3b82f6",
+                "sort_order": 3,
+            },
             {"id": "savings", "label": "Savings", "color": "#fbbf24", "sort_order": 4},
-            {"id": "investments", "label": "Investments", "color": "#14b8a6", "sort_order": 5},
+            {
+                "id": "investments",
+                "label": "Investments",
+                "color": "#14b8a6",
+                "sort_order": 5,
+            },
             {"id": "other", "label": "Other", "color": "#a855f7", "sort_order": 6},
         ],
     )

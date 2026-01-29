@@ -102,7 +102,9 @@ async def check_in(
 
 @router.get("/history", status_code=status.HTTP_200_OK)
 async def get_experience_history(
-    limit: int = Query(default=50, ge=1, le=100, description="Number of events to return"),
+    limit: int = Query(
+        default=50, ge=1, le=100, description="Number of events to return"
+    ),
     offset: int = Query(default=0, ge=0, description="Number of events to skip"),
     current_user_id: UUID = Depends(get_current_user_id),
     experience_service: ExperienceService = Depends(get_experience_service),

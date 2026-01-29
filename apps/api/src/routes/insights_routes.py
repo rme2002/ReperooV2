@@ -68,7 +68,9 @@ async def get_month_snapshot(
             month=month,
             session=session,
         )
-        print(f"[get_month_snapshot] Returning snapshot: {result.label} (key={result.key})")
+        print(
+            f"[get_month_snapshot] Returning snapshot: {result.label} (key={result.key})"
+        )
         return result
     except InsightsValidationError as e:
         raise HTTPException(
@@ -87,6 +89,7 @@ async def get_month_snapshot(
         )
     except Exception as e:
         import traceback
+
         print(f"Error in get_month_snapshot: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(
@@ -128,6 +131,7 @@ async def list_available_months(
         return result
     except Exception as e:
         import traceback
+
         print(f"Error in list_available_months: {str(e)}")
         print(traceback.format_exc())
         raise HTTPException(

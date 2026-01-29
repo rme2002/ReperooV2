@@ -2,6 +2,7 @@
 
 These tests verify the complete end-to-end flow of date handling.
 """
+
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -17,7 +18,7 @@ class TestTimezoneIntegration:
         Expected: Transaction stored with today's date, not yesterday
         """
         # User's local timezone
-        user_tz = 'America/New_York'
+        user_tz = "America/New_York"
 
         # Get today in user's timezone
         today = get_user_today(user_tz)
@@ -37,7 +38,7 @@ class TestTimezoneIntegration:
         Scenario: User in Tokyo (UTC+9) creates transaction for "today"
         Expected: Transaction stored with today's date
         """
-        user_tz = 'Asia/Tokyo'
+        user_tz = "Asia/Tokyo"
 
         today = get_user_today(user_tz)
         date_string = today.isoformat()
@@ -67,13 +68,13 @@ class TestTimezoneIntegration:
         Expected: Each user gets summary for their local today
         """
         # User in Los Angeles
-        la_today = get_user_today('America/Los_Angeles')
+        la_today = get_user_today("America/Los_Angeles")
 
         # User in New York (3 hours ahead)
-        ny_today = get_user_today('America/New_York')
+        ny_today = get_user_today("America/New_York")
 
         # User in Tokyo (even further ahead)
-        tokyo_today = get_user_today('Asia/Tokyo')
+        tokyo_today = get_user_today("Asia/Tokyo")
 
         # All should return valid dates
         assert isinstance(la_today, date)
@@ -82,7 +83,7 @@ class TestTimezoneIntegration:
 
         # They might be different dates if called near midnight
         # But they should all be recent dates
-        now_utc = datetime.now(ZoneInfo('UTC')).date()
+        now_utc = datetime.now(ZoneInfo("UTC")).date()
         assert abs((la_today - now_utc).days) <= 1
         assert abs((ny_today - now_utc).days) <= 1
         assert abs((tokyo_today - now_utc).days) <= 1
@@ -171,7 +172,7 @@ class TestDateStringFormatting:
         # Should be YYYY-MM-DD format
         assert response_string == "2024-06-15"
         assert len(response_string) == 10
-        assert response_string.count('-') == 2
+        assert response_string.count("-") == 2
 
     def test_date_range_query_format(self):
         """Test that date range queries use correct format."""
@@ -213,7 +214,7 @@ class TestEdgeCases:
             date(2024, 1, 31),  # January
             date(2024, 2, 29),  # February (leap year)
             date(2024, 4, 30),  # April
-            date(2024, 12, 31), # December
+            date(2024, 12, 31),  # December
         ]
 
         for original in dates:
@@ -237,9 +238,9 @@ class TestEdgeCases:
         # This is tricky - at midnight UTC, it might be different days
         # in different timezones
 
-        utc_today = get_user_today('UTC')
-        la_today = get_user_today('America/Los_Angeles')
-        tokyo_today = get_user_today('Asia/Tokyo')
+        utc_today = get_user_today("UTC")
+        la_today = get_user_today("America/Los_Angeles")
+        tokyo_today = get_user_today("Asia/Tokyo")
 
         # All should return valid dates
         assert isinstance(utc_today, date)

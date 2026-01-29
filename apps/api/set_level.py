@@ -22,7 +22,9 @@ from src.services.experience_service import ExperienceService
 from src.repositories.xp_event_repository import XPEventRepository
 
 
-async def set_level(target_level: int, additional_xp: int = 0, email: str = "romea123@test.com"):
+async def set_level(
+    target_level: int, additional_xp: int = 0, email: str = "romea123@test.com"
+):
     """Set user to specific level with optional additional XP."""
 
     if target_level < 1 or target_level > 100:
@@ -71,10 +73,14 @@ async def set_level(target_level: int, additional_xp: int = 0, email: str = "rom
                 print("\n2. Current Status:")
                 print(f"   Level: {profile.current_level}")
                 print(f"   XP: {profile.current_xp}")
-                print(f"   Evolution Stage: {exp_service.get_evolution_stage(profile.current_level)}")
+                print(
+                    f"   Evolution Stage: {exp_service.get_evolution_stage(profile.current_level)}"
+                )
 
                 # Calculate XP needed for target level
-                total_xp_for_level = exp_service.calculate_total_xp_for_level(target_level)
+                total_xp_for_level = exp_service.calculate_total_xp_for_level(
+                    target_level
+                )
                 new_xp = total_xp_for_level + additional_xp
 
                 # Update profile
@@ -96,7 +102,9 @@ async def set_level(target_level: int, additional_xp: int = 0, email: str = "rom
                 # Display new state
                 new_stage = exp_service.get_evolution_stage(target_level)
                 xp_for_next = exp_service.xp_required_for_next_level(target_level)
-                total_xp_for_current = exp_service.calculate_total_xp_for_level(target_level)
+                total_xp_for_current = exp_service.calculate_total_xp_for_level(
+                    target_level
+                )
                 xp_within_level = new_xp - total_xp_for_current
 
                 print("\n4. ✅ Level Updated Successfully!")
@@ -116,7 +124,13 @@ async def set_level(target_level: int, additional_xp: int = 0, email: str = "rom
                     ("Legendary", 51, "∞"),
                 ]
                 for stage_name, min_level, max_level in stages:
-                    indicator = "👉 " if min_level <= target_level <= (max_level if isinstance(max_level, int) else 999) else "   "
+                    indicator = (
+                        "👉 "
+                        if min_level
+                        <= target_level
+                        <= (max_level if isinstance(max_level, int) else 999)
+                        else "   "
+                    )
                     print(f"   {indicator}{stage_name}: Level {min_level}-{max_level}")
 
                 print("\n" + "=" * 80)
@@ -138,22 +152,15 @@ def main():
     parser = argparse.ArgumentParser(
         description="Set your level for testing gamification features"
     )
+    parser.add_argument("level", type=int, help="Target level (1-100)")
     parser.add_argument(
-        "level",
-        type=int,
-        help="Target level (1-100)"
-    )
-    parser.add_argument(
-        "--xp",
-        type=int,
-        default=0,
-        help="Additional XP within the level (default: 0)"
+        "--xp", type=int, default=0, help="Additional XP within the level (default: 0)"
     )
     parser.add_argument(
         "--email",
         type=str,
         default="romea123@test.com",
-        help="User email (default: romea123@test.com)"
+        help="User email (default: romea123@test.com)",
     )
 
     args = parser.parse_args()

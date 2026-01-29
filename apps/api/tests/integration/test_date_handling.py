@@ -1,5 +1,5 @@
 """Integration tests for date handling across all endpoints."""
-import pytest
+
 from datetime import date
 
 
@@ -24,9 +24,9 @@ class TestDateFormats:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "want",
-                "expense_category_id": valid_expense_category
+                "expense_category_id": valid_expense_category,
             },
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert expense_response.status_code == 201
 
@@ -37,9 +37,9 @@ class TestDateFormats:
                 "occurred_at": test_date,
                 "amount": 1000.00,
                 "type": "income",
-                "income_category_id": valid_income_category
+                "income_category_id": valid_income_category,
             },
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert income_response.status_code == 201
 
@@ -54,20 +54,17 @@ class TestDateFormats:
                 "start_date": test_date,
                 "end_date": None,
                 "transaction_tag": "need",
-                "expense_category_id": valid_expense_category
+                "expense_category_id": valid_expense_category,
             },
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert recurring_response.status_code == 201
 
         # List transactions
         list_response = client.get(
             "/api/v1/transactions/list",
-            params={
-                "start_date": test_date,
-                "end_date": test_date
-            },
-            headers=auth_headers
+            params={"start_date": test_date, "end_date": test_date},
+            headers=auth_headers,
         )
         assert list_response.status_code == 200
 
@@ -85,20 +82,17 @@ class TestDateFormats:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "want",
-                "expense_category_id": valid_expense_category
+                "expense_category_id": valid_expense_category,
             },
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert expense_response.status_code == 400
 
         # List transactions
         list_response = client.get(
             "/api/v1/transactions/list",
-            params={
-                "start_date": iso_datetime,
-                "end_date": "2024-06-30"
-            },
-            headers=auth_headers
+            params={"start_date": iso_datetime, "end_date": "2024-06-30"},
+            headers=auth_headers,
         )
         assert list_response.status_code == 400
 
@@ -116,9 +110,9 @@ class TestDateFormats:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "want",
-                "expense_category_id": valid_expense_category
+                "expense_category_id": valid_expense_category,
             },
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert expense_response.status_code == 400
 
@@ -136,9 +130,9 @@ class TestDateFormats:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "want",
-                "expense_category_id": valid_expense_category
+                "expense_category_id": valid_expense_category,
             },
-            headers=auth_headers
+            headers=auth_headers,
         )
         data = create_response.json()
         assert data["occurred_at"] == test_date
@@ -147,17 +141,14 @@ class TestDateFormats:
         # List transactions
         list_response = client.get(
             "/api/v1/transactions/list",
-            params={
-                "start_date": "2024-06-01",
-                "end_date": "2024-06-30"
-            },
-            headers=auth_headers
+            params={"start_date": "2024-06-01", "end_date": "2024-06-30"},
+            headers=auth_headers,
         )
         list_data = list_response.json()
         for transaction in list_data:
             occurred_at = transaction["occurred_at"]
             assert len(occurred_at) == 10
-            assert occurred_at.count('-') == 2
+            assert occurred_at.count("-") == 2
             # Should be parseable as date
             date.fromisoformat(occurred_at)
 
@@ -172,13 +163,11 @@ class TestDateBoundaries:
             "amount": 50.00,
             "type": "expense",
             "transaction_tag": "need",
-            "expense_category_id": valid_expense_category
+            "expense_category_id": valid_expense_category,
         }
 
         response = client.post(
-            "/api/v1/transactions/create-expense",
-            json=payload,
-            headers=auth_headers
+            "/api/v1/transactions/create-expense", json=payload, headers=auth_headers
         )
 
         assert response.status_code == 201
@@ -194,13 +183,11 @@ class TestDateBoundaries:
             "amount": 50.00,
             "type": "expense",
             "transaction_tag": "need",
-            "expense_category_id": valid_expense_category
+            "expense_category_id": valid_expense_category,
         }
 
         response = client.post(
-            "/api/v1/transactions/create-expense",
-            json=payload,
-            headers=auth_headers
+            "/api/v1/transactions/create-expense", json=payload, headers=auth_headers
         )
 
         assert response.status_code == 400
@@ -219,13 +206,13 @@ class TestDateBoundaries:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "need",
-                "expense_category_id": valid_expense_category
+                "expense_category_id": valid_expense_category,
             }
 
             response = client.post(
                 "/api/v1/transactions/create-expense",
                 json=payload,
-                headers=auth_headers
+                headers=auth_headers,
             )
 
             assert response.status_code == 201
@@ -249,13 +236,13 @@ class TestDateBoundaries:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "need",
-                "expense_category_id": valid_expense_category
+                "expense_category_id": valid_expense_category,
             }
 
             response = client.post(
                 "/api/v1/transactions/create-expense",
                 json=payload,
-                headers=auth_headers
+                headers=auth_headers,
             )
 
             assert response.status_code == 400
@@ -277,24 +264,21 @@ class TestRecurringDateMaterialization:
             "start_date": "2024-01-31",
             "end_date": "2024-03-31",
             "transaction_tag": "need",
-            "expense_category_id": valid_expense_category
+            "expense_category_id": valid_expense_category,
         }
 
         create_response = client.post(
             "/api/v1/transactions/recurring/create",
             json=template_payload,
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert create_response.status_code == 201
 
         # Query for materialized transactions
         list_response = client.get(
             "/api/v1/transactions/list",
-            params={
-                "start_date": "2024-01-01",
-                "end_date": "2024-03-31"
-            },
-            headers=auth_headers
+            params={"start_date": "2024-01-01", "end_date": "2024-03-31"},
+            headers=auth_headers,
         )
 
         assert list_response.status_code == 200
@@ -320,24 +304,21 @@ class TestRecurringDateMaterialization:
             "start_date": "2024-06-03",  # Monday, June 3
             "end_date": "2024-06-30",
             "transaction_tag": "need",
-            "expense_category_id": valid_expense_category
+            "expense_category_id": valid_expense_category,
         }
 
         create_response = client.post(
             "/api/v1/transactions/recurring/create",
             json=template_payload,
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert create_response.status_code == 201
 
         # Query for materialized transactions
         list_response = client.get(
             "/api/v1/transactions/list",
-            params={
-                "start_date": "2024-06-01",
-                "end_date": "2024-06-30"
-            },
-            headers=auth_headers
+            params={"start_date": "2024-06-01", "end_date": "2024-06-30"},
+            headers=auth_headers,
         )
 
         assert list_response.status_code == 200
@@ -362,9 +343,7 @@ class TestTimezoneScenarios:
         """Simulate user in NYC timezone creating transactions."""
         # Set timezone to NYC
         tz_response = client.patch(
-            "/api/v1/profile/timezone",
-            json="America/New_York",
-            headers=auth_headers
+            "/api/v1/profile/timezone", json="America/New_York", headers=auth_headers
         )
         assert tz_response.status_code == 200
 
@@ -375,13 +354,11 @@ class TestTimezoneScenarios:
             "amount": 42.50,
             "type": "expense",
             "transaction_tag": "want",
-            "expense_category_id": valid_expense_category
+            "expense_category_id": valid_expense_category,
         }
 
         create_response = client.post(
-            "/api/v1/transactions/create-expense",
-            json=payload,
-            headers=auth_headers
+            "/api/v1/transactions/create-expense", json=payload, headers=auth_headers
         )
 
         assert create_response.status_code == 201
@@ -394,16 +371,13 @@ class TestTimezoneScenarios:
         """Simulate user in Tokyo timezone."""
         # Set timezone to Tokyo
         tz_response = client.patch(
-            "/api/v1/profile/timezone",
-            json="Asia/Tokyo",
-            headers=auth_headers
+            "/api/v1/profile/timezone", json="Asia/Tokyo", headers=auth_headers
         )
         assert tz_response.status_code == 200
 
         # Get today's summary
         summary_response = client.get(
-            "/api/v1/transactions/today-summary",
-            headers=auth_headers
+            "/api/v1/transactions/today-summary", headers=auth_headers
         )
 
         assert summary_response.status_code == 200

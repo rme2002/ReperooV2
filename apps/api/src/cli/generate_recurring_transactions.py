@@ -3,6 +3,7 @@
 This script should be run via cron job at the beginning of each month.
 Example cron: 0 0 1 * * cd /path/to/api && uv run python -m src.cli.generate_recurring_transactions
 """
+
 import sys
 from datetime import datetime, timezone
 
@@ -24,7 +25,9 @@ def main():
     with SessionLocal() as session:
         try:
             count = service.generate_monthly_transactions(session, now)
-            print(f"Successfully generated {count} recurring transactions for {now.strftime('%B %Y')}")
+            print(
+                f"Successfully generated {count} recurring transactions for {now.strftime('%B %Y')}"
+            )
             return 0
         except Exception as e:
             print(f"Error generating recurring transactions: {e}", file=sys.stderr)

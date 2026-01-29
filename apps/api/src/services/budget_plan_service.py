@@ -6,7 +6,11 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from src.db.models.transaction import Transaction
-from src.models.model import BudgetPlan, CreateBudgetPlanPayload, UpdateBudgetPlanPayload
+from src.models.model import (
+    BudgetPlan,
+    CreateBudgetPlanPayload,
+    UpdateBudgetPlanPayload,
+)
 from src.repositories.budget_plan_repository import BudgetPlanRepository
 from src.services.errors import (
     BudgetPlanAlreadyExistsError,
@@ -123,7 +127,9 @@ class BudgetPlanService:
         plan_data = {
             "user_id": authenticated_user_id,  # Use authenticated user ID (security critical!)
             "savings_goal": (
-                Decimal(str(payload.savings_goal)) if payload.savings_goal is not None else None
+                Decimal(str(payload.savings_goal))
+                if payload.savings_goal is not None
+                else None
             ),
             "investment_goal": (
                 Decimal(str(payload.investment_goal))
@@ -153,9 +159,13 @@ class BudgetPlanService:
             id=str(db_plan.id),
             user_id=str(db_plan.user_id),
             expected_income=float(expected_income),  # Calculated field
-            savings_goal=float(db_plan.savings_goal) if db_plan.savings_goal is not None else None,
+            savings_goal=float(db_plan.savings_goal)
+            if db_plan.savings_goal is not None
+            else None,
             investment_goal=(
-                float(db_plan.investment_goal) if db_plan.investment_goal is not None else None
+                float(db_plan.investment_goal)
+                if db_plan.investment_goal is not None
+                else None
             ),
             created_at=db_plan.created_at,
             updated_at=db_plan.updated_at,
@@ -203,9 +213,13 @@ class BudgetPlanService:
             id=str(db_plan.id),
             user_id=str(db_plan.user_id),
             expected_income=float(expected_income),  # Calculated field
-            savings_goal=float(db_plan.savings_goal) if db_plan.savings_goal is not None else None,
+            savings_goal=float(db_plan.savings_goal)
+            if db_plan.savings_goal is not None
+            else None,
             investment_goal=(
-                float(db_plan.investment_goal) if db_plan.investment_goal is not None else None
+                float(db_plan.investment_goal)
+                if db_plan.investment_goal is not None
+                else None
             ),
             created_at=db_plan.created_at,
             updated_at=db_plan.updated_at,
@@ -260,7 +274,9 @@ class BudgetPlanService:
 
         # Update budget plan in database
         try:
-            db_plan = self.budget_plan_repository.update_budget_plan(session, db_plan, update_data)
+            db_plan = self.budget_plan_repository.update_budget_plan(
+                session, db_plan, update_data
+            )
             session.commit()
         except Exception as e:
             session.rollback()
@@ -279,9 +295,13 @@ class BudgetPlanService:
             id=str(db_plan.id),
             user_id=str(db_plan.user_id),
             expected_income=float(expected_income),  # Calculated field
-            savings_goal=float(db_plan.savings_goal) if db_plan.savings_goal is not None else None,
+            savings_goal=float(db_plan.savings_goal)
+            if db_plan.savings_goal is not None
+            else None,
             investment_goal=(
-                float(db_plan.investment_goal) if db_plan.investment_goal is not None else None
+                float(db_plan.investment_goal)
+                if db_plan.investment_goal is not None
+                else None
             ),
             created_at=db_plan.created_at,
             updated_at=db_plan.updated_at,

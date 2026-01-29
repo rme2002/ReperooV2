@@ -80,9 +80,7 @@ class ExperienceService:
 
     # ==================== Status ====================
 
-    async def get_status(
-        self, user_id: UUID, session: Session
-    ) -> ExperienceResponse:
+    async def get_status(self, user_id: UUID, session: Session) -> ExperienceResponse:
         """Get current experience status for user."""
         profile = self.profile_repository.get_profile_by_id(session, user_id)
         if not profile:

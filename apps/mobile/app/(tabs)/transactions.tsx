@@ -229,22 +229,19 @@ export default function TransactionsScreen() {
 
   const showJumpButton = todaySectionIndex !== -1;
 
-  const mapIncomeTransaction = useCallback(
-    (tx: ListTransactions200Item) => {
-      if (tx.type !== "income") {
-        return null;
-      }
-      return {
-        id: String(tx.id),
-        amount: tx.amount,
-        type: tx.income_category_id,
-        note: tx.notes ?? undefined,
-        date: tx.occurred_at,
-        isRecurring: Boolean(tx.recurring_template_id),
-      };
-    },
-    [],
-  );
+  const mapIncomeTransaction = useCallback((tx: ListTransactions200Item) => {
+    if (tx.type !== "income") {
+      return null;
+    }
+    return {
+      id: String(tx.id),
+      amount: tx.amount,
+      type: tx.income_category_id,
+      note: tx.notes ?? undefined,
+      date: tx.occurred_at,
+      isRecurring: Boolean(tx.recurring_template_id),
+    };
+  }, []);
 
   const handleTransactionPress = useCallback(
     (tx: ListTransactions200Item) => {
@@ -333,7 +330,7 @@ export default function TransactionsScreen() {
 
   return (
     <>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <AddTransactionMenu
           visible={showAddMenu}
           onAddExpense={openAddExpenseModal}

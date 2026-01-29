@@ -33,7 +33,8 @@ export function FilterBottomSheet({
   categories,
 }: FilterBottomSheetProps) {
   const [mounted, setMounted] = useState(visible);
-  const [localCategories, setLocalCategories] = useState<string[]>(activeCategories);
+  const [localCategories, setLocalCategories] =
+    useState<string[]>(activeCategories);
   const [localRecurring, setLocalRecurring] = useState(showRecurringOnly);
 
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
@@ -72,7 +73,14 @@ export function FilterBottomSheet({
         }),
       ]).start(() => setMounted(false));
     }
-  }, [visible, activeCategories, showRecurringOnly, translateY, overlayOpacity, mounted]);
+  }, [
+    visible,
+    activeCategories,
+    showRecurringOnly,
+    translateY,
+    overlayOpacity,
+    mounted,
+  ]);
 
   if (!mounted) return null;
 
@@ -152,7 +160,12 @@ export function FilterBottomSheet({
                   <View style={styles.checkboxChecked} />
                 )}
               </View>
-              <View style={[styles.categoryColorDot, { backgroundColor: colors.textSecondary }]} />
+              <View
+                style={[
+                  styles.categoryColorDot,
+                  { backgroundColor: colors.textSecondary },
+                ]}
+              />
               <Text style={styles.categoryItemLabel}>All Categories</Text>
             </Pressable>
 
@@ -166,7 +179,7 @@ export function FilterBottomSheet({
                     setLocalCategories((prev) =>
                       prev.includes(category.id)
                         ? prev.filter((id) => id !== category.id)
-                        : [...prev, category.id]
+                        : [...prev, category.id],
                     );
                   }}
                   style={styles.categoryItem}
@@ -299,9 +312,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 4,
   },
   sectionTitle: {
@@ -311,12 +324,12 @@ const styles = StyleSheet.create({
   },
   selectionCount: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.primary,
   },
   categoryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 8,
     gap: 12,
@@ -329,8 +342,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: palette.slate300,
     backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkboxChecked: {
     width: 12,
@@ -346,7 +359,7 @@ const styles = StyleSheet.create({
   categoryItemLabel: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
   },
   toggleRow: {

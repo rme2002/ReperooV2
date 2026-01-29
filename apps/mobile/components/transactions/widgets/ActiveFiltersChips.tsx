@@ -34,9 +34,7 @@ export function ActiveFiltersChips({
             ]}
             onPress={() => onRemoveCategory(categoryId)}
           >
-            <Text style={styles.chipText}>
-              {getCategoryLabel(categoryId)}
-            </Text>
+            <Text style={styles.chipText}>{getCategoryLabel(categoryId)}</Text>
             <Text style={styles.chipClose}>×</Text>
           </Pressable>
         ))}
@@ -62,13 +60,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   chipsWrapper: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: palette.slate190,
     borderRadius: 8,
     borderWidth: 1,
@@ -84,13 +82,13 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     color: palette.gray900,
     letterSpacing: 0.2,
   },
   chipClose: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     color: palette.gray600,
     lineHeight: 16,
     marginTop: -1,

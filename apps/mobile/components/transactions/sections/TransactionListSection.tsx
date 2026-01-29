@@ -57,10 +57,10 @@ export const TransactionListSection = forwardRef<
         stickySectionHeadersEnabled={false}
         refreshControl={refreshControl}
         renderItem={({ item }) => (
-            <TransactionSwipeRow
-              onEdit={() => onEdit(item)}
-              onDelete={() => onDelete(String(item.id), item)}
-            >
+          <TransactionSwipeRow
+            onEdit={() => onEdit(item)}
+            onDelete={() => onDelete(String(item.id), item)}
+          >
             <TransactionRow
               transaction={item}
               getCategoryLabel={getCategoryLabel}

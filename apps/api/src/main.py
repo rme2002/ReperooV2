@@ -52,8 +52,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
     errors = exc.errors()
     if any(
-        "occurred_at" in err.get("loc", ())
-        and "date" in err.get("msg", "").lower()
+        "occurred_at" in err.get("loc", ()) and "date" in err.get("msg", "").lower()
         for err in errors
     ):
         payload = {"detail": "Invalid date format"}

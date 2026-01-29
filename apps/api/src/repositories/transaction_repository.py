@@ -133,15 +133,15 @@ class TransactionRepository:
             func.sum(
                 case((Transaction.type == "expense", Transaction.amount), else_=0)
             ).label("expense_total"),
-            func.count(
-                case((Transaction.type == "expense", 1), else_=None)
-            ).label("expense_count"),
+            func.count(case((Transaction.type == "expense", 1), else_=None)).label(
+                "expense_count"
+            ),
             func.sum(
                 case((Transaction.type == "income", Transaction.amount), else_=0)
             ).label("income_total"),
-            func.count(
-                case((Transaction.type == "income", 1), else_=None)
-            ).label("income_count"),
+            func.count(case((Transaction.type == "income", 1), else_=None)).label(
+                "income_count"
+            ),
         ).where(
             and_(
                 Transaction.user_id == user_id,

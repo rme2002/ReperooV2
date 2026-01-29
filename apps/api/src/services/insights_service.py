@@ -64,17 +64,25 @@ class InsightsService:
         """
         # Validate parameters
         if not (2000 <= year <= 2100):
-            raise InsightsValidationError(f"Invalid year: {year}. Must be between 2000 and 2100.")
+            raise InsightsValidationError(
+                f"Invalid year: {year}. Must be between 2000 and 2100."
+            )
         if not (1 <= month <= 12):
-            raise InsightsValidationError(f"Invalid month: {month}. Must be between 1 and 12.")
+            raise InsightsValidationError(
+                f"Invalid month: {month}. Must be between 1 and 12."
+            )
 
         # Get month boundaries
         start_date, end_date = self._get_month_boundaries(year, month)
 
         # Get budget plan
-        budget_plan = self.budget_plan_repository.get_budget_plan_by_user_id(session, user_id)
+        budget_plan = self.budget_plan_repository.get_budget_plan_by_user_id(
+            session, user_id
+        )
         if not budget_plan:
-            raise BudgetPlanNotFoundError("Budget plan not found. Create one to view insights.")
+            raise BudgetPlanNotFoundError(
+                "Budget plan not found. Create one to view insights."
+            )
 
         # Load colors from database
         self._load_category_colors(session)
@@ -128,7 +136,9 @@ class InsightsService:
             session, user_id, prev_start, prev_end
         )
         prev_total = sum(t.amount for t in prev_transactions)
-        last_month_delta = self._calculate_month_over_month_delta(total_spent, prev_total)
+        last_month_delta = self._calculate_month_over_month_delta(
+            total_spent, prev_total
+        )
 
         # Get total days in month
         total_days = monthrange(year, month)[1]
@@ -141,7 +151,9 @@ class InsightsService:
         # Build and return MonthSnapshot
         # Use the middle of the requested month for currentDate (not the current system time)
         # This ensures the frontend calculates date ranges for the correct month
-        current_date_for_month = datetime(year, month, 15, 12, 0, 0, tzinfo=timezone.utc)
+        current_date_for_month = datetime(
+            year, month, 15, 12, 0, 0, tzinfo=timezone.utc
+        )
 
         return MonthSnapshot(
             key=self._format_month_key(year, month),
@@ -188,9 +200,13 @@ class InsightsService:
     def _load_category_colors(self, session: Session) -> None:
         """Load category and subcategory colors from database."""
         if self._category_colors is None:
-            self._category_colors = self.insights_repository.get_category_colors(session)
+            self._category_colors = self.insights_repository.get_category_colors(
+                session
+            )
         if self._subcategory_colors is None:
-            self._subcategory_colors = self.insights_repository.get_subcategory_colors(session)
+            self._subcategory_colors = self.insights_repository.get_subcategory_colors(
+                session
+            )
 
     def _build_category_breakdown(
         self,
@@ -208,7 +224,9 @@ class InsightsService:
             List of CategoryBreakdown objects sorted by percent descending
         """
         # Group by category
-        category_data = defaultdict(lambda: {"total": Decimal("0"), "count": 0, "subcategories": []})
+        category_data = defaultdict(
+            lambda: {"total": Decimal("0"), "count": 0, "subcategories": []}
+        )
 
         for agg in aggregations:
             cat_id = agg["category_id"]
@@ -220,10 +238,12 @@ class InsightsService:
             category_data[cat_id]["count"] += count
 
             if subcat_id:
-                category_data[cat_id]["subcategories"].append({
-                    "id": subcat_id,
-                    "total": total,
-                })
+                category_data[cat_id]["subcategories"].append(
+                    {
+                        "id": subcat_id,
+                        "total": total,
+                    }
+                )
 
         # Pre-calculate rounded category percentages that sum to 100
         category_ids = list(category_data.keys())
@@ -251,7 +271,9 @@ class InsightsService:
                     for sub in data["subcategories"]
                 ]
                 subcategory_percents = self._round_percentages(subcategory_raw_percents)
-                for sub, sub_percent in zip(data["subcategories"], subcategory_percents):
+                for sub, sub_percent in zip(
+                    data["subcategories"], subcategory_percents
+                ):
                     sub_color = self._subcategory_colors.get(sub["id"], "#cccccc")
                     subcategories.append(
                         SubCategoryBreakdown(
@@ -358,8 +380,16 @@ class InsightsService:
         )
 
         # Calculate deltas
-        saved_delta = self._calculate_month_over_month_delta(saved, prev_saved) if prev_saved else None
-        invested_delta = self._calculate_month_over_month_delta(invested, prev_invested) if prev_invested else None
+        saved_delta = (
+            self._calculate_month_over_month_delta(saved, prev_saved)
+            if prev_saved
+            else None
+        )
+        invested_delta = (
+            self._calculate_month_over_month_delta(invested, prev_invested)
+            if prev_invested
+            else None
+        )
 
         return SavingsBreakdown(
             saved=float(saved),
@@ -486,7 +516,9 @@ class InsightsService:
 
         # Last moment: YYYY-MM-DD 23:59:59.999999+00:00
         last_day = monthrange(year, month)[1]
-        end_date = datetime(year, month, last_day, 23, 59, 59, 999999, tzinfo=timezone.utc)
+        end_date = datetime(
+            year, month, last_day, 23, 59, 59, 999999, tzinfo=timezone.utc
+        )
 
         return start_date, end_date
 
@@ -516,8 +548,20 @@ class InsightsService:
         Returns:
             Month key string
         """
-        month_names = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
-                       'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+        month_names = [
+            "jan",
+            "feb",
+            "mar",
+            "apr",
+            "may",
+            "jun",
+            "jul",
+            "aug",
+            "sep",
+            "oct",
+            "nov",
+            "dec",
+        ]
         return f"{month_names[month - 1]}-{year}"
 
     def _format_month_label(self, year: int, month: int) -> str:
@@ -531,6 +575,18 @@ class InsightsService:
         Returns:
             Month label string
         """
-        month_names = ['January', 'February', 'March', 'April', 'May', 'June',
-                       'July', 'August', 'September', 'October', 'November', 'December']
+        month_names = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ]
         return f"{month_names[month - 1]} {year}"

@@ -1,10 +1,13 @@
 """Tests for recurring transaction materialization service."""
+
 from datetime import date
 from decimal import Decimal
 from uuid import uuid4
 
 from src.db.models.recurring_template import RecurringTemplate
-from src.services.recurring_materialization_service import RecurringMaterializationService
+from src.services.recurring_materialization_service import (
+    RecurringMaterializationService,
+)
 
 
 class TestCalculateMonthlyOccurrences:
@@ -37,7 +40,9 @@ class TestCalculateMonthlyOccurrences:
         start_date = date(2024, 1, 1)
         end_date = date(2024, 3, 31)
 
-        occurrences = service._calculate_monthly_occurrences(template, start_date, end_date)
+        occurrences = service._calculate_monthly_occurrences(
+            template, start_date, end_date
+        )
 
         assert len(occurrences) == 3
         assert occurrences[0] == date(2024, 1, 15)
@@ -70,7 +75,9 @@ class TestCalculateMonthlyOccurrences:
         start_date = date(2024, 1, 1)
         end_date = date(2024, 4, 30)
 
-        occurrences = service._calculate_monthly_occurrences(template, start_date, end_date)
+        occurrences = service._calculate_monthly_occurrences(
+            template, start_date, end_date
+        )
 
         assert len(occurrences) == 4
         assert occurrences[0] == date(2024, 1, 31)
@@ -104,7 +111,9 @@ class TestCalculateMonthlyOccurrences:
         start_date = date(2023, 1, 1)
         end_date = date(2023, 3, 31)
 
-        occurrences = service._calculate_monthly_occurrences(template, start_date, end_date)
+        occurrences = service._calculate_monthly_occurrences(
+            template, start_date, end_date
+        )
 
         assert len(occurrences) == 3
         assert occurrences[0] == date(2023, 1, 31)
@@ -137,7 +146,9 @@ class TestCalculateMonthlyOccurrences:
         start_date = date(2024, 1, 1)
         end_date = date(2024, 12, 31)
 
-        occurrences = service._calculate_monthly_occurrences(template, start_date, end_date)
+        occurrences = service._calculate_monthly_occurrences(
+            template, start_date, end_date
+        )
 
         assert len(occurrences) == 3
         assert occurrences[0] == date(2024, 1, 1)
@@ -170,7 +181,9 @@ class TestCalculateMonthlyOccurrences:
         start_date = date(2024, 1, 1)
         end_date = date(2024, 12, 31)
 
-        occurrences = service._calculate_monthly_occurrences(template, start_date, end_date)
+        occurrences = service._calculate_monthly_occurrences(
+            template, start_date, end_date
+        )
 
         assert len(occurrences) == 3
         assert occurrences[0] == date(2024, 1, 1)
@@ -208,7 +221,9 @@ class TestCalculateWeeklyOccurrences:
         start_date = date(2024, 1, 1)
         end_date = date(2024, 1, 31)
 
-        occurrences = service._calculate_weekly_occurrences(template, start_date, end_date)
+        occurrences = service._calculate_weekly_occurrences(
+            template, start_date, end_date
+        )
 
         # January 2024 has 5 Mondays (1, 8, 15, 22, 29)
         assert len(occurrences) == 5
@@ -241,7 +256,9 @@ class TestCalculateWeeklyOccurrences:
         start_date = date(2024, 1, 1)
         end_date = date(2024, 2, 29)
 
-        occurrences = service._calculate_weekly_occurrences(template, start_date, end_date)
+        occurrences = service._calculate_weekly_occurrences(
+            template, start_date, end_date
+        )
 
         # Every other Friday: Jan 5, 19, Feb 2, 16
         assert len(occurrences) == 4
@@ -277,7 +294,9 @@ class TestCalculateWeeklyOccurrences:
         start_date = date(2024, 1, 1)
         end_date = date(2024, 12, 31)
 
-        occurrences = service._calculate_weekly_occurrences(template, start_date, end_date)
+        occurrences = service._calculate_weekly_occurrences(
+            template, start_date, end_date
+        )
 
         assert len(occurrences) == 3
         assert occurrences[0] == date(2024, 1, 3)
@@ -315,7 +334,9 @@ class TestDateRangeBoundaries:
         start_date = date(2024, 1, 1)
         end_date = date(2024, 3, 31)
 
-        occurrences = service._calculate_monthly_occurrences(template, start_date, end_date)
+        occurrences = service._calculate_monthly_occurrences(
+            template, start_date, end_date
+        )
 
         # Should only get Feb 15 and Mar 15, not Jan 15
         assert len(occurrences) == 2
@@ -349,7 +370,9 @@ class TestDateRangeBoundaries:
         start_date = date(2024, 1, 1)
         end_date = date(2024, 2, 20)
 
-        occurrences = service._calculate_monthly_occurrences(template, start_date, end_date)
+        occurrences = service._calculate_monthly_occurrences(
+            template, start_date, end_date
+        )
 
         # Should only get Jan 15 and Feb 15, not Mar 15
         assert len(occurrences) == 2

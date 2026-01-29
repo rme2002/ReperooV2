@@ -32,7 +32,11 @@ from src.db.models.xp_event import XPEvent
 from sqlalchemy import delete
 
 
-async def set_streak(current_streak: int, longest_streak: int | None = None, email: str = "romea123@test.com"):
+async def set_streak(
+    current_streak: int,
+    longest_streak: int | None = None,
+    email: str = "romea123@test.com",
+):
     """Set user's current and longest streak for testing."""
 
     if current_streak < 0 or current_streak > 999:
@@ -108,7 +112,9 @@ async def set_streak(current_streak: int, longest_streak: int | None = None, ema
                 if existing_milestones:
                     for event in existing_milestones:
                         cleared_xp += event.xp_amount
-                    print(f"   Found {len(existing_milestones)} existing achievement(s)")
+                    print(
+                        f"   Found {len(existing_milestones)} existing achievement(s)"
+                    )
                     print(f"   Removing {cleared_xp} XP from cleared achievements")
 
                     # Delete all streak milestones
@@ -120,7 +126,9 @@ async def set_streak(current_streak: int, longest_streak: int | None = None, ema
 
                     # Adjust XP
                     profile.current_xp = max(0, profile.current_xp - cleared_xp)
-                    profile.total_xp_earned = max(0, profile.total_xp_earned - cleared_xp)
+                    profile.total_xp_earned = max(
+                        0, profile.total_xp_earned - cleared_xp
+                    )
                 else:
                     print("   No existing achievements to clear")
 
@@ -167,9 +175,15 @@ async def set_streak(current_streak: int, longest_streak: int | None = None, ema
 
                 # Display new state
                 print("\n6. ✅ Streak Updated Successfully!")
-                print(f"   Current Streak: {old_current_streak} days → {current_streak} days")
-                print(f"   Longest Streak: {old_longest_streak} days → {longest_streak} days")
-                print(f"   Level: {old_level} ({old_xp} XP) → {new_level} ({profile.current_xp} XP)")
+                print(
+                    f"   Current Streak: {old_current_streak} days → {current_streak} days"
+                )
+                print(
+                    f"   Longest Streak: {old_longest_streak} days → {longest_streak} days"
+                )
+                print(
+                    f"   Level: {old_level} ({old_xp} XP) → {new_level} ({profile.current_xp} XP)"
+                )
 
                 if len(milestones_awarded) > 0:
                     print(f"\n   🎉 Achievements Unlocked: {len(milestones_awarded)}")
@@ -187,7 +201,13 @@ async def set_streak(current_streak: int, longest_streak: int | None = None, ema
                     ("Legendary", 100, "∞"),
                 ]
                 for milestone_name, min_days, max_days in milestones:
-                    indicator = "👉 " if min_days <= current_streak <= (max_days if isinstance(max_days, int) else 999) else "   "
+                    indicator = (
+                        "👉 "
+                        if min_days
+                        <= current_streak
+                        <= (max_days if isinstance(max_days, int) else 999)
+                        else "   "
+                    )
                     print(f"   {indicator}{milestone_name}: {min_days}-{max_days} days")
 
                 print("\n" + "=" * 80)
@@ -209,22 +229,18 @@ def main():
     parser = argparse.ArgumentParser(
         description="Set your streak for testing gamification features"
     )
-    parser.add_argument(
-        "streak",
-        type=int,
-        help="Target current streak (0-999)"
-    )
+    parser.add_argument("streak", type=int, help="Target current streak (0-999)")
     parser.add_argument(
         "--longest",
         type=int,
         default=None,
-        help="Longest streak (default: same as current streak)"
+        help="Longest streak (default: same as current streak)",
     )
     parser.add_argument(
         "--email",
         type=str,
         default="romea123@test.com",
-        help="User email (default: romea123@test.com)"
+        help="User email (default: romea123@test.com)",
     )
 
     args = parser.parse_args()

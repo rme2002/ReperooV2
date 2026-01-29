@@ -13,7 +13,9 @@ router = APIRouter()
 
 @router.patch("/timezone")
 async def update_timezone(
-    timezone: str = Body(..., description="IANA timezone (e.g., 'America/Los_Angeles')"),
+    timezone: str = Body(
+        ..., description="IANA timezone (e.g., 'America/Los_Angeles')"
+    ),
     current_user_id: UUID = Depends(get_current_user_id),
     session: Session = Depends(get_session),
 ):
@@ -24,7 +26,7 @@ async def update_timezone(
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid timezone: {timezone}"
+            detail=f"Invalid timezone: {timezone}",
         )
 
     profile_repo = ProfileRepository()

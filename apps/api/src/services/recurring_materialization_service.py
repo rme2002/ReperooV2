@@ -1,4 +1,5 @@
 """Service for Just-In-Time materialization of recurring transactions."""
+
 from __future__ import annotations
 
 import calendar
@@ -82,13 +83,9 @@ class RecurringMaterializationService:
             List of date objects representing occurrences
         """
         if template.frequency == "monthly":
-            return self._calculate_monthly_occurrences(
-                template, start_date, end_date
-            )
+            return self._calculate_monthly_occurrences(template, start_date, end_date)
         elif template.frequency in ("weekly", "biweekly"):
-            return self._calculate_weekly_occurrences(
-                template, start_date, end_date
-            )
+            return self._calculate_weekly_occurrences(template, start_date, end_date)
         else:
             return []
 
@@ -113,7 +110,10 @@ class RecurringMaterializationService:
                 break
             if template.end_date and current_date > template.end_date:
                 break
-            if template.total_occurrences and occurrence_count >= template.total_occurrences:
+            if (
+                template.total_occurrences
+                and occurrence_count >= template.total_occurrences
+            ):
                 break
 
             # Clamp day to valid range for this month
@@ -123,9 +123,11 @@ class RecurringMaterializationService:
             occurrence_date = date(current_year, current_month, actual_day)
 
             # Only add if it's in our range and after template start
-            if (occurrence_date >= template.start_date and
-                occurrence_date >= start_date and
-                occurrence_date <= end_date):
+            if (
+                occurrence_date >= template.start_date
+                and occurrence_date >= start_date
+                and occurrence_date <= end_date
+            ):
                 occurrences.append(occurrence_date)
                 occurrence_count += 1
 
@@ -156,7 +158,10 @@ class RecurringMaterializationService:
             # Check end conditions
             if template.end_date and current > template.end_date:
                 break
-            if template.total_occurrences and occurrence_count >= template.total_occurrences:
+            if (
+                template.total_occurrences
+                and occurrence_count >= template.total_occurrences
+            ):
                 break
 
             # Check if this date matches the target day of week

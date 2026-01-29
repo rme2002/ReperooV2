@@ -21,10 +21,7 @@ export function TransactionsMonthNavigator({
       <Pressable
         onPress={onPrevious}
         disabled={!canGoPrevious}
-        style={[
-          styles.monthArrow,
-          !canGoPrevious && styles.monthArrowDisabled,
-        ]}
+        style={[styles.monthArrow, !canGoPrevious && styles.monthArrowDisabled]}
       >
         <Text style={styles.monthArrowText}>‹</Text>
       </Pressable>

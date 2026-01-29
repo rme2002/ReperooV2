@@ -18,10 +18,7 @@ import {
 import { incomeTypeOptions, type IncomeEvent } from "@/components/budget/types";
 import { useUserPreferences } from "@/components/profile/UserPreferencesProvider";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
-import {
-  formatAmountInput,
-  parseAmountInput,
-} from "@/utils/decimalSeparator";
+import { formatAmountInput, parseAmountInput } from "@/utils/decimalSeparator";
 import {
   createIncomeTransaction,
   updateTransaction,

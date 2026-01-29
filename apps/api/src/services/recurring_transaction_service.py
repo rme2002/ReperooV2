@@ -1,4 +1,5 @@
 """Service for managing recurring transaction templates and auto-generation."""
+
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -11,7 +12,9 @@ from src.db.models.transaction import Transaction
 class RecurringTransactionService:
     """Service for processing recurring transactions."""
 
-    def generate_monthly_transactions(self, session: Session, target_month: datetime) -> int:
+    def generate_monthly_transactions(
+        self, session: Session, target_month: datetime
+    ) -> int:
         """
         Generate transactions for the target month from recurring templates.
 
@@ -24,25 +27,13 @@ class RecurringTransactionService:
         """
         # Get first day of target month
         first_day = datetime(
-            target_month.year,
-            target_month.month,
-            1,
-            0,
-            0,
-            0,
-            tzinfo=timezone.utc
+            target_month.year, target_month.month, 1, 0, 0, 0, tzinfo=timezone.utc
         )
 
         # Get first day of next month for range check
         if target_month.month == 12:
             next_month = datetime(
-                target_month.year + 1,
-                1,
-                1,
-                0,
-                0,
-                0,
-                tzinfo=timezone.utc
+                target_month.year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc
             )
         else:
             next_month = datetime(
@@ -52,14 +43,16 @@ class RecurringTransactionService:
                 0,
                 0,
                 0,
-                tzinfo=timezone.utc
+                tzinfo=timezone.utc,
             )
 
         # Find all recurring templates
         stmt = select(Transaction).where(
             and_(
                 Transaction.is_recurring == True,  # noqa: E712
-                Transaction.recurring_template_id.is_(None)  # Templates have NULL template_id
+                Transaction.recurring_template_id.is_(
+                    None
+                ),  # Templates have NULL template_id
             )
         )
         recurring_templates = session.execute(stmt).scalars().all()
@@ -72,7 +65,7 @@ class RecurringTransactionService:
                 and_(
                     Transaction.recurring_template_id == template.id,
                     Transaction.occurred_at >= first_day,
-                    Transaction.occurred_at < next_month
+                    Transaction.occurred_at < next_month,
                 )
             )
             existing = session.execute(existing_stmt).scalar_one_or_none()
@@ -87,11 +80,19 @@ class RecurringTransactionService:
 
             # Get last day of target month
             if target_month.month == 12:
-                last_day_of_month = datetime(
-                    target_month.year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc
-                ).replace(day=1).replace(hour=0, minute=0, second=0, microsecond=0)
-                last_day_of_month = (last_day_of_month - timezone.utcoffset(last_day_of_month) if last_day_of_month.tzinfo else last_day_of_month)
-                last_day_num = (last_day_of_month.replace(day=1) - timezone.timedelta(days=1)).day
+                last_day_of_month = (
+                    datetime(target_month.year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+                    .replace(day=1)
+                    .replace(hour=0, minute=0, second=0, microsecond=0)
+                )
+                last_day_of_month = (
+                    last_day_of_month - timezone.utcoffset(last_day_of_month)
+                    if last_day_of_month.tzinfo
+                    else last_day_of_month
+                )
+                last_day_num = (
+                    last_day_of_month.replace(day=1) - timezone.timedelta(days=1)
+                ).day
             else:
                 last_day_of_month = datetime(
                     target_month.year,
@@ -100,10 +101,13 @@ class RecurringTransactionService:
                     0,
                     0,
                     0,
-                    tzinfo=timezone.utc
+                    tzinfo=timezone.utc,
                 )
                 import calendar
-                last_day_num = calendar.monthrange(target_month.year, target_month.month)[1]
+
+                last_day_num = calendar.monthrange(
+                    target_month.year, target_month.month
+                )[1]
 
             # Clamp day to valid range
             actual_day = min(day_of_month, last_day_num)
@@ -115,7 +119,7 @@ class RecurringTransactionService:
                 0,
                 0,
                 0,
-                tzinfo=timezone.utc
+                tzinfo=timezone.utc,
             )
 
             # Create new transaction from template
@@ -144,10 +148,7 @@ class RecurringTransactionService:
         return generated_count
 
     def update_recurring_template(
-        self,
-        session: Session,
-        template_id: str,
-        updates: dict
+        self, session: Session, template_id: str, updates: dict
     ) -> None:
         """
         Update a recurring template and optionally future generated transactions.
@@ -177,7 +178,7 @@ class RecurringTransactionService:
         future_stmt = select(Transaction).where(
             and_(
                 Transaction.recurring_template_id == template_id,
-                Transaction.occurred_at > now
+                Transaction.occurred_at > now,
             )
         )
         future_transactions = session.execute(future_stmt).scalars().all()
@@ -185,18 +186,21 @@ class RecurringTransactionService:
         for txn in future_transactions:
             for key, value in updates.items():
                 # Don't update metadata fields
-                if key not in ['id', 'user_id', 'created_at', 'is_recurring',
-                             'recurring_day_of_month', 'recurring_template_id']:
+                if key not in [
+                    "id",
+                    "user_id",
+                    "created_at",
+                    "is_recurring",
+                    "recurring_day_of_month",
+                    "recurring_template_id",
+                ]:
                     if hasattr(txn, key):
                         setattr(txn, key, value)
 
         session.commit()
 
     def delete_recurring_template(
-        self,
-        session: Session,
-        template_id: str,
-        delete_future: bool = True
+        self, session: Session, template_id: str, delete_future: bool = True
     ) -> None:
         """
         Delete a recurring template and optionally future generated transactions.
@@ -222,7 +226,7 @@ class RecurringTransactionService:
             future_stmt = select(Transaction).where(
                 and_(
                     Transaction.recurring_template_id == template_id,
-                    Transaction.occurred_at > now
+                    Transaction.occurred_at > now,
                 )
             )
             future_transactions = session.execute(future_stmt).scalars().all()

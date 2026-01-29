@@ -5,6 +5,7 @@ Revises: 274afe1fa989
 Create Date: 2026-01-04 18:20:00.000000
 
 """
+
 from __future__ import annotations
 
 from typing import Sequence, Union
@@ -33,11 +34,36 @@ def upgrade() -> None:
         income_categories,
         [
             {"id": "salary", "label": "Salary", "color": "#2563EB", "sort_order": 1},
-            {"id": "freelance_business", "label": "Freelance / Business", "color": "#F97316", "sort_order": 2},
-            {"id": "government_benefits", "label": "Government / Benefits", "color": "#7C3AED", "sort_order": 3},
-            {"id": "investment_income", "label": "Investment Income", "color": "#16A34A", "sort_order": 4},
-            {"id": "refunds_reimbursements", "label": "Refunds / Reimbursements", "color": "#0EA5E9", "sort_order": 5},
-            {"id": "income_other", "label": "Other", "color": "#64748B", "sort_order": 6},
+            {
+                "id": "freelance_business",
+                "label": "Freelance / Business",
+                "color": "#F97316",
+                "sort_order": 2,
+            },
+            {
+                "id": "government_benefits",
+                "label": "Government / Benefits",
+                "color": "#7C3AED",
+                "sort_order": 3,
+            },
+            {
+                "id": "investment_income",
+                "label": "Investment Income",
+                "color": "#16A34A",
+                "sort_order": 4,
+            },
+            {
+                "id": "refunds_reimbursements",
+                "label": "Refunds / Reimbursements",
+                "color": "#0EA5E9",
+                "sort_order": 5,
+            },
+            {
+                "id": "income_other",
+                "label": "Other",
+                "color": "#64748B",
+                "sort_order": 6,
+            },
         ],
     )
 

@@ -122,7 +122,7 @@ export default function OverviewScreen() {
 
   return (
     <View style={styles.screenContainer}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <ScrollView
           style={styles.container}
           contentContainerStyle={styles.content}

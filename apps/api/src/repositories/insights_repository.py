@@ -170,15 +170,12 @@ class InsightsRepository:
         Returns:
             Integer count of unique days
         """
-        stmt = (
-            select(func.count(distinct(cast(Transaction.occurred_at, Date))))
-            .where(
-                and_(
-                    Transaction.user_id == user_id,
-                    Transaction.type == "expense",
-                    Transaction.occurred_at >= start_date,
-                    Transaction.occurred_at <= end_date,
-                )
+        stmt = select(func.count(distinct(cast(Transaction.occurred_at, Date)))).where(
+            and_(
+                Transaction.user_id == user_id,
+                Transaction.type == "expense",
+                Transaction.occurred_at >= start_date,
+                Transaction.occurred_at <= end_date,
             )
         )
 
