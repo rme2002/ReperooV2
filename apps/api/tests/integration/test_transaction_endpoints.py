@@ -1,10 +1,9 @@
 """Integration tests for transaction endpoints with timezone fix."""
 
 import pytest
+from datetime import date, timedelta
 
 pytestmark = pytest.mark.integration
-
-from datetime import date, timedelta
 
 
 class TestCreateExpenseTransaction:
