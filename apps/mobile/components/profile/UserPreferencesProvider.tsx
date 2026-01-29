@@ -1,6 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
+import {
+  type DecimalSeparator,
+  type DecimalSeparatorPreference,
+  getLocaleDecimalSeparator,
+} from "@/utils/decimalSeparator";
 
 export type CurrencyCode = "EUR" | "USD" | "GBP";
 
@@ -68,9 +73,25 @@ const sessionCurrency = (
   return null;
 };
 
+const sessionDecimalSeparatorPreference = (
+  session: Session | null | undefined,
+): DecimalSeparatorPreference | null => {
+  const metadataValue =
+    session?.user?.user_metadata?.preferred_decimal_separator;
+  if (metadataValue === "." || metadataValue === ",") {
+    return metadataValue;
+  }
+  return null;
+};
+
 type ContextValue = {
   currency: CurrencyCode;
+  decimalSeparator: DecimalSeparator;
+  decimalSeparatorPreference: DecimalSeparatorPreference;
   setCurrencyFromProfile: (code: CurrencyCode) => void;
+  setDecimalSeparatorFromProfile: (
+    preference: DecimalSeparatorPreference,
+  ) => void;
 };
 
 const UserPreferencesContext = createContext<ContextValue | null>(null);
@@ -85,6 +106,10 @@ export function UserPreferencesProvider({
   const [currency, setCurrency] = useState<CurrencyCode>(() => {
     return sessionCurrency(session) ?? getLocaleCurrency();
   });
+  const [decimalSeparatorPreference, setDecimalSeparatorPreference] =
+    useState<DecimalSeparatorPreference>(() => {
+      return sessionDecimalSeparatorPreference(session) ?? "auto";
+    });
 
   useEffect(() => {
     const metadataCurrency = sessionCurrency(session);
@@ -98,12 +123,31 @@ export function UserPreferencesProvider({
     setCurrency((current) => (current === fallback ? current : fallback));
   }, [session]);
 
+  useEffect(() => {
+    const metadataPreference = sessionDecimalSeparatorPreference(session);
+    if (metadataPreference) {
+      setDecimalSeparatorPreference((current) =>
+        current === metadataPreference ? current : metadataPreference,
+      );
+      return;
+    }
+    setDecimalSeparatorPreference((current) =>
+      current === "auto" ? current : "auto",
+    );
+  }, [session]);
+
   const value = useMemo<ContextValue>(
     () => ({
       currency,
+      decimalSeparator:
+        decimalSeparatorPreference === "auto"
+          ? getLocaleDecimalSeparator()
+          : decimalSeparatorPreference,
+      decimalSeparatorPreference,
       setCurrencyFromProfile: setCurrency,
+      setDecimalSeparatorFromProfile: setDecimalSeparatorPreference,
     }),
-    [currency],
+    [currency, decimalSeparatorPreference],
   );
 
   return (

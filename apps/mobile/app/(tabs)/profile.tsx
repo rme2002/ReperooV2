@@ -10,6 +10,7 @@ import {
   CURRENCY_OPTIONS,
   useUserPreferences,
 } from "@/components/profile/UserPreferencesProvider";
+import { formatDecimalExample } from "@/utils/decimalSeparator";
 
 // State components
 import { LoadingState } from "@/components/profile/states/LoadingState";
@@ -17,6 +18,7 @@ import { SignedOutState } from "@/components/profile/states/SignedOutState";
 
 // Widgets
 import { CurrencyPickerModal } from "@/components/profile/widgets/CurrencyPickerModal";
+import { DecimalSeparatorPickerModal } from "@/components/profile/widgets/DecimalSeparatorPickerModal";
 
 // Sections
 import { AccountSection } from "@/components/profile/sections/AccountSection";
@@ -32,8 +34,15 @@ import { useTabSafePadding } from "@/hooks/useTabSafePadding";
 export default function ProfileScreen() {
   const router = useRouter();
   const { session, initializing, isMockSession } = useSupabaseAuthSync();
-  const { currency, setCurrencyFromProfile } = useUserPreferences();
+  const {
+    currency,
+    decimalSeparator,
+    decimalSeparatorPreference,
+    setCurrencyFromProfile,
+    setDecimalSeparatorFromProfile,
+  } = useUserPreferences();
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [decimalPickerVisible, setDecimalPickerVisible] = useState(false);
   const { bottomPadding } = useTabSafePadding();
 
   // Form management
@@ -42,11 +51,20 @@ export default function ProfileScreen() {
     setName,
     selectedCurrency,
     setSelectedCurrency,
+    selectedDecimalSeparator,
+    setSelectedDecimalSeparator,
     hasChanges,
     saving,
     errorMessage,
     handleSave,
-  } = useProfileForm(session, isMockSession, currency, setCurrencyFromProfile);
+  } = useProfileForm(
+    session,
+    isMockSession,
+    currency,
+    setCurrencyFromProfile,
+    decimalSeparatorPreference,
+    setDecimalSeparatorFromProfile,
+  );
 
   // Actions
   const { handleLogout, handleResetPassword, handleContactSupport } =
@@ -107,6 +125,17 @@ export default function ProfileScreen() {
   const selectedCurrencyLabel =
     CURRENCY_OPTIONS.find((option) => option.code === selectedCurrency)
       ?.label ?? selectedCurrency;
+  const decimalSeparatorExample = formatDecimalExample(
+    selectedDecimalSeparator === "auto"
+      ? decimalSeparator
+      : selectedDecimalSeparator,
+  );
+  const decimalSeparatorLabel =
+    selectedDecimalSeparator === "auto"
+      ? `Phone default (${decimalSeparatorExample})`
+      : selectedDecimalSeparator === "."
+        ? "Dot (1.23)"
+        : "Comma (1,23)";
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -133,6 +162,8 @@ export default function ProfileScreen() {
         <PreferencesSection
           currencyLabel={selectedCurrencyLabel}
           onCurrencyPress={() => setPickerVisible(true)}
+          decimalSeparatorLabel={decimalSeparatorLabel}
+          onDecimalSeparatorPress={() => setDecimalPickerVisible(true)}
         />
 
         <SupportSection
@@ -148,6 +179,13 @@ export default function ProfileScreen() {
         selected={selectedCurrency}
         onSelect={setSelectedCurrency}
         onClose={() => setPickerVisible(false)}
+      />
+      <DecimalSeparatorPickerModal
+        visible={decimalPickerVisible}
+        selected={selectedDecimalSeparator}
+        localeSeparator={decimalSeparator}
+        onSelect={setSelectedDecimalSeparator}
+        onClose={() => setDecimalPickerVisible(false)}
       />
     </SafeAreaView>
   );

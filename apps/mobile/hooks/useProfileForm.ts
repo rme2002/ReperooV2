@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { showToast } from "@/utils/profileHelpers";
 import type { Session } from "@supabase/supabase-js";
 import type { CurrencyCode } from "@/components/profile/UserPreferencesProvider";
+import type { DecimalSeparatorPreference } from "@/utils/decimalSeparator";
 
 /**
  * Return type for useProfileForm hook
@@ -12,6 +13,8 @@ export interface UseProfileFormReturn {
   setName: (name: string) => void;
   selectedCurrency: CurrencyCode;
   setSelectedCurrency: (currency: CurrencyCode) => void;
+  selectedDecimalSeparator: DecimalSeparatorPreference;
+  setSelectedDecimalSeparator: (separator: DecimalSeparatorPreference) => void;
   hasChanges: boolean;
   saving: boolean;
   errorMessage: string | null;
@@ -26,17 +29,26 @@ export interface UseProfileFormReturn {
  * @param isMockSession - Whether this is a mock session
  * @param currentCurrency - Current currency from preferences
  * @param setCurrencyFromProfile - Function to update currency in preferences
+ * @param currentDecimalSeparator - Current decimal separator preference
+ * @param setDecimalSeparatorFromProfile - Function to update decimal separator preference
  * @returns Object containing form state and save handler
  */
 export function useProfileForm(
   session: Session | null,
   isMockSession: boolean,
   currentCurrency: CurrencyCode,
-  setCurrencyFromProfile: (currency: CurrencyCode) => void
+  setCurrencyFromProfile: (currency: CurrencyCode) => void,
+  currentDecimalSeparator: DecimalSeparatorPreference,
+  setDecimalSeparatorFromProfile: (
+    separator: DecimalSeparatorPreference,
+  ) => void,
 ): UseProfileFormReturn {
   const [name, setName] = useState("");
   const [initialName, setInitialName] = useState("");
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>(currentCurrency);
+  const [selectedCurrency, setSelectedCurrency] =
+    useState<CurrencyCode>(currentCurrency);
+  const [selectedDecimalSeparator, setSelectedDecimalSeparator] =
+    useState<DecimalSeparatorPreference>(currentDecimalSeparator);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -55,13 +67,29 @@ export function useProfileForm(
     setSelectedCurrency(currentCurrency);
   }, [currentCurrency]);
 
+  useEffect(() => {
+    setSelectedDecimalSeparator(currentDecimalSeparator);
+  }, [currentDecimalSeparator]);
+
   // Detect changes
   const trimmedName = name.trim();
   const trimmedInitial = initialName.trim();
   const hasChanges = useMemo(() => {
     if (!session) return false;
-    return trimmedName !== trimmedInitial || selectedCurrency !== currentCurrency;
-  }, [session, trimmedName, trimmedInitial, selectedCurrency, currentCurrency]);
+    return (
+      trimmedName !== trimmedInitial ||
+      selectedCurrency !== currentCurrency ||
+      selectedDecimalSeparator !== currentDecimalSeparator
+    );
+  }, [
+    session,
+    trimmedName,
+    trimmedInitial,
+    selectedCurrency,
+    currentCurrency,
+    selectedDecimalSeparator,
+    currentDecimalSeparator,
+  ]);
 
   // Save handler
   const handleSave = useCallback(async () => {
@@ -76,6 +104,7 @@ export function useProfileForm(
       setInitialName(payloadName);
       setName(payloadName);
       setCurrencyFromProfile(selectedCurrency);
+      setDecimalSeparatorFromProfile(selectedDecimalSeparator);
       setSaving(false);
       showToast("Saved");
       return;
@@ -85,6 +114,10 @@ export function useProfileForm(
       data: {
         display_name: payloadName.length ? payloadName : null,
         preferred_currency: selectedCurrency,
+        preferred_decimal_separator:
+          selectedDecimalSeparator === "auto"
+            ? null
+            : selectedDecimalSeparator,
       },
     });
     if (error) {
@@ -95,6 +128,7 @@ export function useProfileForm(
     setInitialName(payloadName);
     setName(payloadName);
     setCurrencyFromProfile(selectedCurrency);
+    setDecimalSeparatorFromProfile(selectedDecimalSeparator);
     setSaving(false);
     showToast("Saved");
   }, [
@@ -105,6 +139,8 @@ export function useProfileForm(
     isMockSession,
     selectedCurrency,
     setCurrencyFromProfile,
+    selectedDecimalSeparator,
+    setDecimalSeparatorFromProfile,
   ]);
 
   return {
@@ -112,6 +148,8 @@ export function useProfileForm(
     setName,
     selectedCurrency,
     setSelectedCurrency,
+    selectedDecimalSeparator,
+    setSelectedDecimalSeparator,
     hasChanges,
     saving,
     errorMessage,

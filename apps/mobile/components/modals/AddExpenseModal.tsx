@@ -13,7 +13,12 @@ import {
   Platform,
   UIManager,
 } from "react-native";
+import { useUserPreferences } from "@/components/profile/UserPreferencesProvider";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
+import {
+  formatAmountInput,
+  parseAmountInput,
+} from "@/utils/decimalSeparator";
 import { createExpenseTransaction } from "@/lib/gen/transactions/transactions";
 import { createRecurringExpenseTemplate } from "@/lib/gen/recurring-templates/recurring-templates";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
@@ -165,11 +170,12 @@ export function AddExpenseModal({
   const scrollRef = useRef<ScrollView>(null);
   const [categorySectionTop, setCategorySectionTop] = useState(0);
 
-  const amountValue = useMemo(() => {
-    const cleaned = amountText.replace(/,/g, "");
-    const parsed = parseFloat(cleaned);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }, [amountText]);
+  const { decimalSeparator } = useUserPreferences();
+  const amountValue = useMemo(
+    () => parseAmountInput(amountText, decimalSeparator),
+    [amountText, decimalSeparator],
+  );
+  const amountPlaceholder = decimalSeparator === "," ? "0,00" : "0.00";
 
   const isAmountValid = amountValue > 0;
   const usingProvidedCategories = expenseCategories !== undefined;
@@ -313,7 +319,7 @@ export function AddExpenseModal({
       );
       setAmountText(
         initialValues.amount || initialValues.amount === 0
-          ? String(initialValues.amount)
+          ? formatAmountInput(initialValues.amount, decimalSeparator)
           : "",
       );
       setNote(initialValues.note ?? "");
@@ -329,7 +335,7 @@ export function AddExpenseModal({
     } else if (mode === "add") {
       resetForm();
     }
-  }, [visible, mode, initialValues, today, resetForm]);
+  }, [visible, mode, initialValues, today, resetForm, decimalSeparator]);
 
   useEffect(() => {
     if (!isRecurring || recurringDayDirty) {
@@ -713,7 +719,7 @@ export function AddExpenseModal({
                   editable={!isViewMode}
                   selectTextOnFocus={!isViewMode}
                   keyboardType="decimal-pad"
-                  placeholder="0.00"
+                  placeholder={amountPlaceholder}
                   placeholderTextColor={palette.slate280}
                   maxLength={10}
                 />

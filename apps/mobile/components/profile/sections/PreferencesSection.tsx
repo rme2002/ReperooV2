@@ -5,11 +5,15 @@ import { PreferenceRow } from "../widgets/PreferenceRow";
 type PreferencesSectionProps = {
   currencyLabel: string;
   onCurrencyPress: () => void;
+  decimalSeparatorLabel: string;
+  onDecimalSeparatorPress: () => void;
 };
 
 export function PreferencesSection({
   currencyLabel,
   onCurrencyPress,
+  decimalSeparatorLabel,
+  onDecimalSeparatorPress,
 }: PreferencesSectionProps) {
   return (
     <View style={styles.section}>
@@ -19,6 +23,11 @@ export function PreferencesSection({
           label="Currency"
           value={currencyLabel}
           onPress={onCurrencyPress}
+        />
+        <PreferenceRow
+          label="Decimal separator"
+          value={decimalSeparatorLabel}
+          onPress={onDecimalSeparatorPress}
         />
       </View>
     </View>

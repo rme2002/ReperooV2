@@ -16,7 +16,12 @@ import {
 } from "react-native";
 
 import { incomeTypeOptions, type IncomeEvent } from "@/components/budget/types";
+import { useUserPreferences } from "@/components/profile/UserPreferencesProvider";
 import { useCurrencyFormatter } from "@/components/profile/useCurrencyFormatter";
+import {
+  formatAmountInput,
+  parseAmountInput,
+} from "@/utils/decimalSeparator";
 import {
   createIncomeTransaction,
   updateTransaction,
@@ -107,8 +112,11 @@ export function AddIncomeModal({
     parsed.setHours(0, 0, 0, 0);
     return parsed;
   }, [currentDate]);
-  const [amountText, setAmountText] = useState(
-    initialIncome ? String(initialIncome.amount) : "",
+  const { decimalSeparator } = useUserPreferences();
+  const [amountText, setAmountText] = useState(() =>
+    initialIncome
+      ? formatAmountInput(initialIncome.amount, decimalSeparator)
+      : "",
   );
   const [type, setType] = useState(initialIncome?.type ?? null);
   const [note, setNote] = useState(initialIncome?.note ?? "");
@@ -152,11 +160,11 @@ export function AddIncomeModal({
     return day === 0 ? 6 : day - 1;
   }, [selectedDate]);
 
-  const amountValue = useMemo(() => {
-    const cleaned = amountText.replace(/,/g, "");
-    const parsed = parseFloat(cleaned);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }, [amountText]);
+  const amountValue = useMemo(
+    () => parseAmountInput(amountText, decimalSeparator),
+    [amountText, decimalSeparator],
+  );
+  const amountPlaceholder = decimalSeparator === "," ? "0,00" : "0.00";
 
   const isAmountValid = amountValue > 0;
   const isTypeValid = Boolean(type);
@@ -182,7 +190,7 @@ export function AddIncomeModal({
       return;
     }
     if ((mode === "edit" || mode === "view") && initialIncome) {
-      setAmountText(String(initialIncome.amount));
+      setAmountText(formatAmountInput(initialIncome.amount, decimalSeparator));
       setType(initialIncome.type);
       setNote(initialIncome.note ?? "");
       const existing = new Date(initialIncome.date);
@@ -198,7 +206,7 @@ export function AddIncomeModal({
     } else if (mode === "add") {
       clearState();
     }
-  }, [visible, initialIncome, mode, clearState]);
+  }, [visible, initialIncome, mode, clearState, decimalSeparator]);
 
   const handleClose = useCallback(() => {
     clearState();
@@ -440,7 +448,7 @@ export function AddIncomeModal({
                   value={amountText}
                   onChangeText={setAmountText}
                   keyboardType="decimal-pad"
-                  placeholder="0.00"
+                  placeholder={amountPlaceholder}
                   placeholderTextColor={palette.slate280}
                   maxLength={10}
                   editable={!isViewMode}
