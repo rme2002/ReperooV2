@@ -13,8 +13,8 @@ COPY pyproject.toml uv.lock ./
 # Install deps into a managed .venv (from the exact lock)
 RUN uv sync --frozen --no-cache
 
-# Now copy the rest of your app
-COPY . .
+# Copy only the source code (all we need for the API)
+COPY src/ ./src/
 
 # Default port for Cloud Run (can be overridden via env)
 ENV PORT=8080

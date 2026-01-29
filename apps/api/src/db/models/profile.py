@@ -3,7 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 from datetime import date
 
-from sqlalchemy import Column, ForeignKey, Table, Integer, Date
+from sqlalchemy import Column, ForeignKey, Table, Integer, Date, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
@@ -59,3 +59,4 @@ class Profile(TimestampMixin, Base):
     total_xp_earned: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     transactions_today_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     last_transaction_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    timezone: Mapped[str] = mapped_column(Text, default='UTC', nullable=False)

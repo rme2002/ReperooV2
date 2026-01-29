@@ -189,8 +189,8 @@ async def create_income_transaction(
 
 @router.get("/list")
 async def list_transactions(
-    start_date: datetime = Query(..., description="Start date for transaction range"),
-    end_date: datetime = Query(..., description="End date for transaction range"),
+    start_date: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: str = Query(..., description="End date (YYYY-MM-DD)"),
     current_user_id: UUID = Depends(get_current_user_id),
     transaction_repo: TransactionRepository = Depends(lambda: TransactionRepository()),
     materialization_service: RecurringMaterializationService = Depends(get_materialization_service),
@@ -203,8 +203,8 @@ async def list_transactions(
     returning the list, so all expected recurring transactions will be included.
 
     Args:
-        start_date: Start of date range
-        end_date: End of date range
+        start_date: Start of date range (YYYY-MM-DD)
+        end_date: End of date range (YYYY-MM-DD)
         current_user_id: Authenticated user ID from JWT token
         transaction_repo: Transaction repository instance
         materialization_service: Recurring materialization service
@@ -214,9 +214,15 @@ async def list_transactions(
         List of transactions (both expense and income)
     """
     try:
+        from src.utils.date_utils import parse_date_string
+
+        # Parse date strings
+        start_date_obj = parse_date_string(start_date)
+        end_date_obj = parse_date_string(end_date)
+
         # Step 1: Materialize recurring transactions for the date range (JIT)
         generated_count = materialization_service.materialize_for_date_range(
-            session, current_user_id, start_date, end_date
+            session, current_user_id, start_date_obj, end_date_obj
         )
 
         if generated_count > 0:
@@ -224,7 +230,7 @@ async def list_transactions(
 
         # Step 2: Fetch all transactions in the date range
         transactions = transaction_repo.get_transactions_by_date_range(
-            session, current_user_id, start_date, end_date
+            session, current_user_id, start_date_obj, end_date_obj
         )
 
         # Step 3: Convert to response models
@@ -235,7 +241,7 @@ async def list_transactions(
                     TransactionExpense(
                         id=str(txn.id),
                         user_id=str(txn.user_id),
-                        occurred_at=txn.occurred_at,
+                        occurred_at=txn.occurred_at.isoformat(),  # date -> "YYYY-MM-DD"
                         amount=float(txn.amount),
                         notes=txn.notes,
                         recurring_template_id=str(txn.recurring_template_id) if txn.recurring_template_id else None,
@@ -251,7 +257,7 @@ async def list_transactions(
                     TransactionIncome(
                         id=str(txn.id),
                         user_id=str(txn.user_id),
-                        occurred_at=txn.occurred_at,
+                        occurred_at=txn.occurred_at.isoformat(),  # date -> "YYYY-MM-DD"
                         amount=float(txn.amount),
                         notes=txn.notes,
                         recurring_template_id=str(txn.recurring_template_id) if txn.recurring_template_id else None,
@@ -263,6 +269,11 @@ async def list_transactions(
 
         return responses
 
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid date format: {str(e)}"
+        )
     except Exception as e:
         logger = logging.getLogger(__name__)
         logger.error(f"Failed to retrieve transactions: {str(e)}")

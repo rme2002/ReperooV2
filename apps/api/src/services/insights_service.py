@@ -386,7 +386,7 @@ class InsightsService:
                 amount=float(t.amount),
                 categoryId=t.expense_category_id,
                 subcategoryId=t.expense_subcategory_id,
-                date=t.occurred_at.isoformat(),
+                date=t.occurred_at,
             )
             for t in transactions
         ]

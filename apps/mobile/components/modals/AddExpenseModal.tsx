@@ -25,6 +25,7 @@ import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
 import { useExpenseCategories } from "@/hooks/useExpenseCategories";
 import type { ExpenseCategory } from "@/lib/gen/model";
 import { alpha, colors, palette } from "@/constants/theme";
+import { dateToLocalDateString } from "@/utils/timezoneUtils";
 
 type TransactionFormValues = {
   amount: number;
@@ -375,7 +376,7 @@ export function AddExpenseModal({
               recurringFrequency !== "monthly" ? recurringDayOfWeek : null,
             day_of_month:
               recurringFrequency === "monthly" ? recurringDayOfMonth : null,
-            start_date: selectedDate.toISOString(),
+            start_date: dateToLocalDateString(selectedDate),
             end_date: null, // MVP: never ends
             total_occurrences: null, // MVP: never ends
             transaction_tag: transactionTag,
@@ -411,7 +412,7 @@ export function AddExpenseModal({
           // Create one-time transaction
           const payload = {
             user_id: session.user.id,
-            occurred_at: selectedDate.toISOString(),
+            occurred_at: dateToLocalDateString(selectedDate),
             amount: amountValue,
             notes: note.trim() || null,
             type: "expense" as const,

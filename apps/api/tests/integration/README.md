@@ -1,67 +1,96 @@
-# Integration Tests
+# Integration Tests for Timezone Fix
 
-## Overview
-Integration tests that verify the API endpoints work correctly with real Supabase and PostgreSQL instances.
+These integration tests verify that all API endpoints handle dates correctly according to the timezone fix implementation.
+
+## Test Coverage
+
+### test_transaction_endpoints.py
+**POST /api/v1/transactions/create-expense**
+- ✅ Create with YYYY-MM-DD date string
+- ✅ Create for today's date
+- ✅ Create for past/future dates
+- ✅ Reject invalid date formats
+
+**POST /api/v1/transactions/create-income**
+- ✅ Create with YYYY-MM-DD date string
+- ✅ Create for today's date
+
+**GET /api/v1/transactions/list**
+- ✅ List with date range
+- ✅ Verify response format
+- ✅ Single day queries
+
+**GET /api/v1/transactions/today-summary**
+- ✅ Empty and with transactions
+- ✅ Timezone-aware today
+
+**PATCH /api/v1/transactions/update/{id}**
+- ✅ Update transaction dates
+
+**Recurring Templates**
+- ✅ Create and materialize with dates
+
+### test_profile_endpoints.py
+**PATCH /api/v1/profile/timezone**
+- ✅ Valid/invalid timezones
+- ✅ Persistence across requests
+- ✅ Affects today's summary
+
+### test_date_handling.py
+**Date Format Consistency**
+- ✅ All endpoints accept YYYY-MM-DD only
+- ✅ All responses return YYYY-MM-DD
+- ✅ Boundary conditions (leap years, month ends)
+- ✅ Recurring materialization with clamping
 
 ## Running Tests
 
 ```bash
+cd /Users/romnick/Documents/GitHub/ReperooV2/apps/api
+
+# Install dependencies
+uv sync --group dev
+
 # Run all integration tests
-uv run pytest tests/integration/ -v -m integration
+uv run pytest tests/integration/ -v
 
-# Run specific test file
-uv run pytest tests/integration/test_transaction_routes.py -v -m integration
+# Run specific file
+uv run pytest tests/integration/test_transaction_endpoints.py
 
-# Run with cleanup logs
-uv run pytest tests/integration/ -v -m integration --log-cli-level=INFO
+# Run with coverage
+uv run pytest tests/integration/ --cov=src
 ```
 
-## Test Data Cleanup
+## Database Setup
 
-**Cleanup is ENABLED** - Test data is automatically deleted after each test run:
+Before running tests, ensure:
 
-### What Gets Cleaned Up:
-✅ **Transactions** - All transactions created during tests are deleted  
-✅ **Profiles** - All profile records in the database are deleted  
-✅ **Supabase Auth Users** - Test users are deleted from Supabase (requires admin permissions)
+1. Database is running
+2. Migrations are applied: `uv run alembic upgrade head`
+3. Environment variables are set in `.env` or `.env.local`
 
-### Cleanup Strategy:
-1. **Per-test cleanup**: The `cleanup_manager` fixture tracks and cleans up data created in individual tests (like `test_sign_up_creates_supabase_user_and_profile`)
-2. **Session cleanup**: The `cleanup_shared_user` fixture deletes the shared test user at the end of the test session
+## Manual Testing
 
-### Known Issues:
-- ⚠️ Some Supabase configurations may not allow auth user deletion via admin API, resulting in warnings like:
-  ```
-  WARNING: Failed to delete Supabase user: User not allowed
-  ```
-  This is expected if your SUPABASE_SECRET_API_KEY lacks admin permissions. Database records (transactions, profiles) are still cleaned up properly.
+```bash
+# Set timezone
+curl -X PATCH http://localhost:8080/api/v1/profile/timezone \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '"America/New_York"'
 
-## Required Environment Variables
+# Create transaction
+curl -X POST http://localhost:8080/api/v1/transactions/create-expense \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "occurred_at": "2024-06-15",
+    "amount": 42.50,
+    "type": "expense",
+    "transaction_tag": "want",
+    "expense_category_id": "personal"
+  }'
+
+# List transactions
+curl "http://localhost:8080/api/v1/transactions/list?start_date=2024-06-01&end_date=2024-06-30" \
+  -H "Authorization: Bearer $TOKEN"
 ```
-DATABASE_URL=postgresql://...
-SUPABASE_URL=https://...
-SUPABASE_SECRET_API_KEY=...
-SUPABASE_JWT_SECRET=...
-```
 
-## Test Architecture
-
-### Fixtures:
-- **`app_lifespan`** (function-scoped): Initializes FastAPI app and Supabase client for each test
-- **`async_client`**: HTTP client for making API requests
-- **`shared_authenticated_user`** (session-scoped): Reusable test user to avoid rate limiting
-- **`authenticated_user`**: Returns the shared user for tests requiring authentication
-- **`cleanup_manager`**: Tracks and cleans up test data
-- **`valid_expense_category`**: Returns a valid expense category ID
-- **`valid_income_category`**: Returns a valid income category ID
-
-## Test Coverage
-
-- ✅ Authentication (sign-up, JWT validation)
-- ✅ Transaction creation (expense/income)
-- ✅ Transaction updates
-- ✅ Transaction deletion
-- ✅ Permission checks
-- ✅ Validation errors
-
-**Total: 19 tests**
+See test files for comprehensive examples.

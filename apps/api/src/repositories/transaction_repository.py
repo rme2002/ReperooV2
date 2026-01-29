@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Literal
 from uuid import UUID, uuid4
@@ -81,8 +81,8 @@ class TransactionRepository:
         self,
         session: Session,
         user_id: UUID,
-        start_date: datetime,
-        end_date: datetime,
+        start_date: date,
+        end_date: date,
     ) -> list[Transaction]:
         """
         Get all transactions for a user within a date range.
@@ -110,10 +110,15 @@ class TransactionRepository:
         return list(session.execute(stmt).scalars().all())
 
     def get_today_summary(
-        self, session: Session, user_id: UUID
+        self, session: Session, user_id: UUID, today: date
     ) -> dict[str, Any]:
         """
-        Get aggregated summary of today's transactions.
+        Get aggregated summary of transactions for a specific date.
+
+        Args:
+            session: Database session
+            user_id: User UUID
+            today: The date to get summary for (typically user's local today)
 
         Returns dict with:
         - expense_total: Decimal
@@ -121,18 +126,7 @@ class TransactionRepository:
         - income_total: Decimal
         - income_count: int
         """
-        from datetime import timezone
-
         from sqlalchemy import case, func
-
-        # Get today's date boundaries (UTC)
-        now = datetime.now(timezone.utc)
-        start_of_day = datetime(
-            now.year, now.month, now.day, 0, 0, 0, tzinfo=timezone.utc
-        )
-        end_of_day = datetime(
-            now.year, now.month, now.day, 23, 59, 59, 999999, tzinfo=timezone.utc
-        )
 
         # Aggregate query with conditional sums
         stmt = select(
@@ -151,8 +145,7 @@ class TransactionRepository:
         ).where(
             and_(
                 Transaction.user_id == user_id,
-                Transaction.occurred_at >= start_of_day,
-                Transaction.occurred_at <= end_of_day,
+                Transaction.occurred_at == today,  # Simple date comparison!
             )
         )
 

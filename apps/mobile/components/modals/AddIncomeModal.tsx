@@ -28,6 +28,7 @@ import {
   deleteTransaction,
 } from "@/lib/gen/transactions/transactions";
 import { createRecurringIncomeTemplate } from "@/lib/gen/recurring-templates/recurring-templates";
+import { dateToLocalDateString } from "@/utils/timezoneUtils";
 import { useSupabaseAuthSync } from "@/hooks/useSupabaseAuthSync";
 import { alpha, colors, palette } from "@/constants/theme";
 
@@ -235,7 +236,7 @@ export function AddIncomeModal({
         // Update existing transaction
         const response = await updateTransaction(initialIncome.id, {
           type: "income",
-          occurred_at: selectedDate.toISOString(),
+          occurred_at: dateToLocalDateString(selectedDate),
           amount: amountValue,
           notes: note.trim() || null,
           income_category_id: type,
@@ -261,7 +262,7 @@ export function AddIncomeModal({
               recurringFrequency !== "monthly" ? recurringDayOfWeek : null,
             day_of_month:
               recurringFrequency === "monthly" ? recurringDayOfMonth : null,
-            start_date: selectedDate.toISOString(),
+            start_date: dateToLocalDateString(selectedDate),
             end_date: null,
             total_occurrences: null,
           });
@@ -276,7 +277,7 @@ export function AddIncomeModal({
           // Create one-time transaction
           const response = await createIncomeTransaction({
             user_id: session.user.id,
-            occurred_at: selectedDate.toISOString(),
+            occurred_at: dateToLocalDateString(selectedDate),
             amount: amountValue,
             notes: note.trim() || null,
             type: "income",

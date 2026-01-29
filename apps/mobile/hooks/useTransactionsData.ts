@@ -9,6 +9,7 @@ import { listTransactions } from "@/lib/gen/transactions/transactions";
 import { listRecurringTemplates } from "@/lib/gen/recurring-templates/recurring-templates";
 import { listExpenseCategories } from "@/lib/gen/expense-categories/expense-categories";
 import { listIncomeCategories } from "@/lib/gen/income-categories/income-categories";
+import { dateToLocalDateString } from "@/utils/timezoneUtils";
 
 /**
  * Return type for useTransactionsData hook
@@ -128,12 +129,12 @@ export function useTransactionsData(
       const currentDate = new Date(monthCurrentDate);
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      const startDate = new Date(year, month, 1);
-      const endDate = new Date(year, month + 1, 0, 23, 59, 59);
+      const startDate = new Date(year, month, 1);              // First day of month
+      const endDate = new Date(year, month + 1, 0);            // Last day of month
 
       const response = await listTransactions({
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
+        start_date: dateToLocalDateString(startDate),  // "YYYY-MM-DD"
+        end_date: dateToLocalDateString(endDate),      // "YYYY-MM-DD"
       });
 
       if (response.status === 200) {

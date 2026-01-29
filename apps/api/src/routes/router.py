@@ -9,6 +9,7 @@ from src.routes.insights_routes import router as insights_router
 from src.routes.expense_category_routes import router as expense_category_router
 from src.routes.income_category_routes import router as income_category_router
 from src.routes.experience_routes import router as experience_router
+from src.routes.profile_routes import router as profile_router
 
 api_v1 = APIRouter(prefix="/api/v1")
 api_v1.include_router(health_router, tags=["health"])
@@ -20,4 +21,5 @@ api_v1.include_router(insights_router, prefix="/insights", tags=["insights"])
 api_v1.include_router(expense_category_router, prefix="/expense-categories", tags=["expense-categories"])
 api_v1.include_router(income_category_router, prefix="/income-categories", tags=["income-categories"])
 api_v1.include_router(experience_router, prefix="/experience", tags=["experience"])
+api_v1.include_router(profile_router, prefix="/profile", tags=["profile"])
 # api_v1.include_router(reservations_router, prefix="/reservations", tags=["reservations"])

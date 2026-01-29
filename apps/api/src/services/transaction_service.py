@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
@@ -351,19 +352,18 @@ class TransactionService:
             raise TransactionDeleteError("Failed to delete transaction") from e
 
     def get_today_summary(self, session: Session, user_id: UUID) -> dict[str, Any]:
-        """Get today's transaction summary with materialized recurring transactions."""
-        from datetime import datetime, timezone
+        """Get today's transaction summary in user's local timezone."""
+        from src.repositories.profile_repository import ProfileRepository
+        from src.utils.date_utils import get_user_today
 
-        # Get today's date boundaries
-        now = datetime.now(timezone.utc)
-        start_of_day = datetime(
-            now.year, now.month, now.day, 0, 0, 0, tzinfo=timezone.utc
-        )
-        end_of_day = datetime(
-            now.year, now.month, now.day, 23, 59, 59, 999999, tzinfo=timezone.utc
-        )
+        # Get user's timezone
+        profile_repo = ProfileRepository()
+        user_timezone = profile_repo.get_user_timezone(session, user_id)
 
-        # Materialize recurring transactions for today (similar to list endpoint)
+        # Get today in user's timezone
+        today = get_user_today(user_timezone)
+
+        # Materialize recurring transactions for today
         from src.repositories.recurring_template_repository import (
             RecurringTemplateRepository,
         )
@@ -374,15 +374,15 @@ class TransactionService:
         template_repository = RecurringTemplateRepository()
         materialization_service = RecurringMaterializationService(template_repository)
         materialization_service.materialize_for_date_range(
-            session, user_id, start_of_day, end_of_day
+            session, user_id, today, today  # Pass date objects
         )
-        session.commit()  # Commit materialized transactions
+        session.commit()
 
         # Get aggregated summary
-        summary = self.transaction_repository.get_today_summary(session, user_id)
+        summary = self.transaction_repository.get_today_summary(session, user_id, today)
 
         # Add metadata
-        summary["date"] = now.date().isoformat()
+        summary["date"] = today.isoformat()  # "YYYY-MM-DD"
         summary["has_logged_today"] = (
             summary["expense_count"] + summary["income_count"]
         ) > 0

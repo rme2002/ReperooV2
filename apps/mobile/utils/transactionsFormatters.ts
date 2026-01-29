@@ -1,26 +1,31 @@
 import { getUTCDateKey } from "@/utils/dateHelpers";
+import { dateToLocalDateString } from "@/utils/timezoneUtils";
 
 /**
  * Formats a date relative to a reference date
  * Returns "Today", "Yesterday", or formatted date string
  *
- * @param value - Target date to format
+ * @param value - Target date to format (Date or YYYY-MM-DD string)
  * @param reference - Reference date to compare against
  * @returns Formatted relative date string
  */
-export function formatRelativeDate(value: Date, reference: Date): string {
-  const targetKey = getUTCDateKey(value);
-  const refKey = getUTCDateKey(reference);
+export function formatRelativeDate(value: Date | string, reference: Date): string {
+  // value is now "YYYY-MM-DD" from backend
+  const targetKey = typeof value === 'string' ? value : getUTCDateKey(value);
+  const today = dateToLocalDateString(reference);
 
-  if (targetKey === refKey) return "Today";
+  if (targetKey === today) return "Today";
 
   const yesterday = new Date(reference);
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  const yesterdayKey = getUTCDateKey(yesterday);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = dateToLocalDateString(yesterday);
 
   if (targetKey === yesterdayKey) return "Yesterday";
 
-  return value.toLocaleDateString("en-GB", {
+  // Parse and format for other dates
+  const [year, month, day] = targetKey.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString("en-GB", {
     weekday: "short",
     month: "short",
     day: "numeric",

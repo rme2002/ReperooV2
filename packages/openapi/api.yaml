@@ -147,16 +147,16 @@ paths:
           required: true
           schema:
             type: string
-            format: date-time
-            example: "2024-01-01T00:00:00Z"
+            format: date
+            example: "2024-01-01"
         - name: end_date
           in: query
           description: End date for transaction range
           required: true
           schema:
             type: string
-            format: date-time
-            example: "2024-12-31T23:59:59Z"
+            format: date
+            example: "2024-12-31"
       responses:
         '200':
           description: List of transactions
@@ -825,8 +825,8 @@ components:
           $ref: "#/components/schemas/UID"
         occurred_at:
           type: string
-          format: date-time
-          example: "2024-06-01T13:45:00Z"
+          format: date
+          example: "2024-06-01"
         amount:
           $ref: "#/components/schemas/TransactionAmount"
         notes:
@@ -912,8 +912,8 @@ components:
           example: "expense"
         occurred_at:
           type: string
-          format: date-time
-          example: "2024-06-01T13:45:00Z"
+          format: date
+          example: "2024-06-01"
         amount:
           $ref: "#/components/schemas/TransactionAmount"
         notes:
@@ -942,8 +942,8 @@ components:
           example: "income"
         occurred_at:
           type: string
-          format: date-time
-          example: "2024-06-01T13:45:00Z"
+          format: date
+          example: "2024-06-01"
         amount:
           $ref: "#/components/schemas/TransactionAmount"
         notes:
@@ -1054,13 +1054,13 @@ components:
           description: Day of month for monthly recurrence (1-31)
         start_date:
           type: string
-          format: date-time
-          example: "2024-06-01T00:00:00Z"
+          format: date
+          example: "2024-06-01"
         end_date:
           type: string
-          format: date-time
+          format: date
           nullable: true
-          example: "2025-06-01T00:00:00Z"
+          example: "2025-06-01"
         total_occurrences:
           type: integer
           nullable: true
@@ -1396,8 +1396,8 @@ components:
           example: "groceries"
         date:
           type: string
-          format: date-time
-          example: "2025-12-04T00:00:00Z"
+          format: date
+          example: "2025-12-04"
 
     MonthSnapshot:
       type: object

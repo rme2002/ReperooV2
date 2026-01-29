@@ -1,6 +1,7 @@
 """Pydantic models for recurring transaction templates."""
 from __future__ import annotations
 
+from datetime import date
 from typing import Literal, Optional
 from uuid import UUID
 
@@ -31,8 +32,8 @@ class RecurringTemplateBase(BaseModel):
     )
 
     # Start and end conditions
-    start_date: AwareDatetime = Field(..., examples=["2024-06-01T00:00:00Z"])
-    end_date: Optional[AwareDatetime] = Field(None, examples=["2025-06-01T00:00:00Z"])
+    start_date: date = Field(..., examples=["2024-06-01"])
+    end_date: Optional[date] = Field(None, examples=["2025-06-01"])
     total_occurrences: Optional[int] = Field(
         None,
         description="Total number of occurrences (alternative to end_date)",
@@ -58,7 +59,7 @@ class UpdateRecurringTemplatePayload(BaseModel):
     """Payload for updating a recurring template."""
     amount: Optional[float] = Field(None, description="Update amount")
     notes: Optional[str] = Field(None, description="Update notes")
-    end_date: Optional[AwareDatetime] = Field(None, description="Update end date")
+    end_date: Optional[date] = Field(None, description="Update end date")
     total_occurrences: Optional[int] = Field(None, description="Update total occurrences")
     is_paused: Optional[bool] = Field(None, description="Pause/unpause template")
 
