@@ -842,6 +842,27 @@ components:
         - occurred_at
         - amount
 
+    CreateTransactionBase:
+      type: object
+      properties:
+        occurred_at:
+          type: string
+          format: date
+          example: "2024-06-01"
+        amount:
+          $ref: "#/components/schemas/TransactionAmount"
+        notes:
+          type: string
+          nullable: true
+          example: "makeup"
+        recurring_template_id:
+          $ref: "#/components/schemas/UID"
+          nullable: true
+          description: "ID of recurring template if this transaction was created from one"
+      required:
+        - occurred_at
+        - amount
+
     TransactionMeta:
       type: object
       properties:
@@ -857,7 +878,7 @@ components:
 
     CreateExpenseTransactionPayload:
       allOf:
-        - $ref: "#/components/schemas/TransactionBase"
+        - $ref: "#/components/schemas/CreateTransactionBase"
         - type: object
           properties:
             type:
@@ -880,7 +901,7 @@ components:
             - expense_category_id
     CreateIncomeTransactionPayload:
       allOf:
-        - $ref: "#/components/schemas/TransactionBase"
+        - $ref: "#/components/schemas/CreateTransactionBase"
         - type: object
           properties:
             type:

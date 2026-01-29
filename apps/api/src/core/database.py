@@ -27,16 +27,21 @@ def _build_engine(database_url: str) -> Engine:
     """
 
     execution_options = None
+    connect_args = {}
     url = make_url(database_url)
     if url.get_backend_name() == "sqlite":
         # SQLite does not support schemas. Translate "auth" schema references to
         # the default schema so metadata.create_all() works in tests.
         execution_options = {"schema_translate_map": {"auth": None}}
+    elif url.get_backend_name() == "postgresql" and url.get_driver_name() == "psycopg":
+        # Supabase pooler is incompatible with prepared statements.
+        connect_args["prepare_threshold"] = None
 
     return create_engine(
         database_url,
         pool_pre_ping=True,
         execution_options=execution_options,
+        connect_args=connect_args,
     )
 
 

@@ -1,31 +1,18 @@
 """Integration tests for date handling across all endpoints."""
 import pytest
 from datetime import date
-from fastapi.testclient import TestClient
-from uuid import uuid4
-
-from src.main import app
-
-
-@pytest.fixture
-def client():
-    """Create a test client."""
-    return TestClient(app)
-
-
-@pytest.fixture
-def auth_headers():
-    """Create authentication headers."""
-    return {
-        "Authorization": f"Bearer test_token_{uuid4()}",
-        "Content-Type": "application/json"
-    }
 
 
 class TestDateFormats:
     """Test date format handling across all endpoints."""
 
-    def test_all_endpoints_accept_yyyy_mm_dd(self, client, auth_headers):
+    def test_all_endpoints_accept_yyyy_mm_dd(
+        self,
+        client,
+        auth_headers,
+        valid_expense_category,
+        valid_income_category,
+    ):
         """Test that all endpoints accept YYYY-MM-DD format."""
         test_date = "2024-06-15"
 
@@ -37,7 +24,7 @@ class TestDateFormats:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "want",
-                "expense_category_id": "personal"
+                "expense_category_id": valid_expense_category
             },
             headers=auth_headers
         )
@@ -50,7 +37,7 @@ class TestDateFormats:
                 "occurred_at": test_date,
                 "amount": 1000.00,
                 "type": "income",
-                "income_category_id": "salary"
+                "income_category_id": valid_income_category
             },
             headers=auth_headers
         )
@@ -67,7 +54,7 @@ class TestDateFormats:
                 "start_date": test_date,
                 "end_date": None,
                 "transaction_tag": "need",
-                "expense_category_id": "essentials"
+                "expense_category_id": valid_expense_category
             },
             headers=auth_headers
         )
@@ -84,7 +71,9 @@ class TestDateFormats:
         )
         assert list_response.status_code == 200
 
-    def test_all_endpoints_reject_iso_datetime(self, client, auth_headers):
+    def test_all_endpoints_reject_iso_datetime(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test that all endpoints reject ISO datetime format."""
         iso_datetime = "2024-06-15T13:45:00Z"
 
@@ -96,7 +85,7 @@ class TestDateFormats:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "want",
-                "expense_category_id": "personal"
+                "expense_category_id": valid_expense_category
             },
             headers=auth_headers
         )
@@ -113,7 +102,9 @@ class TestDateFormats:
         )
         assert list_response.status_code == 400
 
-    def test_all_endpoints_reject_wrong_format(self, client, auth_headers):
+    def test_all_endpoints_reject_wrong_format(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test that all endpoints reject MM/DD/YYYY format."""
         wrong_format = "06/15/2024"
 
@@ -125,13 +116,15 @@ class TestDateFormats:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "want",
-                "expense_category_id": "personal"
+                "expense_category_id": valid_expense_category
             },
             headers=auth_headers
         )
         assert expense_response.status_code == 400
 
-    def test_all_responses_return_yyyy_mm_dd(self, client, auth_headers):
+    def test_all_responses_return_yyyy_mm_dd(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test that all response dates are in YYYY-MM-DD format."""
         test_date = "2024-06-15"
 
@@ -143,7 +136,7 @@ class TestDateFormats:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "want",
-                "expense_category_id": "personal"
+                "expense_category_id": valid_expense_category
             },
             headers=auth_headers
         )
@@ -172,14 +165,14 @@ class TestDateFormats:
 class TestDateBoundaries:
     """Test boundary conditions for date handling."""
 
-    def test_leap_year_february_29(self, client, auth_headers):
+    def test_leap_year_february_29(self, client, auth_headers, valid_expense_category):
         """Test handling of February 29 in leap year."""
         payload = {
             "occurred_at": "2024-02-29",
             "amount": 50.00,
             "type": "expense",
             "transaction_tag": "need",
-            "expense_category_id": "essentials"
+            "expense_category_id": valid_expense_category
         }
 
         response = client.post(
@@ -192,14 +185,16 @@ class TestDateBoundaries:
         data = response.json()
         assert data["occurred_at"] == "2024-02-29"
 
-    def test_non_leap_year_february_29_fails(self, client, auth_headers):
+    def test_non_leap_year_february_29_fails(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test that February 29 in non-leap year fails."""
         payload = {
             "occurred_at": "2023-02-29",  # 2023 is not a leap year
             "amount": 50.00,
             "type": "expense",
             "transaction_tag": "need",
-            "expense_category_id": "essentials"
+            "expense_category_id": valid_expense_category
         }
 
         response = client.post(
@@ -210,7 +205,7 @@ class TestDateBoundaries:
 
         assert response.status_code == 400
 
-    def test_end_of_month_dates(self, client, auth_headers):
+    def test_end_of_month_dates(self, client, auth_headers, valid_expense_category):
         """Test last days of various months."""
         dates = [
             "2024-01-31",  # January
@@ -224,7 +219,7 @@ class TestDateBoundaries:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "need",
-                "expense_category_id": "essentials"
+                "expense_category_id": valid_expense_category
             }
 
             response = client.post(
@@ -237,7 +232,7 @@ class TestDateBoundaries:
             data = response.json()
             assert data["occurred_at"] == test_date
 
-    def test_invalid_dates(self, client, auth_headers):
+    def test_invalid_dates(self, client, auth_headers, valid_expense_category):
         """Test that invalid dates are rejected."""
         invalid_dates = [
             "2024-02-30",  # February doesn't have 30 days
@@ -254,7 +249,7 @@ class TestDateBoundaries:
                 "amount": 50.00,
                 "type": "expense",
                 "transaction_tag": "need",
-                "expense_category_id": "essentials"
+                "expense_category_id": valid_expense_category
             }
 
             response = client.post(
@@ -269,7 +264,9 @@ class TestDateBoundaries:
 class TestRecurringDateMaterialization:
     """Test that recurring transactions materialize with correct dates."""
 
-    def test_monthly_day_31_february_clamping(self, client, auth_headers):
+    def test_monthly_day_31_february_clamping(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test that day 31 clamps to 28/29 in February."""
         # Create recurring template for day 31
         template_payload = {
@@ -280,7 +277,7 @@ class TestRecurringDateMaterialization:
             "start_date": "2024-01-31",
             "end_date": "2024-03-31",
             "transaction_tag": "need",
-            "expense_category_id": "essentials"
+            "expense_category_id": valid_expense_category
         }
 
         create_response = client.post(
@@ -312,7 +309,7 @@ class TestRecurringDateMaterialization:
         assert "2024-02-29" in dates  # Clamped to 29 (leap year)
         assert "2024-03-31" in dates
 
-    def test_weekly_materialization(self, client, auth_headers):
+    def test_weekly_materialization(self, client, auth_headers, valid_expense_category):
         """Test that weekly recurring transactions materialize correctly."""
         # Create weekly recurring starting on Monday
         template_payload = {
@@ -323,7 +320,7 @@ class TestRecurringDateMaterialization:
             "start_date": "2024-06-03",  # Monday, June 3
             "end_date": "2024-06-30",
             "transaction_tag": "need",
-            "expense_category_id": "essentials"
+            "expense_category_id": valid_expense_category
         }
 
         create_response = client.post(
@@ -361,7 +358,7 @@ class TestRecurringDateMaterialization:
 class TestTimezoneScenarios:
     """Test real-world timezone scenarios."""
 
-    def test_user_in_nyc_timezone(self, client, auth_headers):
+    def test_user_in_nyc_timezone(self, client, auth_headers, valid_expense_category):
         """Simulate user in NYC timezone creating transactions."""
         # Set timezone to NYC
         tz_response = client.patch(
@@ -378,7 +375,7 @@ class TestTimezoneScenarios:
             "amount": 42.50,
             "type": "expense",
             "transaction_tag": "want",
-            "expense_category_id": "personal"
+            "expense_category_id": valid_expense_category
         }
 
         create_response = client.post(

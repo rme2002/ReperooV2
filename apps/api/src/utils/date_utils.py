@@ -24,7 +24,7 @@ def get_user_today(user_timezone: str) -> date:
         return datetime.now(ZoneInfo('UTC')).date()
 
 
-def parse_date_string(date_str: str | date) -> date:
+def parse_date_string(date_str: str | date | None, *, allow_datetime: bool = True) -> date:
     """
     Parse date string to Python date object.
 
@@ -51,10 +51,18 @@ def parse_date_string(date_str: str | date) -> date:
     # If already a date object, return it
     if isinstance(date_str, date):
         return date_str
+    if not isinstance(date_str, str):
+        raise ValueError(
+            f"Invalid date format: {date_str}. Expected YYYY-MM-DD or ISO 8601 datetime"
+        )
 
     try:
         # Handle ISO datetime format (contains 'T')
         if 'T' in date_str:
+            if not allow_datetime:
+                raise ValueError(
+                    f"Invalid date format: {date_str}. Expected YYYY-MM-DD"
+                )
             # Parse as ISO datetime and extract date
             dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
             return dt.date()

@@ -1,10 +1,8 @@
-from datetime import datetime, timezone
+from datetime import date
 from typing import Literal
 
 import pytest
 from httpx import AsyncClient
-
-from tests.integration.conftest import IntegrationCleanup
 
 
 def _create_transaction_payload(
@@ -27,7 +25,7 @@ def _create_transaction_payload(
     """
     base_payload = {
         "user_id": user_id,
-        "occurred_at": datetime.now(timezone.utc).isoformat(),
+        "occurred_at": date.today().isoformat(),
         "amount": 42.5,
         "type": type,
         "transaction_tag": "want" if type == "expense" else "",
@@ -44,7 +42,6 @@ def _create_transaction_payload(
 @pytest.mark.integration
 async def test_create_expense_transaction_success(
     async_client: AsyncClient,
-    cleanup_manager: IntegrationCleanup,
     authenticated_user: dict[str, str],
     valid_expense_category: str,
 ):
@@ -76,15 +73,17 @@ async def test_create_expense_transaction_success(
     assert "id" in data
     assert "created_at" in data
 
-    # Track for cleanup
-    cleanup_manager.track_transaction(data["id"])
+    # Clean up - delete the created transaction
+    await async_client.delete(
+        f"/api/v1/transactions/delete/{data['id']}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
 
 
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def test_create_income_transaction_success(
     async_client: AsyncClient,
-    cleanup_manager: IntegrationCleanup,
     authenticated_user: dict[str, str],
     valid_income_category: str,
 ):
@@ -115,8 +114,11 @@ async def test_create_income_transaction_success(
     assert "id" in data
     assert "created_at" in data
 
-    # Track for cleanup
-    cleanup_manager.track_transaction(data["id"])
+    # Clean up - delete the created transaction
+    await async_client.delete(
+        f"/api/v1/transactions/delete/{data['id']}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
 
 
 @pytest.mark.asyncio
@@ -227,7 +229,6 @@ async def test_create_transaction_invalid_jwt(
 @pytest.mark.integration
 async def test_create_transaction_user_id_override(
     async_client: AsyncClient,
-    cleanup_manager: IntegrationCleanup,
     authenticated_user: dict[str, str],
     valid_expense_category: str,
 ):
@@ -257,8 +258,11 @@ async def test_create_transaction_user_id_override(
     assert data["user_id"] == user_id
     assert data["user_id"] != fake_user_id
 
-    # Track for cleanup
-    cleanup_manager.track_transaction(data["id"])
+    # Clean up - delete the created transaction
+    await async_client.delete(
+        f"/api/v1/transactions/delete/{data['id']}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
 
 
 # ===== UPDATE TRANSACTION TESTS =====
@@ -268,7 +272,6 @@ async def test_create_transaction_user_id_override(
 @pytest.mark.integration
 async def test_update_expense_transaction_success(
     async_client: AsyncClient,
-    cleanup_manager: IntegrationCleanup,
     authenticated_user: dict[str, str],
     valid_expense_category: str,
 ):
@@ -292,7 +295,6 @@ async def test_update_expense_transaction_success(
     )
     assert create_response.status_code == 201
     transaction_id = create_response.json()["id"]
-    cleanup_manager.track_transaction(transaction_id)
 
     # Update the transaction
     update_payload = {
@@ -317,12 +319,17 @@ async def test_update_expense_transaction_success(
     assert data["type"] == "expense"
     assert data["expense_category_id"] == valid_expense_category
 
+    # Clean up - delete the created transaction
+    await async_client.delete(
+        f"/api/v1/transactions/delete/{transaction_id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
 
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def test_update_income_transaction_success(
     async_client: AsyncClient,
-    cleanup_manager: IntegrationCleanup,
     authenticated_user: dict[str, str],
     valid_income_category: str,
 ):
@@ -345,7 +352,6 @@ async def test_update_income_transaction_success(
     )
     assert create_response.status_code == 201
     transaction_id = create_response.json()["id"]
-    cleanup_manager.track_transaction(transaction_id)
 
     # Update the transaction
     update_payload = {
@@ -368,6 +374,12 @@ async def test_update_income_transaction_success(
     assert data["amount"] == 1500.0
     assert data["notes"] == "Bonus payment"
     assert data["type"] == "income"
+
+    # Clean up - delete the created transaction
+    await async_client.delete(
+        f"/api/v1/transactions/delete/{transaction_id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
 
 
 @pytest.mark.asyncio
@@ -399,7 +411,6 @@ async def test_update_transaction_not_found(
 @pytest.mark.integration
 async def test_update_transaction_type_immutable(
     async_client: AsyncClient,
-    cleanup_manager: IntegrationCleanup,
     authenticated_user: dict[str, str],
     valid_expense_category: str,
 ):
@@ -421,7 +432,6 @@ async def test_update_transaction_type_immutable(
     )
     assert create_response.status_code == 201
     transaction_id = create_response.json()["id"]
-    cleanup_manager.track_transaction(transaction_id)
 
     # Try to change type to income
     update_payload = {
@@ -437,6 +447,12 @@ async def test_update_transaction_type_immutable(
 
     assert response.status_code == 400
     assert "type" in response.json()["detail"].lower()
+
+    # Clean up - delete the created transaction
+    await async_client.delete(
+        f"/api/v1/transactions/delete/{transaction_id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
 
 
 @pytest.mark.asyncio
@@ -465,7 +481,6 @@ async def test_update_transaction_unauthenticated(
 @pytest.mark.integration
 async def test_update_transaction_invalid_category(
     async_client: AsyncClient,
-    cleanup_manager: IntegrationCleanup,
     authenticated_user: dict[str, str],
     valid_expense_category: str,
 ):
@@ -487,7 +502,6 @@ async def test_update_transaction_invalid_category(
     )
     assert create_response.status_code == 201
     transaction_id = create_response.json()["id"]
-    cleanup_manager.track_transaction(transaction_id)
 
     # Try to update with invalid category
     update_payload = {
@@ -589,7 +603,6 @@ async def test_delete_transaction_unauthenticated(
 @pytest.mark.integration
 async def test_delete_transaction_wrong_user(
     async_client: AsyncClient,
-    cleanup_manager: IntegrationCleanup,
     authenticated_user: dict[str, str],
     valid_expense_category: str,
 ):
@@ -611,7 +624,6 @@ async def test_delete_transaction_wrong_user(
     )
     assert create_response.status_code == 201
     transaction_id = create_response.json()["id"]
-    cleanup_manager.track_transaction(transaction_id)
 
     # Try to delete with a different (fake) token
     # In a real scenario, this would be another user's token
@@ -623,3 +635,9 @@ async def test_delete_transaction_wrong_user(
 
     # Should fail with 401 (invalid token)
     assert response.status_code == 401
+
+    # Clean up - delete the created transaction with valid token
+    await async_client.delete(
+        f"/api/v1/transactions/delete/{transaction_id}",
+        headers={"Authorization": f"Bearer {authenticated_user['token']}"},
+    )

@@ -3,6 +3,7 @@ import { listTransactions } from "@/lib/gen/transactions/transactions";
 import { listRecurringTemplates } from "@/lib/gen/recurring-templates/recurring-templates";
 import type { TransactionIncome } from "@/lib/gen/model/transactionIncome";
 import type { RecurringTemplateIncome } from "@/lib/gen/model/recurringTemplateIncome";
+import { dateToLocalDateString } from "@/utils/timezoneUtils";
 
 /**
  * Return type for useInsightsIncome hook
@@ -37,8 +38,10 @@ export function useInsightsIncome(
     try {
       const year = selectedMonth.year;
       const month = selectedMonth.month - 1; // Convert from 1-based to 0-based month
-      const start_date = new Date(year, month, 1).toISOString();
-      const end_date = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+      const startDate = new Date(year, month, 1);
+      const endDate = new Date(year, month + 1, 0);
+      const start_date = dateToLocalDateString(startDate);
+      const end_date = dateToLocalDateString(endDate);
 
       const [transactionsRes, templatesRes] = await Promise.all([
         listTransactions({ start_date, end_date }),

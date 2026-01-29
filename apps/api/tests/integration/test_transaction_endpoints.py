@@ -1,47 +1,21 @@
 """Integration tests for transaction endpoints with timezone fix."""
 import pytest
 from datetime import date, timedelta
-from uuid import uuid4
-
-from fastapi.testclient import TestClient
-
-from src.main import app
-
-
-@pytest.fixture
-def client():
-    """Create a test client."""
-    return TestClient(app)
-
-
-@pytest.fixture
-def test_user_id():
-    """Create a test user ID."""
-    return uuid4()
-
-
-@pytest.fixture
-def auth_headers(test_user_id):
-    """Create authentication headers for test user."""
-    # In real tests, you'd generate a proper JWT token
-    # For now, mock the authentication
-    return {
-        "Authorization": f"Bearer test_token_{test_user_id}",
-        "Content-Type": "application/json"
-    }
 
 
 class TestCreateExpenseTransaction:
     """Integration tests for POST /api/v1/transactions/create-expense."""
 
-    def test_create_expense_with_date_string(self, client, auth_headers, test_user_id):
+    def test_create_expense_with_date_string(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test creating expense transaction with YYYY-MM-DD date string."""
         payload = {
             "occurred_at": "2024-06-15",
             "amount": 42.50,
             "type": "expense",
             "transaction_tag": "want",
-            "expense_category_id": "personal",
+            "expense_category_id": valid_expense_category,
             "expense_subcategory_id": None,
             "notes": "Coffee shop"
         }
@@ -60,12 +34,12 @@ class TestCreateExpenseTransaction:
         assert data["amount"] == 42.50
         assert data["type"] == "expense"
         assert data["transaction_tag"] == "want"
-        assert data["expense_category_id"] == "personal"
+        assert data["expense_category_id"] == valid_expense_category
         assert data["notes"] == "Coffee shop"
         assert "id" in data
         assert "created_at" in data
 
-    def test_create_expense_for_today(self, client, auth_headers):
+    def test_create_expense_for_today(self, client, auth_headers, valid_expense_category):
         """Test creating expense transaction for today's date."""
         today = date.today().isoformat()
 
@@ -74,7 +48,7 @@ class TestCreateExpenseTransaction:
             "amount": 25.00,
             "type": "expense",
             "transaction_tag": "need",
-            "expense_category_id": "essentials",
+            "expense_category_id": valid_expense_category,
             "notes": "Groceries"
         }
 
@@ -88,14 +62,16 @@ class TestCreateExpenseTransaction:
         data = response.json()
         assert data["occurred_at"] == today
 
-    def test_create_expense_with_invalid_date_format(self, client, auth_headers):
+    def test_create_expense_with_invalid_date_format(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test that invalid date format returns 400 error."""
         payload = {
             "occurred_at": "06/15/2024",  # Wrong format
             "amount": 42.50,
             "type": "expense",
             "transaction_tag": "want",
-            "expense_category_id": "personal"
+            "expense_category_id": valid_expense_category
         }
 
         response = client.post(
@@ -107,14 +83,16 @@ class TestCreateExpenseTransaction:
         assert response.status_code == 400
         assert "Invalid date format" in response.json()["detail"]
 
-    def test_create_expense_with_iso_datetime_fails(self, client, auth_headers):
+    def test_create_expense_with_iso_datetime_fails(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test that ISO datetime string is rejected."""
         payload = {
             "occurred_at": "2024-06-15T13:45:00Z",  # Should be date only
             "amount": 42.50,
             "type": "expense",
             "transaction_tag": "want",
-            "expense_category_id": "personal"
+            "expense_category_id": valid_expense_category
         }
 
         response = client.post(
@@ -125,7 +103,7 @@ class TestCreateExpenseTransaction:
 
         assert response.status_code == 400
 
-    def test_create_expense_past_date(self, client, auth_headers):
+    def test_create_expense_past_date(self, client, auth_headers, valid_expense_category):
         """Test creating expense for past date."""
         past_date = (date.today() - timedelta(days=30)).isoformat()
 
@@ -134,7 +112,7 @@ class TestCreateExpenseTransaction:
             "amount": 100.00,
             "type": "expense",
             "transaction_tag": "need",
-            "expense_category_id": "essentials",
+            "expense_category_id": valid_expense_category,
             "notes": "Last month's expense"
         }
 
@@ -148,7 +126,9 @@ class TestCreateExpenseTransaction:
         data = response.json()
         assert data["occurred_at"] == past_date
 
-    def test_create_expense_future_date(self, client, auth_headers):
+    def test_create_expense_future_date(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test creating expense for future date."""
         future_date = (date.today() + timedelta(days=7)).isoformat()
 
@@ -157,7 +137,7 @@ class TestCreateExpenseTransaction:
             "amount": 50.00,
             "type": "expense",
             "transaction_tag": "want",
-            "expense_category_id": "personal",
+            "expense_category_id": valid_expense_category,
             "notes": "Planned expense"
         }
 
@@ -175,13 +155,15 @@ class TestCreateExpenseTransaction:
 class TestCreateIncomeTransaction:
     """Integration tests for POST /api/v1/transactions/create-income."""
 
-    def test_create_income_with_date_string(self, client, auth_headers):
+    def test_create_income_with_date_string(
+        self, client, auth_headers, valid_income_category
+    ):
         """Test creating income transaction with YYYY-MM-DD date string."""
         payload = {
             "occurred_at": "2024-06-01",
             "amount": 3000.00,
             "type": "income",
-            "income_category_id": "salary",
+            "income_category_id": valid_income_category,
             "notes": "Monthly salary"
         }
 
@@ -197,10 +179,10 @@ class TestCreateIncomeTransaction:
         assert data["occurred_at"] == "2024-06-01"
         assert data["amount"] == 3000.00
         assert data["type"] == "income"
-        assert data["income_category_id"] == "salary"
+        assert data["income_category_id"] == valid_income_category
         assert data["notes"] == "Monthly salary"
 
-    def test_create_income_for_today(self, client, auth_headers):
+    def test_create_income_for_today(self, client, auth_headers, valid_income_category):
         """Test creating income transaction for today."""
         today = date.today().isoformat()
 
@@ -208,7 +190,7 @@ class TestCreateIncomeTransaction:
             "occurred_at": today,
             "amount": 500.00,
             "type": "income",
-            "income_category_id": "freelance",
+            "income_category_id": valid_income_category,
             "notes": "Freelance payment"
         }
 
@@ -226,7 +208,9 @@ class TestCreateIncomeTransaction:
 class TestListTransactions:
     """Integration tests for GET /api/v1/transactions/list."""
 
-    def test_list_transactions_with_date_range(self, client, auth_headers):
+    def test_list_transactions_with_date_range(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test listing transactions with date range."""
         # Create some transactions first
         for day in range(1, 6):
@@ -235,7 +219,7 @@ class TestListTransactions:
                 "amount": 10.00 * day,
                 "type": "expense",
                 "transaction_tag": "need",
-                "expense_category_id": "essentials"
+                "expense_category_id": valid_expense_category
             }
             client.post(
                 "/api/v1/transactions/create-expense",
@@ -308,7 +292,9 @@ class TestListTransactions:
         assert response.status_code == 400
         assert "Invalid date format" in response.json()["detail"]
 
-    def test_list_transactions_single_day(self, client, auth_headers):
+    def test_list_transactions_single_day(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test listing transactions for a single day."""
         date_str = "2024-06-15"
 
@@ -318,7 +304,7 @@ class TestListTransactions:
             "amount": 25.00,
             "type": "expense",
             "transaction_tag": "need",
-            "expense_category_id": "essentials"
+            "expense_category_id": valid_expense_category
         }
         client.post(
             "/api/v1/transactions/create-expense",
@@ -375,7 +361,9 @@ class TestTodaySummary:
         # Should be today or very close (accounting for timezone)
         assert abs((summary_date - today).days) <= 1
 
-    def test_get_today_summary_with_transactions(self, client, auth_headers):
+    def test_get_today_summary_with_transactions(
+        self, client, auth_headers, valid_expense_category, valid_income_category
+    ):
         """Test getting today's summary with transactions."""
         today = date.today().isoformat()
 
@@ -385,7 +373,7 @@ class TestTodaySummary:
             "amount": 50.00,
             "type": "expense",
             "transaction_tag": "want",
-            "expense_category_id": "personal"
+            "expense_category_id": valid_expense_category
         }
         client.post(
             "/api/v1/transactions/create-expense",
@@ -397,7 +385,7 @@ class TestTodaySummary:
             "occurred_at": today,
             "amount": 1000.00,
             "type": "income",
-            "income_category_id": "salary"
+            "income_category_id": valid_income_category
         }
         client.post(
             "/api/v1/transactions/create-income",
@@ -452,7 +440,7 @@ class TestTodaySummary:
 class TestUpdateTransaction:
     """Integration tests for PATCH /api/v1/transactions/update/{id}."""
 
-    def test_update_transaction_date(self, client, auth_headers):
+    def test_update_transaction_date(self, client, auth_headers, valid_expense_category):
         """Test updating transaction date."""
         # Create a transaction
         create_payload = {
@@ -460,7 +448,7 @@ class TestUpdateTransaction:
             "amount": 50.00,
             "type": "expense",
             "transaction_tag": "want",
-            "expense_category_id": "personal"
+            "expense_category_id": valid_expense_category
         }
         create_response = client.post(
             "/api/v1/transactions/create-expense",
@@ -486,7 +474,9 @@ class TestUpdateTransaction:
         data = update_response.json()
         assert data["occurred_at"] == "2024-06-20"
 
-    def test_update_transaction_invalid_date_format(self, client, auth_headers):
+    def test_update_transaction_invalid_date_format(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test that invalid date format in update returns 400."""
         # Create a transaction
         create_payload = {
@@ -494,7 +484,7 @@ class TestUpdateTransaction:
             "amount": 50.00,
             "type": "expense",
             "transaction_tag": "want",
-            "expense_category_id": "personal"
+            "expense_category_id": valid_expense_category
         }
         create_response = client.post(
             "/api/v1/transactions/create-expense",
@@ -520,7 +510,9 @@ class TestUpdateTransaction:
 class TestRecurringTemplates:
     """Integration tests for recurring template endpoints."""
 
-    def test_create_recurring_expense_template(self, client, auth_headers):
+    def test_create_recurring_expense_template(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test creating recurring expense template with date strings."""
         payload = {
             "type": "expense",
@@ -531,7 +523,7 @@ class TestRecurringTemplates:
             "end_date": None,
             "total_occurrences": None,
             "transaction_tag": "need",
-            "expense_category_id": "essentials",
+            "expense_category_id": valid_expense_category,
             "notes": "Monthly subscription"
         }
 
@@ -549,7 +541,9 @@ class TestRecurringTemplates:
         assert data["frequency"] == "monthly"
         assert data["day_of_month"] == 15
 
-    def test_create_recurring_income_template(self, client, auth_headers):
+    def test_create_recurring_income_template(
+        self, client, auth_headers, valid_income_category
+    ):
         """Test creating recurring income template."""
         payload = {
             "type": "income",
@@ -559,7 +553,7 @@ class TestRecurringTemplates:
             "start_date": "2024-01-01",
             "end_date": None,
             "total_occurrences": None,
-            "income_category_id": "salary",
+            "income_category_id": valid_income_category,
             "notes": "Monthly salary"
         }
 
@@ -575,7 +569,9 @@ class TestRecurringTemplates:
         assert data["start_date"] == "2024-01-01"
         assert data["amount"] == 3000.00
 
-    def test_recurring_template_with_end_date(self, client, auth_headers):
+    def test_recurring_template_with_end_date(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test creating recurring template with end date."""
         payload = {
             "type": "expense",
@@ -586,7 +582,7 @@ class TestRecurringTemplates:
             "end_date": "2024-12-31",
             "total_occurrences": None,
             "transaction_tag": "want",
-            "expense_category_id": "personal",
+            "expense_category_id": valid_expense_category,
             "notes": "Weekly expense"
         }
 
@@ -603,7 +599,9 @@ class TestRecurringTemplates:
         assert data["end_date"] == "2024-12-31"
         assert data["frequency"] == "weekly"
 
-    def test_recurring_templates_materialize_correctly(self, client, auth_headers):
+    def test_recurring_templates_materialize_correctly(
+        self, client, auth_headers, valid_expense_category
+    ):
         """Test that recurring templates materialize with correct dates."""
         # Create recurring template
         template_payload = {
@@ -615,7 +613,7 @@ class TestRecurringTemplates:
             "end_date": "2024-08-31",
             "total_occurrences": None,
             "transaction_tag": "need",
-            "expense_category_id": "essentials",
+            "expense_category_id": valid_expense_category,
             "notes": "Monthly recurring"
         }
         create_response = client.post(

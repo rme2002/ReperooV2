@@ -1,24 +1,5 @@
 """Integration tests for profile/timezone endpoints."""
 import pytest
-from fastapi.testclient import TestClient
-from uuid import uuid4
-
-from src.main import app
-
-
-@pytest.fixture
-def client():
-    """Create a test client."""
-    return TestClient(app)
-
-
-@pytest.fixture
-def auth_headers():
-    """Create authentication headers."""
-    return {
-        "Authorization": f"Bearer test_token_{uuid4()}",
-        "Content-Type": "application/json"
-    }
 
 
 class TestTimezoneEndpoint:

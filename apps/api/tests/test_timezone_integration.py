@@ -2,7 +2,7 @@
 
 These tests verify the complete end-to-end flow of date handling.
 """
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from src.utils.date_utils import get_user_today, parse_date_string
@@ -137,9 +137,7 @@ class TestTimezoneIntegration:
         days = 0
         while current <= end_date:
             days += 1
-            current = date(current.year, current.month, current.day + 1) if current.day < 28 else \
-                     date(current.year, current.month + 1, 1) if current.month < 12 else \
-                     date(current.year + 1, 1, 1)
+            current += timedelta(days=1)
 
         # June has 30 days
         assert days >= 30  # Should count at least 30 days

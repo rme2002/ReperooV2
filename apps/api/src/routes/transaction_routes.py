@@ -8,11 +8,13 @@ from sqlalchemy.orm import Session
 from src.core.auth import get_current_user_id
 from src.core.database import get_session
 from src.models.model import (
-    CreateExpenseTransactionPayload,
-    CreateIncomeTransactionPayload,
     TodayTransactionSummary,
     TransactionExpense,
     TransactionIncome,
+)
+from src.models.transaction_payloads import (
+    CreateExpenseTransactionPayload,
+    CreateIncomeTransactionPayload,
     UpdateTransactionPayload,
 )
 from src.repositories.recurring_template_repository import RecurringTemplateRepository
@@ -216,8 +218,8 @@ async def list_transactions(
         from src.utils.date_utils import parse_date_string
 
         # Parse date strings
-        start_date_obj = parse_date_string(start_date)
-        end_date_obj = parse_date_string(end_date)
+        start_date_obj = parse_date_string(start_date, allow_datetime=False)
+        end_date_obj = parse_date_string(end_date, allow_datetime=False)
 
         # Step 1: Materialize recurring transactions for the date range (JIT)
         generated_count = materialization_service.materialize_for_date_range(

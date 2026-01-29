@@ -5,11 +5,13 @@ from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 
 from src.models.model import (
-    CreateExpenseTransactionPayload,
-    CreateIncomeTransactionPayload,
     TransactionExpense,
     TransactionIncome,
     UID,
+)
+from src.models.transaction_payloads import (
+    CreateExpenseTransactionPayload,
+    CreateIncomeTransactionPayload,
     UpdateExpenseTransactionPayload,
     UpdateIncomeTransactionPayload,
 )
