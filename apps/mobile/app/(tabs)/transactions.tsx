@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -48,6 +50,7 @@ import { useTransactionsModals } from "@/hooks/useTransactionsModals";
 import { useTransactionActions } from "@/hooks/useTransactionActions";
 import { useTransactionRefresh } from "@/hooks/useTransactionRefresh";
 import { useTabSafePadding } from "@/hooks/useTabSafePadding";
+import { useTransactionExport } from "@/hooks/useTransactionExport";
 
 export default function TransactionsScreen() {
   const { height } = useWindowDimensions();
@@ -180,6 +183,22 @@ export default function TransactionsScreen() {
     refetch,
   );
 
+  // Export
+  const { exporting, exportToCSV } = useTransactionExport({
+    getCategoryLabel,
+    getSubcategoryLabel,
+    getIncomeCategoryLabel,
+    formatCurrency,
+  });
+
+  const handleExport = useCallback(() => {
+    if (filteredTransactions.length === 0) {
+      Alert.alert("No Data", "No transactions to export.");
+      return;
+    }
+    exportToCSV(filteredTransactions, activeMonth?.label ?? "transactions");
+  }, [filteredTransactions, activeMonth, exportToCSV]);
+
   const handleTransactionSuccess = useCallback(
     async (date: Date) => {
       await Promise.allSettled([refetch(), refreshTransactionData({ date })]);
@@ -306,6 +325,21 @@ export default function TransactionsScreen() {
       fontSize: 22,
       color: colors.textLight,
     },
+    actionButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      backgroundColor: colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    actionButtonDisabled: {
+      opacity: 0.5,
+    },
+    actionButtonText: {
+      fontSize: 20,
+      color: colors.textLight,
+    },
     searchFilterRow: {
       flexDirection: "row",
       gap: 10,
@@ -341,6 +375,21 @@ export default function TransactionsScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Transactions</Text>
           <View style={styles.headerActions}>
+            <Pressable
+              style={[
+                styles.actionButton,
+                (filteredTransactions.length === 0 || exporting) &&
+                  styles.actionButtonDisabled,
+              ]}
+              onPress={handleExport}
+              disabled={filteredTransactions.length === 0 || exporting}
+            >
+              {exporting ? (
+                <ActivityIndicator size="small" color={colors.textLight} />
+              ) : (
+                <Text style={styles.actionButtonText}>⬇</Text>
+              )}
+            </Pressable>
             <Pressable
               style={styles.addButton}
               onPress={() => setShowAddMenu(!showAddMenu)}

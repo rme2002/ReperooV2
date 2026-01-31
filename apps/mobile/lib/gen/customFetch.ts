@@ -124,6 +124,22 @@ export const customFetch = async <T>(
   // Log the outgoing API call
   const method = options.method || 'GET';
   console.log(`[API Call] ${method} ${requestUrl}`);
+  if (requestInit.body != null) {
+    const body = requestInit.body;
+    let payloadPreview: string;
+    if (typeof body === 'string') {
+      payloadPreview = body;
+    } else if (body instanceof FormData) {
+      payloadPreview = '[FormData]';
+    } else if (body instanceof Blob) {
+      payloadPreview = `[Blob size=${body.size}]`;
+    } else if (body instanceof ArrayBuffer) {
+      payloadPreview = `[ArrayBuffer byteLength=${body.byteLength}]`;
+    } else {
+      payloadPreview = `[Body type=${Object.prototype.toString.call(body)}]`;
+    }
+    console.log(`[API Payload] ${method} ${requestUrl} - Body:`, payloadPreview);
+  }
 
   try {
     const response = await fetch(requestUrl, requestInit);

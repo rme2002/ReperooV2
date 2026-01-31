@@ -181,7 +181,12 @@ export function AddExpenseModal({
     const source = usingProvidedCategories
       ? (expenseCategories ?? [])
       : fetchedCategories;
-    return [...source].sort((a, b) => a.sort_order - b.sort_order);
+    return source
+      .filter(
+        (category) => category.label.trim().toLowerCase() !== "test expense",
+      )
+      .slice()
+      .sort((a, b) => a.sort_order - b.sort_order);
   }, [expenseCategories, fetchedCategories, usingProvidedCategories]);
   const currentCategory = useMemo(
     () =>

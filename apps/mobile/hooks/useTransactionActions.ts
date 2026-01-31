@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { Alert } from "react-native";
+import { dateToLocalDateString } from "@/utils/timezoneUtils";
 import {
   createExpenseTransaction,
   deleteTransaction,
@@ -52,6 +53,7 @@ export function useTransactionActions(
   const handleSubmit = useCallback(
     async (payload: TransactionSubmitPayload) => {
       const isoDate = payload.date.toISOString();
+      const localDate = dateToLocalDateString(payload.date);
 
       if (modalMode === "edit" && editingTx) {
         if (editingTx.type !== "expense") {
@@ -62,7 +64,7 @@ export function useTransactionActions(
         try {
           const response = await updateTransaction(editingTx.id, {
             type: "expense",
-            occurred_at: isoDate,
+            occurred_at: localDate,
             amount: payload.amount,
             notes: payload.note || null,
             transaction_tag: payload.transactionTag || "want",
